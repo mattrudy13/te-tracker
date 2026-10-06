@@ -45,6 +45,8 @@
 
     <p class="note">
       <b>Team pts</b> are implied by the spread and total. <b>Pts, last 3</b> lists fantasy points from each of the player's last three games, oldest to newest (most recent in bold).
+      <b>Book TD</b> is the best anytime-TD price across US sportsbooks and <b>Rec line</b> the receptions over/under most books offer
+      (hover for prices and books). <span id="odds-asof"></span>
       <b>TD %</b> is the anytime-touchdown estimate from the
       <a href="touchdowns.html">Touchdowns</a> page. The defense line is that opponent's tight end fantasy points allowed per game, ranked
       from 1st (fewest) to 32nd (most). Finished games show their tight end box score. Games in progress
@@ -73,19 +75,20 @@
       return seasonRows.filter((r) => r.team === team).sort((a, b) => b.tgtPg - a.tgtPg || b.fppg - a.fppg);
     }
 
-    function seasonTable(rows, oddsById, watch, showOdds) {
+    function seasonTable(rows, oddsById, watch, showOdds, g) {
       if (!rows.length) return `<p class="muted">No tight end has played for this team yet.</p>`;
       return `<div class="table-wrap"><table class="grid"><thead><tr>
         <th class="c"></th><th class="l">Player</th><th>G</th><th>Tgt/G</th><th title="Share of team targets">Tgt %</th><th>Rec/G</th><th>Yds/G</th><th>TD</th>
-        <th title="Targets inside the 20">RZ Tgt</th><th title="Expected TDs per game">xTD/G</th><th>Pts/G</th>${showOdds ? `<th title="Anytime TD estimate">TD %</th>` : ""}<th class="c" title="Fantasy points in each of the last three games, oldest to newest">Pts, last 3</th>
+        <th title="Targets inside the 20">RZ Tgt</th><th title="Expected TDs per game">xTD/G</th><th>Pts/G</th>${showOdds ? `<th title="Model anytime-TD estimate">TD %</th><th title="Best anytime-TD price across sportsbooks">Book TD</th><th title="Receptions over/under: most common line, best over price">Rec line</th>` : ""}<th class="c" title="Fantasy points in each of the last three games, oldest to newest">Pts, last 3</th>
         </tr></thead><tbody>${rows.map((r) => {
           const o = oddsById[r.id];
+          const book = g ? playerOdds(data, r.id, g.home, g.away) : null;
           return `<tr class="${watch.has(r.id) ? "watched" : ""}${r.tgtPg < 1 ? " minor" : ""}">
             <td class="c">${starButton(r.id, watch.has(r.id))}</td>
             <td class="l"><div class="who">${headshot(r.player, 30)}${playerLink(r)}</div></td>
             <td>${r.gp}</td><td>${fmt.d1(r.tgtPg)}</td><td>${fmt.pct0(r.tgtShare)}</td><td>${fmt.d1(r.rec / r.gp)}</td><td>${fmt.d1(r.yds / r.gp)}</td>
             <td>${r.td + r.rushTd}</td><td>${r.tgt20}</td><td>${fmt.d2(r.xtd / r.gp)}</td><td class="key">${fmt.d1(r.fppg)}</td>
-            ${showOdds ? `<td class="key">${o ? fmt.pct0(o.prob) : "–"}</td>` : ""}
+            ${showOdds ? `<td class="key">${o ? fmt.pct0(o.prob) : "–"}</td><td>${bookTdCell(book)}</td><td>${recLineCell(book)}</td>` : ""}
             <td class="c">${lastThree(r.games)}</td></tr>`;
         }).join("")}</tbody></table></div>`;
     }
@@ -145,7 +148,7 @@
             <h3>${teamChip(data, abbr)} ${esc(t?.short ?? abbr)} tight ends</h3>
             ${done ? `<h4>This game</h4>${boxTable(box, watch)}<h4>Season</h4>` : ""}
             ${live ? `<p class="muted">Live stats appear after the game.</p>` : ""}
-            ${seasonTable(rows, oddsById, watch, !done && !live)}
+            ${seasonTable(rows, oddsById, watch, !done && !live, g)}
             ${minor ? `<button type="button" class="linkbtn" data-all>Show ${minor} more with under 1 target/game</button>` : ""}
             ${d ? `<p class="def">vs ${esc(oppAbbr)} defense: <b>${fmt.d1(d.fptsPg)}</b> TE pts/game allowed (${ordinal(d.rank)} of ${def.count}) · ${fmt.d1(d.ydsPg)} yds · ${d.td} TD in ${d.gp} games</p>` : ""}
           </div>`;
@@ -179,6 +182,7 @@
         data = await loadData();
         $("updated").textContent = updatedText(data);
         if (!data.schedule?.games?.length) throw new Error("No games scheduled right now.");
+        $("odds-asof").textContent = data.odds ? `${oddsAsOf(data)}.` : "";
         $("title").textContent = `Week ${data.schedule.week} matchups`;
         document.title = `Week ${data.schedule.week} Matchups — TE Tracker`;
         format = SCORING[getParams().fmt] ? getParams().fmt : "ppr";

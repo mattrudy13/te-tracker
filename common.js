@@ -9,6 +9,13 @@ async function loadData() {
   const res = await fetch(`data/${current}.json`, { cache: "no-cache" });
   if (!res.ok) throw new Error(`Couldn't load data (HTTP ${res.status})`);
   TE.data = await res.json();
+  // Sportsbook snapshot (optional: the site works without it).
+  try {
+    const o = await fetch(`data/odds-${current}.json`, { cache: "no-cache" });
+    TE.data.odds = o.ok ? await o.json() : null;
+  } catch {
+    TE.data.odds = null;
+  }
   return TE.data;
 }
 
@@ -184,6 +191,42 @@ function defenseVsTe(data, format = "ppr") {
 function ordinal(n) {
   const s = ["th", "st", "nd", "rd"], v = n % 100;
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+// ---- Sportsbook odds ----
+
+// American odds -> implied probability. Includes the book's margin, so it runs a bit high.
+function impliedProb(o) {
+  return o == null ? null : o > 0 ? 100 / (o + 100) : -o / (-o + 100);
+}
+function americanText(o) {
+  return o == null ? "–" : o > 0 ? `+${o}` : `−${Math.abs(o)}`;
+}
+// A player's snapshot odds for a specific game (matched by teams, so last week's snapshot never
+// shows up against this week's game).
+function playerOdds(data, id, home, away) {
+  const p = data.odds?.players?.[id];
+  const g = p && data.odds.games?.[p.oddsGameId];
+  return g && g.home === home && g.away === away ? p : null;
+}
+function oddsAsOf(data) {
+  if (!data.odds?.takenAt) return "";
+  const d = new Date(data.odds.takenAt);
+  return `Sportsbook odds as of ${d.toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })}`;
+}
+function bookTdCell(o) {
+  if (!o?.td) return `<span class="muted">–</span>`;
+  return `<span title="Best of ${o.td.books} book${o.td.books > 1 ? "s" : ""}: ${esc(o.td.book)}">${americanText(o.td.best)}</span>`;
+}
+function recLineCell(o) {
+  if (!o?.rec) return `<span class="muted">–</span>`;
+  const r = o.rec;
+  return `<span title="Over ${americanText(r.over)} (${esc(r.overBook ?? "–")}) · Under ${americanText(r.under)} (${esc(r.underBook ?? "–")})">${r.line} <small class="muted">o${americanText(r.over)}</small></span>`;
+}
+function edgeCell(model, market) {
+  if (model == null || market == null) return `<span class="muted">–</span>`;
+  const e = (model - market) * 100;
+  return `<span class="${e >= 3 ? "pos" : e <= -3 ? "neg" : ""}">${e > 0 ? "+" : e < 0 ? "−" : ""}${Math.abs(e).toFixed(0)}</span>`;
 }
 
 // ---- URL state ----

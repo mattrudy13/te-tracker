@@ -42,6 +42,21 @@ Games already in the file are reused, so a rerun only fetches new games.
 (UTC) from September through February. It commits only when the data changed. You can also run it
 by hand from the Actions tab ("Run workflow").
 
+## Sportsbook odds
+
+`scripts/fetch-odds.mjs` takes a snapshot of tight end props from [The Odds API](https://the-odds-api.com):
+anytime-TD prices and the receptions over/under, across US books. It writes `data/odds-<season>.json`.
+`.github/workflows/snapshot-odds.yml` runs it Thursday at 5 PM ET (before TNF) and Sunday at 8 AM ET.
+Games that have already kicked off keep their earlier snapshot. Each snapshot costs about 2 credits per
+game, ~32 a week, which fits the free tier (500/month).
+
+The key is the `ODDS_API_KEY` repository secret, so it's only used inside the workflow. Set or replace it
+with `gh secret set ODDS_API_KEY -R mattrudy13/te-tracker`. To run locally:
+`ODDS_API_KEY=... node scripts/fetch-odds.mjs`. Without the file, the site hides the odds columns' values.
+
+Where the odds show up: the Touchdowns table (Book, Market %, Edge, Rec line), the Matchups page
+(Book TD, Rec line) and the player page's TD tile.
+
 ## The touchdown model
 
 - **xTD** credits each target with the league-wide TE TD rate for where the ball was snapped:

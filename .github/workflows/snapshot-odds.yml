@@ -1,0 +1,39 @@
+name: Snapshot odds
+
+on:
+  schedule:
+    # Times are UTC. Thursday 21:00 (5 PM ET, before TNF) and Sunday 12:00 (8 AM ET, before
+    # London games and after Saturday injury news), September through February.
+    - cron: "0 21 * 9-12,1-2 4"
+    - cron: "0 12 * 9-12,1-2 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  odds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Fetch odds
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: node scripts/fetch-odds.mjs
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet && exit 0
+          git commit -m "data: odds snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
+          git pull --rebase -q
+          git push

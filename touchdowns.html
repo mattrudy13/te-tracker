@@ -44,7 +44,10 @@
         <b>TD %</b> is the chance of at least one TD in the game. It starts from the player's expected TDs per game (season average blended with the last 3 games) and is scaled by the team's
         <b>implied points</b> from the betting line, compared with the week's average (<span id="avg-implied"></span>).
         <b>Fair odds</b> is that probability as an American price with no vig, for comparing against a sportsbook's.
-        These are model estimates, not betting advice.
+        <b>Book</b> is the best anytime-TD price across US sportsbooks; <b>Market %</b> is the median book's implied chance, which includes
+        the books' margin, so it runs a few points high. <b>Edge</b> is model minus market, in percentage points.
+        <b>Rec line</b> is the receptions over/under most books offer, with the best over price. <span id="odds-asof"></span>
+        These are model estimates and a snapshot of prices, not betting advice.
       </p>
     </section>
 
@@ -94,6 +97,10 @@
       { key: "td", label: "TD", fmt: (r) => r.td + r.rushTd },
       { key: "prob", label: "TD %", cls: "sep key", fmt: (r) => `<span class="bar"><i><b style="width:${Math.min(100, r.prob * 200)}%"></b></i>${fmt.pct0(r.prob)}</span>` },
       { key: "odds", label: "Fair odds", cls: "key", sort: (r) => r.prob, fmt: (r) => fmt.odds(r.prob) },
+      { key: "book", label: "Book", cls: "sep", title: "Best anytime-TD price across sportsbooks", sort: (r) => impliedProb(r.book?.td?.best), fmt: (r) => bookTdCell(r.book) },
+      { key: "market", label: "Market %", title: "Median sportsbook implied probability (includes the books' margin)", sort: (r) => r.book?.td?.marketProb, fmt: (r) => fmt.pct0(r.book?.td?.marketProb) },
+      { key: "edge", label: "Edge", title: "Model TD % minus market %, in percentage points", sort: (r) => (r.book?.td ? r.prob - r.book.td.marketProb : null), fmt: (r) => edgeCell(r.prob, r.book?.td?.marketProb) },
+      { key: "rec", label: "Rec line", cls: "sep", title: "Receptions over/under: the most common line, with the best over price", sort: (r) => r.book?.rec?.line, fmt: (r) => recLineCell(r.book) },
     ];
 
     const rzCols = [
@@ -116,7 +123,7 @@
       const q = $("q1").value.trim().toLowerCase();
       const min = +$("minTpg").value || 0;
       const watch = getWatchlist();
-      const rows = tdOdds(data).filter(
+      const rows = tdOdds(data).map((r) => ({ ...r, book: playerOdds(data, r.id, r.up.home ? r.team : r.up.opp, r.up.home ? r.up.opp : r.team) })).filter(
         (r) => r.tgtPg >= min && (!$("watch1").checked || watch.has(r.id)) && (!q || (r.player?.name ?? "").toLowerCase().includes(q))
       );
       renderTable($("odds"), rows, oddsCols, oddsState, renderOdds);
@@ -146,6 +153,7 @@
         $("updated").textContent = updatedText(data);
         const wk = data.upcoming?.[0]?.week;
         $("odds-title").textContent = wk ? `Anytime TD odds · Week ${wk}` : "Anytime TD odds";
+        $("odds-asof").textContent = data.odds ? `${oddsAsOf(data)}.` : "Sportsbook odds aren't loaded yet.";
         $("avg-implied").textContent = `${fmt.d1(tdModel(data).avgImplied)} pts`;
         if (!data.upcoming?.length) $("odds").innerHTML = `<p class="muted">No upcoming games with betting lines yet.</p>`;
         for (const w of data.weeks) {

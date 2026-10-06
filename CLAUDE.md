@@ -9,6 +9,15 @@ no build step, globals in `common.js`, Barlow Condensed + Inter, dark top bar.
 - `scripts/build-data.mjs`: the only thing that talks to ESPN. Writes `data/<season>.json`,
   `data/positions-<season>.json` (athlete position cache) and `data/seasons.json` (`{current}`, read
   by the site to pick the file).
+- `scripts/fetch-odds.mjs` + `.github/workflows/snapshot-odds.yml`: The Odds API snapshot (Thu 21:00 /
+  Sun 12:00 UTC) → `data/odds-<season>.json` `{ takenAt, games: {oddsEventId: {home, away, commence}},
+  players: {espnId: {oddsGameId, td: {best, book, books, marketProb}, rec: {line, over, under, ...}}} }`.
+  Needs the `ODDS_API_KEY` secret. It costs 1 credit per market per game (free tier 500/month), so don't
+  schedule it more often without checking the quota (`x-requests-remaining` is logged). Players are matched
+  by normalized name, then last name + first initial, among the two teams' TEs. The site shows odds only
+  when the snapshot game's home/away match (`playerOdds()`), so stale weeks never leak. Test offline with
+  `--fixture`.
+- Both workflows share the `update-data` concurrency group and `git pull --rebase` before pushing.
 - `.github/workflows/update-data.yml`: scheduled build; commits `data/` only if something other
   than `updated` changed.
 - `common.js`: data loading, `aggregate()`, `fantasyPoints()`, `tdModel()` / `tdOdds()`,

@@ -121,7 +121,11 @@
         tile("xTD", fmt.d1(a.xtd), `${fmt.d2(a.xtd / a.gp)}/game · ${rank("xtd")}`),
         tile("TD − xTD", `<span class="${a.tdDiff > 0.5 ? "pos" : a.tdDiff < -0.5 ? "neg" : ""}">${fmt.signed(a.tdDiff)}</span>`, a.tdDiff > 0.5 ? "Running hot" : a.tdDiff < -0.5 ? "Due for more" : "In line with usage"),
         odds
-          ? tile(`Wk ${odds.up.week} TD %`, fmt.pct0(odds.prob), `${matchup(odds.up)} · fair ${fmt.odds(odds.prob)} · team ${fmt.d1(odds.up.implied)} pts`)
+          ? (() => {
+              const book = playerOdds(data, id, odds.up.home ? odds.team : odds.up.opp, odds.up.home ? odds.up.opp : odds.team);
+              const extra = [book?.td ? `book ${americanText(book.td.best)} (${esc(book.td.book)})` : "", book?.rec ? `rec line ${book.rec.line}` : ""].filter(Boolean).join(" · ");
+              return tile(`Wk ${odds.up.week} TD %`, fmt.pct0(odds.prob), `${matchup(odds.up)} · fair ${fmt.odds(odds.prob)} · team ${fmt.d1(odds.up.implied)} pts${extra ? ` · ${extra}` : ""}`);
+            })()
           : tile("This week", "–", "No game or line yet"),
       ].join("");
       $("td-note").innerHTML = `xTD credits each target with the TE-wide TD rate for its field position. See <a href="touchdowns.html">Touchdowns</a> for how it works.`;
