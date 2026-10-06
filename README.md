@@ -57,7 +57,10 @@ game, ~32 a week, which fits the free tier (500/month).
 
 The key is the `ODDS_API_KEY` repository secret, so it's only used inside the workflow. Set or replace it
 with `gh secret set ODDS_API_KEY -R mattrudy13/te-tracker`. To run locally:
-`ODDS_API_KEY=... node scripts/fetch-odds.mjs`. Without the file, the site hides the odds columns' values.
+`ODDS_API_KEY=... node scripts/fetch-odds.mjs`. Without the file, the odds columns just show "–".
+
+Sportsbooks post most TE props midweek, so a Monday-night or Tuesday run prices only a few players.
+Thursday's snapshot is the one that counts.
 
 Where the odds show up:
 - the Touchdowns table (Book, Market, Edge, Rec line)
@@ -90,5 +93,11 @@ python3 -m http.server 8000          # then open http://localhost:8000
 - ESPN doesn't publish snap counts or routes run, so usage means targets, target share and yards share.
 - Red-zone splits come from play-by-play text and match box-score targets in ~95% of games
   (sometimes off by one).
+- "Missed last game" means no box-score line. A TE who played but drew no targets is flagged too.
 - Two-point conversions aren't counted toward fantasy points.
+- The TD model is calibrated against one snapshot and hasn't been scored against real results yet
+  (see ENHANCEMENTS.md).
 - Regular season only.
+- GitHub Pages lets browsers cache pages for 10 minutes, so hard refresh (⌘⇧R) right after a deploy.
+
+Ideas and next steps are in [ENHANCEMENTS.md](ENHANCEMENTS.md).

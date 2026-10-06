@@ -4,6 +4,19 @@ NFL tight end stats/usage/TD-odds site on GitHub Pages: https://mattrudy13.githu
 See README.md for features, the TD model and how to run it. Same conventions as `../h2h`: plain HTML/CSS/JS,
 no build step, globals in `common.js`, Barlow Condensed + Inter, dark top bar.
 
+## Status (2026-10-05)
+
+Live and working end to end:
+- Pages: Leaders, Matchups, Touchdowns, Player, Compare. Watchlist, shareable URLs, dark mode, phone layout.
+- Data: `update-data.yml` (ESPN, every 3 h Thu–Mon + Tue) and `snapshot-odds.yml` (The Odds API, Thu 5 PM ET
+  + Sun 8 AM ET). `ODDS_API_KEY` secret is set. The first real snapshot (Mon night) priced 37 TEs, 483
+  credits left.
+- TD model calibrated against that snapshot (RMSE 11.2 → 6.4 pts). Constants are at the top of the TD
+  model section in common.js.
+
+Next steps: ENHANCEMENTS.md. The highest-value items are injury tags, scoring the model and books against
+results, and a receptions projection vs the line.
+
 ## Layout
 
 - `scripts/build-data.mjs`: the only thing that talks to ESPN. Writes `data/<season>.json`,
@@ -24,7 +37,22 @@ no build step, globals in `common.js`, Barlow Condensed + Inter, dark top bar.
   `renderTable()` (sortable), URL params, watchlist (localStorage), markup helpers.
 - Pages: `index.html` (leaders), `matchups.html`, `touchdowns.html`, `player.html`, `compare.html`;
   each keeps its page logic in an inline script. The nav is copied into each page; add new tabs to all of them.
-- `defenseVsTe()` in common.js: TE fantasy points allowed per game by each defense (rank 1 = fewest).
+- `defenseVsTe()` in common.js: TE fantasy points allowed per game by each defense (PPR, rank 1 = fewest).
+- Odds helpers in common.js: `playerOdds()`, `impliedProb()`, `americanText()`, `bookTdCell()`,
+  `recLineCell()`, `edgeCell()`, `oddsAsOf()`.
+
+## Page notes
+
+- Matchups is odds-first by request: no fantasy columns and no scoring toggle. Before kickoff it shows
+  Model TD / Book TD / Market / Edge / Rec line / O-U. Finished games show the pregame price (✓/✗) and line
+  (Over/Under) next to the box score. Data refreshes every 3 h, so in-progress games show no live stats.
+- Wide tables: the matchup and Touchdowns odds tables use tighter cell padding (`.g-side .grid`,
+  `.table-wrap.tight`) so they fit at 1280px without sideways scrolling. Check `scrollWidth <= clientWidth`
+  on the table wrapper when adding columns.
+- "Missed last game" (tdOdds `missedLast`) means no box-score row in the team's latest game, which also
+  catches a TE who played but drew no targets.
+- The user cares about TD and receptions betting angles more than fantasy points. Keep new features
+  pointed that way.
 
 ## Data shape (data/<season>.json)
 
@@ -60,4 +88,8 @@ finished games, so those are null. `upcoming` can be a week ahead of `schedule` 
   Check every page in light and dark mode, at 375px (`scrollWidth <= 375`), with no console errors.
 - Spot-check numbers against `site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/{id}/gamelog?season=YYYY`.
 - Keep page copy pronoun-neutral ("the player").
+- GitHub Pages sends `max-age=600`, so a page can be served stale for 10 minutes after a deploy. When
+  something "disappears" right after a push, check for that first (it happened with the nav tab).
+- Test odds UI offline: intercept `data/odds-2026.json` (and `data/2026.json` for a pre-kickoff week) with
+  Playwright `page.route`. Never commit fixture odds.
 - Commit prefixes: `feat:`, `fix:`, `docs:`, `data:` (the bot uses `data:`).
