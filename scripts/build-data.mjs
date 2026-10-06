@@ -179,26 +179,61 @@ async function main() {
     }
   }
 
-  // Next week's games with betting lines: implied team points drive the TD odds on the site.
-  // On Monday nights the current week has no unplayed games left, so look one week ahead too.
+  // The two calendar weeks that haven't ended yet. The matchups page shows the first one with a
+  // game still to finish (so it rolls over once Monday night is final). TD odds use the first one
+  // with an unplayed game: on Monday night that's already next week.
+  const openWeeks = [];
+  for (const e of calendar.entries.filter((e) => new Date(e.endDate).getTime() > now).slice(0, 2)) {
+    const sb = await getJson(`${API}/scoreboard?seasontype=${SEASON_TYPE}&week=${e.value}&dates=${season}`);
+    openWeeks.push({ week: Number(e.value), events: sb.events ?? [] });
+  }
+  const lines = (comp) => {
+    const odds = comp.odds?.[0];
+    // `spread` is from the home team's side: -3 means home favored by 3.
+    return { total: odds?.overUnder ?? null, spread: odds?.spread ?? null };
+  };
+  const sides = (comp) => ({
+    home: comp.competitors.find((c) => c.homeAway === "home"),
+    away: comp.competitors.find((c) => c.homeAway === "away"),
+  });
+
+  const shown = openWeeks.find((w) => w.events.some((ev) => !ev.status?.type?.completed));
+  const schedule = shown && {
+    week: shown.week,
+    games: shown.events
+      .map((ev) => {
+        const comp = ev.competitions[0];
+        const { home, away } = sides(comp);
+        const st = ev.status?.type ?? {};
+        return {
+          id: ev.id,
+          date: comp.date,
+          state: st.state ?? "pre",
+          detail: st.shortDetail ?? "",
+          network: comp.broadcasts?.[0]?.names?.[0] ?? null,
+          neutral: !!comp.neutralSite,
+          home: home.team.abbreviation,
+          away: away.team.abbreviation,
+          homeScore: st.state === "pre" ? null : Number(home.score),
+          awayScore: st.state === "pre" ? null : Number(away.score),
+          ...lines(comp),
+        };
+      })
+      .sort((a, b) => a.date.localeCompare(b.date)),
+  };
+
+  // Betting lines for unplayed games: implied team points drive the TD odds on the site.
   const upcoming = [];
-  for (const nextWeek of calendar.entries.filter((e) => new Date(e.endDate).getTime() > now).slice(0, 2)) {
-    if (upcoming.length) break;
-    const sb = await getJson(`${API}/scoreboard?seasontype=${SEASON_TYPE}&week=${nextWeek.value}&dates=${season}`);
-    for (const ev of sb.events ?? []) {
-      if (ev.status?.type?.state !== "pre") continue;
-      const comp = ev.competitions[0];
-      const odds = comp.odds?.[0];
-      const total = odds?.overUnder ?? null;
-      const home = comp.competitors.find((c) => c.homeAway === "home").team.abbreviation;
-      const away = comp.competitors.find((c) => c.homeAway === "away").team.abbreviation;
-      // `spread` is from the home team's side: -3 means home favored by 3.
-      const spread = odds?.spread ?? null;
-      const implied = (side) =>
-        total == null || spread == null ? null : Math.round((total / 2 + (side === "home" ? -spread : spread) / 2) * 10) / 10;
-      for (const [team, opp, side] of [[home, away, "home"], [away, home, "away"]]) {
-        upcoming.push({ week: Number(nextWeek.value), gameId: ev.id, date: comp.date, team, opp, home: side === "home", total, spread: spread == null ? null : side === "home" ? spread : -spread, implied: implied(side) });
-      }
+  const oddsWeek = openWeeks.find((w) => w.events.some((ev) => ev.status?.type?.state === "pre"));
+  for (const ev of oddsWeek?.events ?? []) {
+    if (ev.status?.type?.state !== "pre") continue;
+    const comp = ev.competitions[0];
+    const { total, spread } = lines(comp);
+    const { home, away } = sides(comp);
+    const implied = (side) =>
+      total == null || spread == null ? null : Math.round((total / 2 + (side === "home" ? -spread : spread) / 2) * 10) / 10;
+    for (const [team, opp, side] of [[home.team.abbreviation, away.team.abbreviation, "home"], [away.team.abbreviation, home.team.abbreviation, "away"]]) {
+      upcoming.push({ week: oddsWeek.week, gameId: ev.id, date: comp.date, team, opp, home: side === "home", total, spread: spread == null ? null : side === "home" ? spread : -spread, implied: implied(side) });
     }
   }
 
@@ -300,6 +335,7 @@ async function main() {
     weeks: [...new Set(events.map((e) => e.week))].sort((a, b) => a - b),
     teams,
     upcoming,
+    schedule: schedule ?? null,
     // Roster tight ends plus anyone who played as one; drops ex-TEs with no games.
     players: Object.fromEntries(
       Object.entries(players)

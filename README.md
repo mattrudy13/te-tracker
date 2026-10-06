@@ -6,6 +6,10 @@ Pages: https://mattrudy13.github.io/te-tracker/
 - **Leaders** (`index.html`): sortable leaderboard covering targets, target share, yards share, catch
   rate, Y/R, Y/Tgt, TDs, red-zone targets and fantasy points (PPR / Half / Standard, optional TE
   premium). Filter by team, week range, minimum targets, or your ★ watchlist.
+- **Matchups** (`matchups.html`): this week's games (next week's once Monday night is final) with
+  kickoff, network, spread, total and implied team points. Expand a game to see both teams' tight ends:
+  season usage, xTD, points per game, anytime-TD % and a last-3 sparkline, plus how the opposing defense
+  has fared against TEs. Finished games also show their TE box score. `?open=<gameId>,…` keeps games expanded.
 - **Touchdowns** (`touchdowns.html`): this week's anytime-TD odds for every TE, red-zone usage
   (targets inside the 20 / 10 / 5), expected TDs (xTD) vs actual, and the TE touchdown rate by
   field position that the model uses.
@@ -29,7 +33,8 @@ The site only loads one JSON file. `scripts/build-data.mjs` (Node 20+, no depend
    on a roster (cached in `data/positions-<season>.json`).
 3. Takes each game's box score (receiving, rushing, fumbles, and team totals for share stats) and
    parses play-by-play for red-zone targets and TDs.
-4. Saves next week's matchups with the spread, total and implied team points.
+4. Saves the current week's schedule (state, score, network, lines) for the Matchups page, and the
+   unplayed games' implied team points for the TD odds.
 
 Games already in the file are reused, so a rerun only fetches new games.
 

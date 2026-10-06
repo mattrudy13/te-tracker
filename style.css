@@ -189,3 +189,47 @@ footer { color: var(--muted); font-size: .8rem; padding: 2rem 0 3rem; }
   input[type="search"], input[type="text"] { width: 100%; }
   .controls .field:has(input[type="search"]) { flex: 1 1 100%; }
 }
+
+/* ---- Matchups ---- */
+.day { font-family: var(--display); font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 1.4rem 0 .5rem; }
+.game { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin: .6rem 0; }
+.game > summary { list-style: none; cursor: pointer; padding: .8rem 1rem; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .4rem 1rem; align-items: center; }
+.game > summary::-webkit-details-marker { display: none; }
+.game > summary:focus-visible { outline: 2px solid var(--accent); border-radius: var(--radius); }
+.game[open] > summary { border-bottom: 1px solid var(--border); }
+.g-teams { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+.g-team { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.g-team img { width: 28px; height: 28px; flex: none; }
+.g-team .nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-team .sc { font-family: var(--display); font-weight: 700; font-size: 1.25rem; margin-left: auto; padding-left: .5rem; font-variant-numeric: tabular-nums; }
+.g-team.lost .nm, .g-team.lost .sc { color: var(--muted); }
+.g-team .imp { color: var(--muted); font-size: .8rem; white-space: nowrap; }
+.g-team .topte { color: var(--muted); font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-meta { text-align: right; font-size: .85rem; color: var(--muted); white-space: nowrap; display: flex; flex-direction: column; gap: .15rem; align-items: flex-end; }
+.g-meta .st { color: var(--fg); font-weight: 600; }
+.g-meta .live { color: var(--neg); }
+.g-meta .chev { font-size: 1.1rem; line-height: 1; color: var(--fg); transition: transform .15s; }
+.g-team .short { display: none; }
+.game[open] .chev { transform: rotate(180deg); }
+.g-body { padding: .2rem 1rem 1rem; }
+.g-side { margin-top: .9rem; }
+.g-side h3 { display: flex; align-items: center; gap: .5rem; font-size: 1.15rem; text-transform: uppercase; margin-bottom: .3rem; }
+.g-side h4 { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: .7rem 0 .2rem; }
+.g-side .def { font-size: .85rem; color: var(--muted); margin: .4rem 0 0; }
+.g-side .def b { color: var(--fg); }
+.grid tr.watched td { background: var(--accent-soft); }
+.grid tr.minor { display: none; }
+.g-side.all .grid tr.minor { display: table-row; }
+.linkbtn { all: unset; cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; margin-top: .3rem; display: inline-block; }
+.linkbtn:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
+.spark { vertical-align: middle; }
+.spark polyline { fill: none; stroke: var(--accent); stroke-width: 1.6; }
+.spark circle { fill: var(--accent); }
+@media (max-width: 720px) {
+  .game > summary { grid-template-columns: minmax(0, 1fr); }
+  .g-meta { text-align: left; align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: .2rem .6rem; }
+  .g-meta .chev { display: none; }
+  .g-team .full { display: none; }
+  .g-team .short { display: inline; }
+  .tabs a { padding: .35rem .45rem; font-size: .98rem; letter-spacing: .04em; }
+}

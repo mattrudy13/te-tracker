@@ -13,8 +13,9 @@ no build step, globals in `common.js`, Barlow Condensed + Inter, dark top bar.
   than `updated` changed.
 - `common.js`: data loading, `aggregate()`, `fantasyPoints()`, `tdModel()` / `tdOdds()`,
   `renderTable()` (sortable), URL params, watchlist (localStorage), markup helpers.
-- Pages: `index.html` (leaders), `touchdowns.html`, `player.html`, `compare.html`; each keeps its
-  page logic in an inline script.
+- Pages: `index.html` (leaders), `matchups.html`, `touchdowns.html`, `player.html`, `compare.html`;
+  each keeps its page logic in an inline script. The nav is copied into each page; add new tabs to all of them.
+- `defenseVsTe()` in common.js: TE fantasy points allowed per game by each defense (rank 1 = fewest).
 
 ## Data shape (data/<season>.json)
 
@@ -22,6 +23,10 @@ no build step, globals in `common.js`, Barlow Condensed + Inter, dark top bar.
 fumLost`, team totals `teamTgt,teamRecYds` (share denominators), and play-by-play red-zone splits
 `tgt5,tgt10,tgt20,td5,td10,td20` (cumulative: inside the 5 ⊂ 10 ⊂ 20). `upcoming[]` has one row per team for
 the next week, with `implied` points (from `total` and `spread`). `spread` is from that team's side.
+`schedule` = `{ week, games[] }` for the matchups page: the first not-yet-ended calendar week that still has
+an unfinished game, so it rolls over once Monday night is final. Each game has `state` (pre/in/post),
+`detail`, `network`, `home`/`away`, scores, and `spread` (home side) / `total`. ESPN drops odds from
+finished games, so those are null. `upcoming` can be a week ahead of `schedule` on Monday nights.
 
 ## ESPN API quirks
 
@@ -38,7 +43,7 @@ the next week, with `implied` points (from `total` and `spread`). `spread` is fr
 - Games are only processed once `status.type.completed`, and `processedEvents` stops
   them from being fetched again. To force a full rebuild, delete `data/<season>.json`.
 - Around Monday night the current week has no unplayed games left, so `upcoming` looks at the next
-  calendar week as well.
+  calendar week as well (`openWeeks` in build-data.mjs holds both).
 
 ## Dev notes
 

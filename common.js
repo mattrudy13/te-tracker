@@ -162,6 +162,30 @@ function tdOdds(data) {
   return rows.sort((x, y) => y.prob - x.prob);
 }
 
+// What each defense allows to tight ends, per game. rank 1 = fewest fantasy points allowed.
+function defenseVsTe(data, format = "ppr") {
+  const by = {};
+  for (const g of data.games) {
+    const d = (by[g.opp] ??= { team: g.opp, gameIds: new Set(), tgt: 0, rec: 0, yds: 0, td: 0, fpts: 0 });
+    d.gameIds.add(g.gameId);
+    d.tgt += g.tgt;
+    d.rec += g.rec;
+    d.yds += g.yds;
+    d.td += g.td + g.rushTd;
+    d.fpts += fantasyPoints(g, format);
+  }
+  const rows = Object.values(by).map((d) => {
+    const n = d.gameIds.size;
+    return { team: d.team, gp: n, tgtPg: d.tgt / n, recPg: d.rec / n, ydsPg: d.yds / n, tdPg: d.td / n, fptsPg: d.fpts / n, td: d.td };
+  });
+  rows.sort((a, b) => a.fptsPg - b.fptsPg).forEach((r, i) => (r.rank = i + 1));
+  return { byTeam: Object.fromEntries(rows.map((r) => [r.team, r])), count: rows.length };
+}
+function ordinal(n) {
+  const s = ["th", "st", "nd", "rd"], v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
 // ---- URL state ----
 
 function getParams() {
