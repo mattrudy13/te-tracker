@@ -60,7 +60,7 @@ with `gh secret set ODDS_API_KEY -R mattrudy13/te-tracker`. To run locally:
 `ODDS_API_KEY=... node scripts/fetch-odds.mjs`. Without the file, the site hides the odds columns' values.
 
 Where the odds show up:
-- the Touchdowns table (Book, Market %, Edge, Rec line)
+- the Touchdowns table (Book, Market, Edge, Rec line)
 - the Matchups page (Model TD, Book TD, Market, Edge, Rec line, O / U before kickoff; pregame price and line
   vs result after)
 - the player page's TD tile

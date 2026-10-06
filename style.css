@@ -150,10 +150,6 @@ table.grid { border-collapse: collapse; width: 100%; font-variant-numeric: tabul
 .star.on { color: var(--star); }
 .star:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
 
-/* Probability bar in the TD odds table */
-.bar { display: inline-flex; align-items: center; gap: .45rem; justify-content: flex-end; }
-.bar i { display: block; height: 8px; width: 70px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; }
-.bar i b { display: block; height: 100%; background: var(--accent); }
 
 /* ---- Stat tiles ---- */
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: .6rem; }
@@ -215,7 +211,7 @@ footer { color: var(--muted); font-size: .8rem; padding: 2rem 0 3rem; }
 .g-side { margin-top: .9rem; }
 .g-side h3 { display: flex; align-items: center; gap: .5rem; font-size: 1.15rem; text-transform: uppercase; margin-bottom: .3rem; }
 .g-side h4 { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: .7rem 0 .2rem; }
-.g-side .grid th, .g-side .grid td { padding-left: .4rem; padding-right: .4rem; }
+.g-side .grid th, .g-side .grid td, .tight .grid th, .tight .grid td { padding-left: .4rem; padding-right: .4rem; }
 .g-side .def { font-size: .85rem; color: var(--muted); margin: .4rem 0 0; }
 .g-side .def b { color: var(--fg); }
 .grid tr.watched td { background: var(--accent-soft); }

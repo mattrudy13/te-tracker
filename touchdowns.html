@@ -39,12 +39,12 @@
           <label class="field inline"><input type="checkbox" id="watch1"> ★ Watchlist only</label>
         </div>
       </div>
-      <div class="table-wrap"><div id="odds"></div></div>
+      <div class="table-wrap tight"><div id="odds"></div></div>
       <p class="note">
         <b>TD %</b> is the chance of at least one TD in the game. It starts from the player's expected TDs per game, pulled toward what their target volume alone would predict (so a few early red-zone looks don't dominate), blends in the last 3 games, and is scaled by the team's
         <b>implied points</b> from the betting line, compared with the week's average (<span id="avg-implied"></span>).
         <b>Fair odds</b> is that probability as an American price with no vig, for comparing against a sportsbook's.
-        <b>Book</b> is the best anytime-TD price across US sportsbooks; <b>Market %</b> is the median book's implied chance, which includes
+        <b>Book</b> is the best anytime-TD price across US sportsbooks; <b>Market</b> is the median book's implied chance, which includes
         the books' margin, so it runs a few points high. <b>Edge</b> is model minus market, in percentage points.
         <b>Rec line</b> is the receptions over/under most books offer, with the best over price. <span id="odds-asof"></span>
         These are model estimates and a snapshot of prices, not betting advice.
@@ -95,10 +95,10 @@
       { key: "rzPg", label: "RZ Tgt/G", fmt: (r) => fmt.d1(r.rzPg) },
       { key: "xtdPg", label: "xTD/G", fmt: (r) => fmt.d2(r.xtdPg) },
       { key: "td", label: "TD", fmt: (r) => r.td + r.rushTd },
-      { key: "prob", label: "TD %", cls: "sep key", fmt: (r) => `<span class="bar"><i><b style="width:${Math.min(100, r.prob * 200)}%"></b></i>${fmt.pct0(r.prob)}</span>` },
+      { key: "prob", label: "TD %", cls: "sep key", fmt: (r) => fmt.pct0(r.prob) },
       { key: "odds", label: "Fair odds", cls: "key", sort: (r) => r.prob, fmt: (r) => fmt.odds(r.prob) },
       { key: "book", label: "Book", cls: "sep", title: "Best anytime-TD price across sportsbooks", sort: (r) => impliedProb(r.book?.td?.best), fmt: (r) => bookTdCell(r.book) },
-      { key: "market", label: "Market %", title: "Median sportsbook implied probability (includes the books' margin)", sort: (r) => r.book?.td?.marketProb, fmt: (r) => fmt.pct0(r.book?.td?.marketProb) },
+      { key: "market", label: "Market", title: "Median sportsbook implied probability (includes the books' margin)", sort: (r) => r.book?.td?.marketProb, fmt: (r) => fmt.pct0(r.book?.td?.marketProb) },
       { key: "edge", label: "Edge", title: "Model TD % minus market %, in percentage points", sort: (r) => (r.book?.td ? r.prob - r.book.td.marketProb : null), fmt: (r) => edgeCell(r.prob, r.book?.td?.marketProb) },
       { key: "rec", label: "Rec line", cls: "sep", title: "Receptions over/under: the most common line, with the best over price", sort: (r) => r.book?.rec?.line, fmt: (r) => recLineCell(r.book) },
     ];
