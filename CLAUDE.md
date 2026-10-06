@@ -7,7 +7,7 @@ no build step, globals in `common.js`, Barlow Condensed + Inter, dark top bar.
 ## Status (2026-10-06)
 
 Live and working end to end:
-- Pages: Leaders, Matchups, Touchdowns, Player. Watchlist, shareable URLs, dark mode, phone layout.
+- Pages: Matchups (home), Leaders, Touchdowns, Player. Watchlist, shareable URLs, dark mode, phone layout.
   Compare was removed on request (2026-10-06).
 - Data: `update-data.yml` (ESPN, every 3 h Thu–Mon + Tue) and `snapshot-odds.yml` (The Odds API, Thu 5 PM ET
   + Sun 8 AM ET). `ODDS_API_KEY` secret is set. The first real snapshot (Mon night) priced 37 TEs, 483
@@ -36,7 +36,8 @@ results, and a receptions projection vs the line.
   than `updated` changed.
 - `common.js`: data loading, `aggregate()`, `fantasyPoints()`, `tdModel()` / `tdOdds()`,
   `renderTable()` (sortable), URL params, watchlist (localStorage), markup helpers.
-- Pages: `index.html` (leaders), `matchups.html`, `touchdowns.html`, `player.html`;
+- Pages: `index.html` (Matchups, the home page by request), `leaders.html`, `touchdowns.html`, `player.html`.
+  `matchups.html` is only a redirect to `./` that keeps `?open=` (old links);
   each keeps its page logic in an inline script. The nav is copied into each page; add new tabs to all of them.
 - `defenseVsTe()` in common.js: TE fantasy points allowed per game by each defense (PPR, rank 1 = fewest).
 - Odds helpers in common.js: `playerOdds()`, `impliedProb()`, `americanText()`, `bookTdCell()`,
@@ -57,7 +58,11 @@ results, and a receptions projection vs the line.
 - "Missed last game" (tdOdds `missedLast`) means no box-score row in the team's latest game, which also
   catches a TE who played but drew no targets.
 - The user cares about TD and receptions betting angles more than fantasy points. Keep new features
-  pointed that way. Fantasy is now only on the player page (tiles, chart, game log) and in the PPR defense line.
+  pointed that way. Fantasy points survive only in the PPR defense line on Matchups (`defenseVsTe`) and
+  `fantasyPoints()` in common.js. The player page is odds-first too: a "This week" card (rec line, O/U, over-the-line
+  hit rate, model TD vs book), receptions chart with the line drawn in, no scoring toggle.
+- Player names (`.pname`) have a dotted underline so it's clear they link to player pages (the user didn't
+  know the page existed).
 - Edge is green for any positive value and red for any negative one (`edgeCell`). Touchdowns sorts by Edge by default.
 - Explain jargon in plain words in page notes and header tooltips (the user asked what "Tgt %" meant).
 

@@ -44,8 +44,8 @@ The focus is touchdowns and receptions betting angles. Fantasy is secondary.
       has `open` vs `current` reception lines for free.
 - [ ] **Receiving yards line**: the `player_reception_yds` market (+1 credit per game) with the same
       over/under treatment.
-- [ ] **Hit rates**: on the player page, how often the TE has gone over each recent reception line,
-      and how they've done when the book TD price was shorter than +200.
+- [~] **Hit rates**: the player page shows how often the TE has gone over this week's line. Still open: hit rates
+      against each past week's own line, and how they've done when the book TD price was shorter than +200.
 
 ## Data and coverage
 - [ ] **Snap counts and routes from nflverse**: free weekly CSVs with snap share, routes run and
@@ -62,8 +62,8 @@ The focus is touchdowns and receptions betting angles. Fantasy is secondary.
 ## Look and feel
 - [ ] **Sticky player column** on wide tables at phone width, so the name stays visible while
       scrolling across the stats.
-- [ ] **Player page de-fantasy**: swap the fantasy tile and chart for receptions vs line and TD odds,
-      matching the rest of the site.
+- [x] **Player page de-fantasy**: "This week" card with receptions line and TD odds, receptions chart
+      against the line, no fantasy points.
 - [ ] **Player odds history**: a weekly strip on the player page showing model TD %, book price and
       whether they scored, plus each week's reception line and result.
 - [ ] **Per-game snapshot time** on Matchups ("odds as of Thu 5:00 PM" per game), since TNF and Sunday
@@ -87,7 +87,7 @@ The focus is touchdowns and receptions betting angles. Fantasy is secondary.
 - [x] Leaderboard, Player, watchlist, shareable URLs, dark mode, phone layout
 - [x] Leaders reworked around usage and TDs (no fantasy points or LNG), Compare removed, Matchups table
       consolidated into Usage / Receptions / Touchdowns groups, positive Edge in green, Touchdowns
-      sorted by Edge (2026-10-06)
+      sorted by Edge, Matchups is the home page, player page refocused on lines (2026-10-06)
 - [x] Red-zone splits from play-by-play, xTD, anytime-TD model with implied team points
 - [x] Matchups page with each game's TEs, defense vs TE and finished-game box scores
 - [x] Sportsbook odds snapshot (anytime TD, receptions line) on Matchups, Touchdowns and Player

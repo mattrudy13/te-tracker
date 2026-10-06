@@ -3,11 +3,7 @@
 NFL tight end stats, usage and touchdown odds through the season. A static site on GitHub
 Pages: https://mattrudy13.github.io/te-tracker/
 
-- **Leaders** (`index.html`): usage and touchdown leaderboard, per game or season totals: targets, target
-  share, receptions, catch %, yards, yards per target, TDs, red-zone targets, xTD and TD − xTD, plus this
-  week's receptions line and best anytime-TD price. Filter by team, week range, minimum targets or your
-  ★ watchlist.
-- **Matchups** (`matchups.html`): this week's games (next week's once Monday night is final) with
+- **Matchups** (`index.html`, the home page): this week's games (next week's once Monday night is final) with
   kickoff, network, spread, total and implied team points. Expand a game to see both teams' tight ends:
   - **Usage:** targets per game and target share
   - **Receptions:** per game, next to the line and the best over/under prices
@@ -15,12 +11,17 @@ Pages: https://mattrudy13.github.io/te-tracker/
   - how the opposing defense has fared against TEs
 
   Finished games show the TE box score with the pregame TD price and receptions line, and how each one
-  landed. `?open=<gameId>,…` keeps games expanded.
+  landed. `?open=<gameId>,…` keeps games expanded. The old `matchups.html` address redirects here.
+- **Leaders** (`leaders.html`): usage and touchdown leaderboard, per game or season totals: targets, target
+  share, receptions, catch %, yards, yards per target, TDs, red-zone targets, xTD and TD − xTD, plus this
+  week's receptions line and best anytime-TD price. Filter by team, week range, minimum targets or your
+  ★ watchlist.
 - **Touchdowns** (`touchdowns.html`): this week's anytime-TD odds for every TE (sorted by model-vs-book edge), red-zone usage
   (targets inside the 20 / 10 / 5), expected TDs (xTD) vs actual, and the TE touchdown rate by
   field position that the model uses.
-- **Player** (`player.html?id=<espn id>`): season tiles, touchdown outlook, weekly charts and
-  a game log.
+- **Player** (`player.html?id=<espn id>`, click any player name): this week's game with the receptions line
+  (best over/under, how often the player has gone over it) and anytime-TD model vs book; season usage; touchdown
+  profile; charts of targets, receptions against the line, red-zone targets and yards; and a game log.
 
 Filters live in the URL, so any view can be shared. The watchlist is saved in your browser.
 
