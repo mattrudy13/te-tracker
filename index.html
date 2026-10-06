@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TE Tracker — NFL Tight End Stats</title>
+  <meta name="description" content="NFL tight end stats, usage and fantasy points, week by week.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="wordmark" href="./">TE <span>Tracker</span></a>
+      <nav class="tabs">
+        <a href="./" aria-current="page">Leaders</a>
+        <a href="touchdowns.html">Touchdowns</a>
+        <a href="compare.html">Compare</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="page-head">
+      <h1>Tight end leaderboard</h1>
+      <p class="sub">Production, usage and fantasy points. <span class="updated" id="updated"></span></p>
+    </div>
+    <div id="status" hidden></div>
+
+    <section class="card">
+      <div class="controls">
+        <label class="field">Search<input type="search" id="q" placeholder="Player name"></label>
+        <label class="field">Team<select id="team"><option value="">All teams</option></select></label>
+        <label class="field">From<select id="from"></select></label>
+        <label class="field">To<select id="to"></select></label>
+        <label class="field">Min targets<input type="number" id="minTgt" min="0" step="1" value="5"></label>
+        <div class="field">Scoring
+          <div class="seg" id="format">
+            <button type="button" data-v="ppr" aria-pressed="true">PPR</button>
+            <button type="button" data-v="half" aria-pressed="false">Half</button>
+            <button type="button" data-v="std" aria-pressed="false">Std</button>
+          </div>
+        </div>
+        <label class="field inline"><input type="checkbox" id="tep"> TE premium (+0.5/rec)</label>
+        <label class="field inline"><input type="checkbox" id="watch"> ★ Watchlist only</label>
+      </div>
+      <div class="table-wrap" style="margin-top:1rem"><div id="table"></div></div>
+      <p class="note"><b>Tgt %</b> is the share of the team's targets in the games each TE played; <b>Yds %</b> is the same for receiving yards. ESPN doesn't publish snap counts or routes, so these are the usage measures.</p>
+    </section>
+
+    <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
+  </main>
+
+  <script src="common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const state = { sort: "fpts", dir: "desc", format: "ppr" };
+    let data;
+
+    const cols = [
+      { key: "star", label: "", cls: "c", nosort: true, fmt: (r) => starButton(r.id, getWatchlist().has(r.id)) },
+      { key: "rank", label: "#", cls: "rank", nosort: true, fmt: (r, i) => i + 1 },
+      { key: "name", label: "Player", cls: "l", asc: true, sort: (r) => r.player?.name ?? "",
+        fmt: (r) => `<div class="who">${headshot(r.player)}<div>${playerLink(r)}<small>${teamChip(data, r.team)}</small></div></div>` },
+      { key: "gp", label: "G", fmt: (r) => r.gp },
+      { key: "tgt", label: "Tgt", cls: "sep", fmt: (r) => r.tgt },
+      { key: "tgtPg", label: "Tgt/G", fmt: (r) => fmt.d1(r.tgtPg) },
+      { key: "tgtShare", label: "Tgt %", title: "Share of team targets", fmt: (r) => fmt.pct(r.tgtShare) },
+      { key: "ydsShare", label: "Yds %", title: "Share of team receiving yards", fmt: (r) => fmt.pct(r.ydsShare) },
+      { key: "rec", label: "Rec", cls: "sep", fmt: (r) => r.rec },
+      { key: "catchPct", label: "Catch %", fmt: (r) => fmt.pct0(r.catchPct) },
+      { key: "yds", label: "Yds", fmt: (r) => fmt.int(r.yds) },
+      { key: "ypr", label: "Y/R", fmt: (r) => fmt.d1(r.ypr) },
+      { key: "ypt", label: "Y/Tgt", fmt: (r) => fmt.d1(r.ypt) },
+      { key: "long", label: "Lng", fmt: (r) => r.long },
+      { key: "td", label: "TD", cls: "sep", fmt: (r) => r.td + r.rushTd },
+      { key: "tgt20", label: "RZ Tgt", title: "Targets inside the opponent's 20", fmt: (r) => r.tgt20 },
+      { key: "fpts", label: "Pts", cls: "sep key", fmt: (r) => fmt.d1(r.fpts) },
+      { key: "fppg", label: "Pts/G", cls: "key", fmt: (r) => fmt.d1(r.fppg) },
+    ];
+
+    function readControls() {
+      return {
+        q: $("q").value.trim(), team: $("team").value, from: +$("from").value, to: +$("to").value,
+        minTgt: +$("minTgt").value || 0, tep: $("tep").checked, watch: $("watch").checked,
+      };
+    }
+
+    function render() {
+      const c = readControls();
+      if (c.from > c.to) [c.from, c.to] = [c.to, c.from];
+      const watch = getWatchlist();
+      const q = c.q.toLowerCase();
+      const rows = aggregate(data, gamesFor(data, c), { format: state.format, tep: c.tep }).filter(
+        (r) => r.tgt >= c.minTgt && (!c.watch || watch.has(r.id)) && (!q || (r.player?.name ?? "").toLowerCase().includes(q))
+      );
+      renderTable($("table"), rows, cols, state, render);
+      const weeks = data.weeks;
+      setParams({
+        q: c.q, team: c.team, from: c.from !== weeks[0] ? c.from : "", to: c.to !== weeks.at(-1) ? c.to : "",
+        min: c.minTgt !== 5 ? c.minTgt : "", fmt: state.format !== "ppr" ? state.format : "", tep: c.tep, watch: c.watch,
+        sort: state.sort !== "fpts" ? state.sort : "", dir: state.dir !== "desc" ? state.dir : "",
+      });
+    }
+
+    function setFormat(v) {
+      state.format = SCORING[v] ? v : "ppr";
+      $("format").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === state.format));
+    }
+
+    (async () => {
+      try {
+        data = await loadData();
+        $("updated").textContent = updatedText(data);
+        const p = getParams();
+        for (const abbr of Object.keys(data.teams).sort()) $("team").add(new Option(`${abbr} — ${data.teams[abbr].short}`, abbr));
+        for (const w of data.weeks) {
+          $("from").add(new Option(`Week ${w}`, w));
+          $("to").add(new Option(`Week ${w}`, w));
+        }
+        $("q").value = p.q ?? "";
+        $("team").value = data.teams[p.team] ? p.team : "";
+        $("from").value = data.weeks.includes(+p.from) ? p.from : data.weeks[0];
+        $("to").value = data.weeks.includes(+p.to) ? p.to : data.weeks.at(-1);
+        $("minTgt").value = p.min ?? 5;
+        $("tep").checked = p.tep === "1";
+        $("watch").checked = p.watch === "1";
+        setFormat(p.fmt);
+        if (p.sort && cols.some((c) => c.key === p.sort && !c.nosort)) state.sort = p.sort;
+        if (p.dir === "asc") state.dir = "asc";
+
+        for (const id of ["team", "from", "to", "tep", "watch"]) $(id).addEventListener("change", render);
+        for (const id of ["q", "minTgt"]) $(id).addEventListener("input", render);
+        $("format").addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (b) { setFormat(b.dataset.v); render(); }
+        });
+        initStars(() => $("watch").checked && render());
+        render();
+      } catch (err) {
+        showError(err);
+      }
+    })();
+  </script>
+</body>
+</html>

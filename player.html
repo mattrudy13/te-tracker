@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Player — TE Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="wordmark" href="./">TE <span>Tracker</span></a>
+      <nav class="tabs">
+        <a href="./">Leaders</a>
+        <a href="touchdowns.html">Touchdowns</a>
+        <a href="compare.html">Compare</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="status" hidden></div>
+    <div id="player" hidden>
+      <section class="page-head phead" id="head"></section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Season</h2>
+          <div class="seg" id="format">
+            <button type="button" data-v="ppr" aria-pressed="true">PPR</button>
+            <button type="button" data-v="half" aria-pressed="false">Half</button>
+            <button type="button" data-v="std" aria-pressed="false">Std</button>
+          </div>
+        </div>
+        <div class="tiles" id="tiles"></div>
+      </section>
+
+      <section class="card" id="td-card">
+        <h2>Touchdown outlook</h2>
+        <div class="tiles" id="td-tiles" style="margin-top:.75rem"></div>
+        <p class="note" id="td-note"></p>
+      </section>
+
+      <section class="charts">
+        <div class="card"><h3>Targets &amp; target share</h3><div class="chart-box"><canvas id="c-tgt"></canvas></div></div>
+        <div class="card"><h3>Receiving yards</h3><div class="chart-box"><canvas id="c-yds"></canvas></div></div>
+        <div class="card"><h3>Red-zone targets &amp; TDs</h3><div class="chart-box"><canvas id="c-rz"></canvas></div></div>
+        <div class="card"><h3>Fantasy points</h3><div class="chart-box"><canvas id="c-pts"></canvas></div></div>
+      </section>
+
+      <section class="card">
+        <h2>Game log</h2>
+        <div class="table-wrap" style="margin-top:.75rem"><div id="log"></div></div>
+      </section>
+    </div>
+    <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
+  </main>
+
+  <script src="common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let data, id, format = "ppr";
+    const charts = {};
+
+    function tile(k, v, s = "") {
+      return `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+    }
+
+    function chart(elId, config) {
+      charts[elId]?.destroy();
+      const t = chartTheme();
+      config.options = {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: { legend: { labels: { color: t.fg, boxWidth: 12 } } },
+        ...config.options,
+      };
+      for (const ax of Object.values(config.options.scales ?? {})) {
+        ax.ticks = { color: t.fg, ...(ax.ticks ?? {}) };
+        ax.grid = { color: t.grid, ...(ax.grid ?? {}) };
+      }
+      charts[elId] = new Chart($(elId), config);
+    }
+
+    function render() {
+      const games = gamesFor(data, { playerId: id });
+      const [a] = aggregate(data, games, { format });
+      const p = data.players[id];
+      const team = data.teams[a.team];
+      document.title = `${p.name} — TE Tracker`;
+      $("head").innerHTML = `${headshot(p, 96)}
+        <div><h1>${esc(p.name)}</h1>
+        <div class="meta">${teamChip(data, a.team)} ${esc(team?.name ?? "")}${p.jersey ? ` · #${esc(p.jersey)}` : ""}${p.age ? ` · Age ${esc(p.age)}` : ""}${p.exp != null ? ` · ${p.exp ? `Year ${p.exp + 1}` : "Rookie"}` : ""}${p.onRoster ? "" : ` · <span class="flag">not on a current roster</span>`}</div></div>
+        <div class="actions">${starButton(id, getWatchlist().has(id))}<a class="btn ghost" href="compare.html?ids=${encodeURIComponent(id)}">Compare</a></div>`;
+
+      // Rank among TEs with 5+ targets.
+      const all = aggregate(data, data.games, { format }).filter((r) => r.tgt >= 5);
+      const rank = (k) => {
+        const sorted = all.map((r) => r[k]).sort((x, y) => y - x);
+        const i = sorted.indexOf(a[k]);
+        return i < 0 ? "" : `TE${i + 1} of ${sorted.length}`;
+      };
+      $("tiles").innerHTML = [
+        tile("Fantasy pts", fmt.d1(a.fpts), `${fmt.d1(a.fppg)}/game · ${rank("fpts")}`),
+        tile("Targets", a.tgt, `${fmt.d1(a.tgtPg)}/game · ${fmt.pct(a.tgtShare)} share`),
+        tile("Receptions", a.rec, `${fmt.pct0(a.catchPct)} catch rate`),
+        tile("Rec yards", fmt.int(a.yds), `${fmt.d1(a.ypr)} Y/R · ${fmt.d1(a.ypt)} Y/Tgt`),
+        tile("Yards share", fmt.pct(a.ydsShare), "of team rec yards"),
+        tile("Touchdowns", a.td + a.rushTd, a.rushTd ? `${a.td} rec · ${a.rushTd} rush` : `Long ${a.long}`),
+        tile("Games", a.gp, `Weeks ${games[0].week}–${games.at(-1).week}`),
+      ].join("");
+
+      const odds = tdOdds(data).find((r) => r.id === id);
+      $("td-tiles").innerHTML = [
+        tile("RZ targets", a.tgt20, `${a.tgt10} inside 10 · ${a.tgt5} inside 5`),
+        tile("xTD", fmt.d1(a.xtd), `${fmt.d2(a.xtd / a.gp)}/game · ${rank("xtd")}`),
+        tile("TD − xTD", `<span class="${a.tdDiff > 0.5 ? "pos" : a.tdDiff < -0.5 ? "neg" : ""}">${fmt.signed(a.tdDiff)}</span>`, a.tdDiff > 0.5 ? "Running hot" : a.tdDiff < -0.5 ? "Due for more" : "In line with usage"),
+        odds
+          ? tile(`Wk ${odds.up.week} TD %`, fmt.pct0(odds.prob), `${matchup(odds.up)} · fair ${fmt.odds(odds.prob)} · team ${fmt.d1(odds.up.implied)} pts`)
+          : tile("This week", "–", "No game or line yet"),
+      ].join("");
+      $("td-note").innerHTML = `xTD credits each target with the TE-wide TD rate for its field position. See <a href="touchdowns.html">Touchdowns</a> for how it works.`;
+
+      const weeks = games.map((g) => `W${g.week}`);
+      chart("c-tgt", {
+        data: { labels: weeks, datasets: [
+          { type: "bar", label: "Targets", data: games.map((g) => g.tgt), backgroundColor: SERIES[0], yAxisID: "y" },
+          { type: "line", label: "Target share", data: games.map((g) => (g.teamTgt ? (g.tgt / g.teamTgt) * 100 : null)), borderColor: SERIES[1], backgroundColor: SERIES[1], yAxisID: "y1", tension: .3 },
+        ] },
+        options: { scales: { x: {}, y: { beginAtZero: true, ticks: { precision: 0 } }, y1: { position: "right", beginAtZero: true, ticks: { callback: (v) => v + "%" }, grid: { drawOnChartArea: false } } } },
+      });
+      chart("c-yds", {
+        type: "bar",
+        data: { labels: weeks, datasets: [{ label: "Rec yards", data: games.map((g) => g.yds), backgroundColor: SERIES[0] }] },
+        options: { plugins: { legend: { display: false } }, scales: { x: {}, y: { beginAtZero: true } } },
+      });
+      chart("c-rz", {
+        type: "bar",
+        data: { labels: weeks, datasets: [
+          { label: "RZ targets", data: games.map((g) => g.tgt20), backgroundColor: SERIES[0] },
+          { label: "Expected TDs", data: games.map((g) => +tdModel(data).xtd(g).toFixed(2)), backgroundColor: SERIES[2] },
+          { label: "TDs", data: games.map((g) => g.td + g.rushTd), backgroundColor: SERIES[1] },
+        ] },
+        options: { scales: { x: {}, y: { beginAtZero: true } } },
+      });
+      chart("c-pts", {
+        type: "line",
+        data: { labels: weeks, datasets: [{ label: `${SCORING[format].label} points`, data: games.map((g) => +fantasyPoints(g, format).toFixed(1)), borderColor: SERIES[0], backgroundColor: SERIES[0], tension: .3, fill: false }] },
+        options: { plugins: { legend: { display: false } }, scales: { x: {}, y: { beginAtZero: true } } },
+      });
+
+      $("log").innerHTML = `<table class="grid"><thead><tr>
+        <th class="l">Wk</th><th class="l">Opp</th><th class="l">Result</th><th>Tgt</th><th>Tgt %</th><th>Rec</th><th>Yds</th><th>Lng</th><th>TD</th><th>RZ Tgt</th><th>xTD</th><th>Rush</th><th>Pts</th>
+        </tr></thead><tbody>${games.map((g) => {
+          const res = g.score > g.oppScore ? "W" : g.score < g.oppScore ? "L" : "T";
+          return `<tr><td class="l">${g.week}</td><td class="l">${g.home ? "vs" : "@"} ${teamChip(data, g.opp)}</td>
+            <td class="l"><span class="${res === "W" ? "pos" : res === "L" ? "neg" : ""}">${res}</span> ${g.score}–${g.oppScore}</td>
+            <td>${g.tgt}</td><td>${fmt.pct0(g.teamTgt ? g.tgt / g.teamTgt : null)}</td><td>${g.rec}</td><td>${g.yds}</td><td>${g.long}</td>
+            <td>${g.td + g.rushTd || ""}</td><td>${g.tgt20 || ""}</td><td>${fmt.d2(tdModel(data).xtd(g))}</td>
+            <td>${g.rushAtt ? `${g.rushAtt}-${g.rushYds}` : ""}</td><td class="key">${fmt.d1(fantasyPoints(g, format))}</td></tr>`;
+        }).join("")}</tbody></table>`;
+    }
+
+    (async () => {
+      try {
+        data = await loadData();
+        id = getParams().id;
+        if (!data.players[id] || !data.games.some((g) => g.playerId === id)) {
+          throw new Error(data.players[id] ? `${data.players[id].name} hasn't played a game yet this season.` : "Player not found. Pick one from the leaderboard.");
+        }
+        format = SCORING[getParams().fmt] ? getParams().fmt : "ppr";
+        const setFmt = () => $("format").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === format));
+        setFmt();
+        $("format").addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (!b) return;
+          format = b.dataset.v;
+          setFmt();
+          setParams({ id, fmt: format !== "ppr" ? format : "" });
+          render();
+        });
+        initStars();
+        $("player").hidden = false;
+        render();
+        matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+      } catch (err) {
+        showError(err);
+      }
+    })();
+  </script>
+</body>
+</html>

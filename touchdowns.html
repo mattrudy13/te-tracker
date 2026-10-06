@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TE Touchdowns — TE Tracker</title>
+  <meta name="description" content="Tight end touchdown odds, red-zone usage and expected touchdowns.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="wordmark" href="./">TE <span>Tracker</span></a>
+      <nav class="tabs">
+        <a href="./">Leaders</a>
+        <a href="touchdowns.html" aria-current="page">Touchdowns</a>
+        <a href="compare.html">Compare</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="page-head">
+      <h1>Touchdowns</h1>
+      <p class="sub">Who's likely to score this week, who's getting red-zone looks, and whose TD totals don't match their usage. <span class="updated" id="updated"></span></p>
+    </div>
+    <div id="status" hidden></div>
+
+    <section class="card">
+      <div class="card-head">
+        <h2 id="odds-title">Anytime TD odds</h2>
+        <div class="controls">
+          <label class="field">Search<input type="search" id="q1" placeholder="Player name"></label>
+          <label class="field">Min Tgt/G<input type="number" id="minTpg" min="0" step="0.5" value="2"></label>
+          <label class="field inline"><input type="checkbox" id="watch1"> ★ Watchlist only</label>
+        </div>
+      </div>
+      <div class="table-wrap"><div id="odds"></div></div>
+      <p class="note">
+        <b>TD %</b> is the chance of at least one TD in the game. It starts from the player's expected TDs per game (season average blended with the last 3 games) and is scaled by the team's
+        <b>implied points</b> from the betting line, compared with the week's average (<span id="avg-implied"></span>).
+        <b>Fair odds</b> is that probability as an American price with no vig, for comparing against a sportsbook's.
+        These are model estimates, not betting advice.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Red zone &amp; TD luck</h2>
+        <div class="controls">
+          <label class="field">From<select id="from"></select></label>
+          <label class="field">To<select id="to"></select></label>
+          <label class="field">Min targets<input type="number" id="minTgt" min="0" step="1" value="5"></label>
+        </div>
+      </div>
+      <div class="table-wrap"><div id="rz"></div></div>
+      <p class="note">
+        <b>xTD</b> is expected receiving TDs: each target is worth the league-wide TE touchdown rate for where it was thrown from.
+        <b>TD − xTD</b> above zero means the player has scored more than the usage suggests and is likely to cool off; below zero means the player has been unlucky.
+        Red-zone splits come from ESPN play-by-play and can miss an occasional target.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>TE touchdown rate by field position</h2>
+      <p class="sub" style="margin-bottom:.75rem">How often a target to a tight end becomes a touchdown, from where the ball was snapped. These rates drive xTD.</p>
+      <div class="table-wrap"><div id="rates"></div></div>
+    </section>
+
+    <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
+  </main>
+
+  <script src="common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const oddsState = { sort: "prob", dir: "desc" };
+    const rzState = { sort: "tgt20", dir: "desc" };
+    let data;
+
+    const who = (r) => `<div class="who">${headshot(r.player)}<div>${playerLink(r)}<small>${teamChip(data, r.team)}${r.missedLast ? ` <span class="flag" title="Didn't play in the team's most recent game">missed last game</span>` : ""}</small></div></div>`;
+
+    const oddsCols = [
+      { key: "star", label: "", cls: "c", nosort: true, fmt: (r) => starButton(r.id, getWatchlist().has(r.id)) },
+      { key: "name", label: "Player", cls: "l", asc: true, sort: (r) => r.player?.name ?? "", fmt: who },
+      { key: "opp", label: "Game", cls: "l", asc: true, sort: (r) => r.up.opp, fmt: (r) => `${matchup(r.up)} <small class="muted">${new Date(r.up.date).toLocaleDateString(undefined, { weekday: "short" })}</small>` },
+      { key: "implied", label: "Team pts", title: "Implied team points from the spread and total", sort: (r) => r.up.implied, fmt: (r) => fmt.d1(r.up.implied) },
+      { key: "tgtPg", label: "Tgt/G", cls: "sep", fmt: (r) => fmt.d1(r.tgtPg) },
+      { key: "rzPg", label: "RZ Tgt/G", fmt: (r) => fmt.d1(r.rzPg) },
+      { key: "xtdPg", label: "xTD/G", fmt: (r) => fmt.d2(r.xtdPg) },
+      { key: "td", label: "TD", fmt: (r) => r.td + r.rushTd },
+      { key: "prob", label: "TD %", cls: "sep key", fmt: (r) => `<span class="bar"><i><b style="width:${Math.min(100, r.prob * 200)}%"></b></i>${fmt.pct0(r.prob)}</span>` },
+      { key: "odds", label: "Fair odds", cls: "key", sort: (r) => r.prob, fmt: (r) => fmt.odds(r.prob) },
+    ];
+
+    const rzCols = [
+      { key: "star", label: "", cls: "c", nosort: true, fmt: (r) => starButton(r.id, getWatchlist().has(r.id)) },
+      { key: "name", label: "Player", cls: "l", asc: true, sort: (r) => r.player?.name ?? "", fmt: who },
+      { key: "gp", label: "G", fmt: (r) => r.gp },
+      { key: "tgt", label: "Tgt", fmt: (r) => r.tgt },
+      { key: "tgt20", label: "RZ Tgt", cls: "sep", title: "Targets inside the 20", fmt: (r) => r.tgt20 },
+      { key: "tgt10", label: "In 10", title: "Targets inside the 10", fmt: (r) => r.tgt10 },
+      { key: "tgt5", label: "In 5", title: "Targets inside the 5", fmt: (r) => r.tgt5 },
+      { key: "rzShare", label: "RZ % of Tgt", title: "Share of the player's targets that came in the red zone", fmt: (r) => fmt.pct0(r.rzShare) },
+      { key: "td", label: "Rec TD", cls: "sep", fmt: (r) => r.td },
+      { key: "td20", label: "RZ TD", fmt: (r) => r.td20 },
+      { key: "xtd", label: "xTD", cls: "key", fmt: (r) => fmt.d1(r.xtd) },
+      { key: "tdDiff", label: "TD − xTD", cls: "key", fmt: (r) => `<span class="${r.tdDiff > 0.5 ? "pos" : r.tdDiff < -0.5 ? "neg" : ""}">${fmt.signed(r.tdDiff)}</span>` },
+      { key: "rushTd", label: "Rush TD", cls: "sep", fmt: (r) => r.rushTd },
+    ];
+
+    function renderOdds() {
+      const q = $("q1").value.trim().toLowerCase();
+      const min = +$("minTpg").value || 0;
+      const watch = getWatchlist();
+      const rows = tdOdds(data).filter(
+        (r) => r.tgtPg >= min && (!$("watch1").checked || watch.has(r.id)) && (!q || (r.player?.name ?? "").toLowerCase().includes(q))
+      );
+      renderTable($("odds"), rows, oddsCols, oddsState, renderOdds);
+    }
+
+    function renderRz() {
+      let from = +$("from").value, to = +$("to").value;
+      if (from > to) [from, to] = [to, from];
+      const min = +$("minTgt").value || 0;
+      const rows = aggregate(data, gamesFor(data, { from, to })).filter((r) => r.tgt >= min);
+      for (const r of rows) r.rzShare = r.tgt ? r.tgt20 / r.tgt : null;
+      renderTable($("rz"), rows, rzCols, rzState, renderRz);
+    }
+
+    function renderRates() {
+      const m = tdModel(data);
+      $("rates").innerHTML = `<table class="grid"><thead><tr><th class="l">Snapped from</th><th>Targets</th><th>TDs</th><th>Actual rate</th><th>Rate used</th></tr></thead><tbody>${TD_ZONES.map((z) => {
+        const t = m.totals[z.key];
+        return `<tr><td class="l">${z.label}</td><td>${fmt.int(t.tgt)}</td><td>${fmt.int(t.td)}</td><td>${t.tgt ? fmt.pct(t.td / t.tgt) : "–"}</td><td class="key">${fmt.pct(m.rates[z.key])}</td></tr>`;
+      }).join("")}</tbody></table>
+      <p class="note">"Rate used" blends this season's results with long-run averages until the sample grows.</p>`;
+    }
+
+    (async () => {
+      try {
+        data = await loadData();
+        $("updated").textContent = updatedText(data);
+        const wk = data.upcoming?.[0]?.week;
+        $("odds-title").textContent = wk ? `Anytime TD odds · Week ${wk}` : "Anytime TD odds";
+        $("avg-implied").textContent = `${fmt.d1(tdModel(data).avgImplied)} pts`;
+        if (!data.upcoming?.length) $("odds").innerHTML = `<p class="muted">No upcoming games with betting lines yet.</p>`;
+        for (const w of data.weeks) {
+          $("from").add(new Option(`Week ${w}`, w));
+          $("to").add(new Option(`Week ${w}`, w));
+        }
+        $("from").value = data.weeks[0];
+        $("to").value = data.weeks.at(-1);
+        for (const id of ["q1", "minTpg"]) $(id).addEventListener("input", renderOdds);
+        $("watch1").addEventListener("change", renderOdds);
+        for (const id of ["from", "to"]) $(id).addEventListener("change", renderRz);
+        $("minTgt").addEventListener("input", renderRz);
+        initStars(() => $("watch1").checked && renderOdds());
+        if (data.upcoming?.length) renderOdds();
+        renderRz();
+        renderRates();
+      } catch (err) {
+        showError(err);
+      }
+    })();
+  </script>
+</body>
+</html>

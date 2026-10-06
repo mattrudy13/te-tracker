@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compare — TE Tracker</title>
+  <meta name="description" content="Compare NFL tight ends week by week.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="wordmark" href="./">TE <span>Tracker</span></a>
+      <nav class="tabs">
+        <a href="./">Leaders</a>
+        <a href="touchdowns.html">Touchdowns</a>
+        <a href="compare.html" aria-current="page">Compare</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="page-head">
+      <h1>Compare tight ends</h1>
+      <p class="sub">Pick up to four. <span class="updated" id="updated"></span></p>
+    </div>
+    <div id="status" hidden></div>
+
+    <section class="card">
+      <form class="controls" id="add-form">
+        <label class="field">Add a tight end<input type="text" id="add" list="names" placeholder="Start typing a name" autocomplete="off"></label>
+        <datalist id="names"></datalist>
+        <button class="btn" type="submit">Add</button>
+        <button class="btn ghost" type="button" id="add-watch">Add watchlist</button>
+      </form>
+      <div class="picks" id="picks" style="margin-top:.75rem"></div>
+    </section>
+
+    <div id="results" hidden>
+      <section class="card">
+        <div class="card-head">
+          <h2>Week by week</h2>
+          <div class="controls">
+            <label class="field">Stat<select id="metric"></select></label>
+            <div class="field">Scoring
+              <div class="seg" id="format">
+                <button type="button" data-v="ppr" aria-pressed="true">PPR</button>
+                <button type="button" data-v="half" aria-pressed="false">Half</button>
+                <button type="button" data-v="std" aria-pressed="false">Std</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-box tall"><canvas id="chart"></canvas></div>
+      </section>
+
+      <section class="card">
+        <h2>Season totals</h2>
+        <div class="table-wrap" style="margin-top:.75rem"><div id="totals"></div></div>
+      </section>
+    </div>
+    <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
+  </main>
+
+  <script src="common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const MAX = 4;
+    let data, ids = [], format = "ppr", chart;
+    const nameToId = new Map();
+
+    // Weekly values for the chart.
+    const METRICS = {
+      fpts: { label: "Fantasy points", get: (g) => fantasyPoints(g, format) },
+      tgt: { label: "Targets", get: (g) => g.tgt },
+      tgtShare: { label: "Target share %", get: (g) => (g.teamTgt ? (g.tgt / g.teamTgt) * 100 : null) },
+      rec: { label: "Receptions", get: (g) => g.rec },
+      yds: { label: "Receiving yards", get: (g) => g.yds },
+      tgt20: { label: "Red-zone targets", get: (g) => g.tgt20 },
+      xtd: { label: "Expected TDs", get: (g) => tdModel(data).xtd(g) },
+      td: { label: "Touchdowns", get: (g) => g.td + g.rushTd },
+    };
+
+    // Rows of the totals table; `best` marks the leader in each row.
+    const TOTALS = [
+      ["Games", (a) => a.gp, String],
+      ["Fantasy pts", (a) => a.fpts, fmt.d1, "max"],
+      ["Pts / game", (a) => a.fppg, fmt.d1, "max"],
+      ["Targets", (a) => a.tgt, String, "max"],
+      ["Targets / game", (a) => a.tgtPg, fmt.d1, "max"],
+      ["Target share", (a) => a.tgtShare, fmt.pct, "max"],
+      ["Yards share", (a) => a.ydsShare, fmt.pct, "max"],
+      ["Receptions", (a) => a.rec, String, "max"],
+      ["Catch rate", (a) => a.catchPct, fmt.pct0, "max"],
+      ["Receiving yards", (a) => a.yds, fmt.int, "max"],
+      ["Yards / target", (a) => a.ypt, fmt.d1, "max"],
+      ["Touchdowns", (a) => a.td + a.rushTd, String, "max"],
+      ["Red-zone targets", (a) => a.tgt20, String, "max"],
+      ["Inside-10 targets", (a) => a.tgt10, String, "max"],
+      ["Expected TDs", (a) => a.xtd, fmt.d1, "max"],
+      ["TD − xTD", (a) => a.tdDiff, fmt.signed],
+    ];
+
+    function renderPicks() {
+      $("picks").innerHTML = ids.length
+        ? ids.map((id, i) => `<span class="pick" style="--c:${SERIES[i]}"><a class="pname" href="player.html?id=${encodeURIComponent(id)}">${esc(data.players[id].name)}</a><button type="button" data-remove="${esc(id)}" aria-label="Remove ${esc(data.players[id].name)}">×</button></span>`).join("")
+        : `<span class="muted">No one picked yet. Try the top two from the <a href="./">leaderboard</a>.</span>`;
+    }
+
+    function render() {
+      renderPicks();
+      setParams({ ids: ids.join(","), stat: $("metric").value !== "fpts" ? $("metric").value : "", fmt: format !== "ppr" ? format : "" });
+      $("results").hidden = !ids.length;
+      if (!ids.length) return;
+
+      const m = METRICS[$("metric").value];
+      const t = chartTheme();
+      chart?.destroy();
+      chart = new Chart($("chart"), {
+        type: "line",
+        data: {
+          labels: data.weeks.map((w) => `W${w}`),
+          datasets: ids.map((id, i) => {
+            const byWeek = new Map(gamesFor(data, { playerId: id }).map((g) => [g.week, g]));
+            return {
+              label: data.players[id].name,
+              data: data.weeks.map((w) => (byWeek.has(w) ? +(+m.get(byWeek.get(w))).toFixed(2) : null)),
+              borderColor: SERIES[i], backgroundColor: SERIES[i], tension: .3, spanGaps: false, pointRadius: 4,
+            };
+          }),
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: { legend: { labels: { color: t.fg, boxWidth: 12 } } },
+          scales: { x: { ticks: { color: t.fg }, grid: { color: t.grid } }, y: { beginAtZero: true, ticks: { color: t.fg }, grid: { color: t.grid }, title: { display: true, text: m.label, color: t.fg } } },
+        },
+      });
+
+      const aggs = ids.map((id) => aggregate(data, gamesFor(data, { playerId: id }), { format })[0]);
+      $("totals").innerHTML = `<table class="grid"><thead><tr><th class="l"></th>${aggs.map((a, i) => `<th style="color:${SERIES[i]}">${esc(a.player.short)}</th>`).join("")}</tr></thead><tbody>${TOTALS.map(([label, get, f, best]) => {
+        const vals = aggs.map(get);
+        const top = best && aggs.length > 1 ? Math.max(...vals.filter((v) => v != null)) : null;
+        return `<tr><td class="l">${label}</td>${vals.map((v) => `<td class="${top != null && v === top ? "key pos" : ""}">${f(v)}</td>`).join("")}</tr>`;
+      }).join("")}</tbody></table>`;
+    }
+
+    function add(id) {
+      if (!id || ids.includes(id) || ids.length >= MAX) return;
+      ids.push(id);
+      render();
+    }
+
+    (async () => {
+      try {
+        data = await loadData();
+        $("updated").textContent = updatedText(data);
+        const played = new Set(data.games.map((g) => g.playerId));
+        for (const [id, p] of Object.entries(data.players)) {
+          if (!played.has(id)) continue;
+          const label = `${p.name} (${p.team ?? "FA"})`;
+          nameToId.set(label.toLowerCase(), id);
+          nameToId.set(p.name.toLowerCase(), id);
+          $("names").append(new Option(label));
+        }
+        for (const [k, m] of Object.entries(METRICS)) $("metric").add(new Option(m.label, k));
+
+        const p = getParams();
+        ids = (p.ids ?? "").split(",").filter((id) => played.has(id)).slice(0, MAX);
+        $("metric").value = METRICS[p.stat] ? p.stat : "fpts";
+        format = SCORING[p.fmt] ? p.fmt : "ppr";
+        const setFmt = () => $("format").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === format));
+        setFmt();
+
+        $("add-form").addEventListener("submit", (e) => {
+          e.preventDefault();
+          const v = $("add").value.trim().toLowerCase();
+          const id = nameToId.get(v) ?? [...nameToId].find(([k]) => k.includes(v))?.[1];
+          if (v && id) { add(id); $("add").value = ""; }
+        });
+        $("add").addEventListener("change", () => {
+          const id = nameToId.get($("add").value.trim().toLowerCase());
+          if (id) { add(id); $("add").value = ""; }
+        });
+        $("add-watch").addEventListener("click", () => {
+          for (const id of getWatchlist()) if (played.has(id) && !ids.includes(id) && ids.length < MAX) ids.push(id);
+          render();
+        });
+        $("picks").addEventListener("click", (e) => {
+          const b = e.target.closest("[data-remove]");
+          if (!b) return;
+          ids = ids.filter((id) => id !== b.dataset.remove);
+          render();
+        });
+        $("metric").addEventListener("change", render);
+        $("format").addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (b) { format = b.dataset.v; setFmt(); render(); }
+        });
+        render();
+      } catch (err) {
+        showError(err);
+      }
+    })();
+  </script>
+</body>
+</html>
