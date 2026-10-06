@@ -62,10 +62,13 @@ Where the odds show up: the Touchdowns table (Book, Market %, Edge, Rec line), t
 - **xTD** credits each target with the league-wide TE TD rate for where the ball was snapped:
   inside the 5, 6–10, 11–20, or outside the red zone. Rates are this season's results blended with
   long-run priors, so the early weeks aren't driven by a few plays.
-- **Anytime TD %**: expected TDs per game (season average blended 50/50 with the last 3 games,
-  plus a small rushing-TD term), scaled by the team's implied points against the week's average.
-  The result goes through a Poisson: P = 1 − e^(−λ). It's shown as a probability and as fair
-  American odds.
+- **Anytime TD %**: expected TDs per game, shrunk toward a volume-only baseline (targets per game ×
+  a long-run 5% TE TD-per-target rate, weighted like 8 games of data), blended 70/30 with the last 3
+  games, plus a small rushing-TD term. That's scaled by the team's implied points against the week's average
+  and run through a Poisson: P = 1 − e^(−λ). It's shown as a probability and as fair American odds.
+- **Calibration** (Oct 5, 2026, first odds snapshot): with books de-vigged by ~12%, the error against the
+  market fell from 11.2 to 6.4 percentage points (RMSE over 30 TEs) and the model's average matched the
+  market's. Constants live at the top of the TD model section in `common.js`.
 
 ## Running locally
 

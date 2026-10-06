@@ -100,18 +100,29 @@ function aggregate(data, games, { format = "ppr", tep = false } = {}) {
 
 // ---- Touchdown model ----
 //
-// Expected receiving TDs (xTD): each target is worth the TE-wide TD rate for where it was
+// Expected receiving TDs (xTD): each target is worth the league-wide TE TD rate for where it was
 // thrown from (inside the 5, 6–10, 11–20, or outside the red zone). Rates are this season's
-// actual TE results blended with priors, so the first weeks aren't driven by a few plays.
-// Anytime-TD odds: expected TDs per game (season blended with the last 3 games), scaled by
-// the team's implied points for the matchup, through a Poisson: P = 1 − e^(−λ).
+// actual TE results blended with long-run priors; the priors carry most of the weight early on.
+//
+// Anytime-TD odds: a player's expected TDs per game is shrunk toward a volume-only baseline
+// (targets per game x a long-run 5% TE TD-per-target rate), worth SHRINK_GAMES games of data, so a
+// few red-zone looks in September don't dominate. Season and last-3 estimates are blended, scaled by
+// the team's implied points for the matchup, then P = 1 − e^(−λ) (Poisson).
+//
+// Calibrated on 2026-10-05 against the first sportsbook snapshot (30 priced TEs, books de-vigged by
+// ~12%): RMSE went from 11.2 to 6.4 percentage points and the average matched the market. The model
+// still disagrees with the books on purpose (it only knows targets and field position).
 
 const TD_ZONES = [
-  { key: "i5", label: "Inside 5", prior: 0.42, weight: 40 },
-  { key: "i10", label: "6–10", prior: 0.22, weight: 60 },
-  { key: "i20", label: "11–20", prior: 0.1, weight: 100 },
-  { key: "out", label: "Outside 20", prior: 0.025, weight: 800 },
+  { key: "i5", label: "Inside 5", prior: 0.45, weight: 400 },
+  { key: "i10", label: "6–10", prior: 0.27, weight: 400 },
+  { key: "i20", label: "11–20", prior: 0.12, weight: 600 },
+  { key: "out", label: "Outside 20", prior: 0.025, weight: 3000 },
 ];
+const TD_PER_TARGET_PRIOR = 0.05;
+const SHRINK_GAMES = 8;
+const RECENT_WEIGHT = 0.3;
+
 function zoneCounts(g) {
   return {
     i5: { tgt: g.tgt5, td: g.td5 },
@@ -143,6 +154,12 @@ function tdModel(data) {
   return data._tdModel;
 }
 
+// Expected TDs per game over `games`, shrunk toward the player's volume-only baseline.
+function shrunkXtdPg(model, games, tgtPg) {
+  const x = games.reduce((s, g) => s + model.xtd(g), 0);
+  return (x + SHRINK_GAMES * tgtPg * TD_PER_TARGET_PRIOR) / (games.length + SHRINK_GAMES);
+}
+
 // Anytime-TD probability for each TE with a game in the upcoming week.
 function tdOdds(data) {
   const model = tdModel(data);
@@ -157,14 +174,15 @@ function tdOdds(data) {
     if (!u || team !== a.team) continue; // no game this week, or changed teams
     const recent = a.games.slice(-3);
     const xtdSeason = a.xtd / a.gp;
-    const xtdRecent = recent.reduce((s, g) => s + model.xtd(g), 0) / recent.length;
+    const season = shrunkXtdPg(model, a.games, a.tgtPg);
+    const recentPg = shrunkXtdPg(model, recent, a.tgtPg);
     // Small rushing-TD bump for the few TEs who get carries near the goal line.
     const rush = a.rushTd / a.gp;
-    const base = (a.gp >= 3 ? 0.5 * xtdSeason + 0.5 * xtdRecent : xtdSeason) + 0.5 * rush;
+    const base = (a.gp >= 3 ? (1 - RECENT_WEIGHT) * season + RECENT_WEIGHT * recentPg : season) + 0.5 * rush;
     const scale = u.implied ? u.implied / model.avgImplied : 1;
     const lambda = base * scale;
     const missedLast = (lastTeamWeek[team] ?? 0) > a.games.at(-1).week;
-    rows.push({ ...a, team, up: u, xtdPg: xtdSeason, xtdRecent, lambda, prob: 1 - Math.exp(-lambda), missedLast });
+    rows.push({ ...a, team, up: u, xtdPg: xtdSeason, lambda, prob: 1 - Math.exp(-lambda), missedLast });
   }
   return rows.sort((x, y) => y.prob - x.prob);
 }
