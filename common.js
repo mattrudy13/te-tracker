@@ -30,7 +30,11 @@ const fmt = {
   d2: (n) => (n == null || !Number.isFinite(n) ? "–" : n.toFixed(2)),
   pct: (n) => (n == null || !Number.isFinite(n) ? "–" : `${(n * 100).toFixed(1)}%`),
   pct0: (n) => (n == null || !Number.isFinite(n) ? "–" : `${Math.round(n * 100)}%`),
-  signed: (n) => (n == null || !Number.isFinite(n) ? "–" : `${n > 0 ? "+" : n < 0 ? "−" : ""}${Math.abs(n).toFixed(1)}`),
+  signed: (n) => {
+    if (n == null || !Number.isFinite(n)) return "–";
+    const r = Math.round(n * 10) / 10;
+    return `${r > 0 ? "+" : r < 0 ? "−" : ""}${Math.abs(r).toFixed(1)}`;
+  },
   // Fair American odds for a probability.
   odds: (p) => {
     if (!(p > 0 && p < 1)) return "–";
@@ -234,7 +238,8 @@ function oddsAsOf(data) {
 }
 function bookTdCell(o) {
   if (!o?.td) return `<span class="muted">–</span>`;
-  return `<span title="Best of ${o.td.books} book${o.td.books > 1 ? "s" : ""}: ${esc(o.td.book)}">${americanText(o.td.best)}</span>`;
+  const market = o.td.marketProb != null ? ` · market ${Math.round(o.td.marketProb * 100)}%` : "";
+  return `<span title="Best of ${o.td.books} book${o.td.books > 1 ? "s" : ""}: ${esc(o.td.book)}${market}">${americanText(o.td.best)}</span>`;
 }
 function recLineCell(o) {
   if (!o?.rec) return `<span class="muted">–</span>`;
@@ -243,8 +248,8 @@ function recLineCell(o) {
 }
 function edgeCell(model, market) {
   if (model == null || market == null) return `<span class="muted">–</span>`;
-  const e = (model - market) * 100;
-  return `<span class="${e >= 3 ? "pos" : e <= -3 ? "neg" : ""}">${e > 0 ? "+" : e < 0 ? "−" : ""}${Math.abs(e).toFixed(0)}</span>`;
+  const e = Math.round((model - market) * 100);
+  return `<span class="${e > 0 ? "pos" : e < 0 ? "neg" : ""}">${e > 0 ? "+" : e < 0 ? "−" : ""}${Math.abs(e)}</span>`;
 }
 
 // ---- URL state ----

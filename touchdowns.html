@@ -18,7 +18,6 @@
         <a href="./">Leaders</a>
         <a href="matchups.html">Matchups</a>
         <a href="touchdowns.html" aria-current="page">Touchdowns</a>
-        <a href="compare.html">Compare</a>
       </nav>
     </div>
   </header>
@@ -80,7 +79,7 @@
   <script src="common.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
-    const oddsState = { sort: "prob", dir: "desc" };
+    const oddsState = { sort: "edge", dir: "desc" };
     const rzState = { sort: "tgt20", dir: "desc" };
     let data;
 

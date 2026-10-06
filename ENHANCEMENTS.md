@@ -15,7 +15,7 @@ The focus is touchdowns and receptions betting angles. Fantasy is secondary.
       Matchups (top 5 positive and negative TD edges, plus any receptions edges once those exist).
 - [ ] **Watchlist filter on Matchups**: show only games with a starred TE, and open them by default.
 - [ ] **Cache-busting**: add `?v=<commit>` to `style.css` / `common.js` (stamped by the workflow), so
-      a deploy isn't half-stale for 10 minutes as happened with the Compare nav tab.
+      a deploy isn't half-stale for 10 minutes, as happened with a nav tab.
 
 ## Touchdown model
 - [ ] **Score the model and the books against results**: at each Thursday/Sunday snapshot, save
@@ -62,6 +62,8 @@ The focus is touchdowns and receptions betting angles. Fantasy is secondary.
 ## Look and feel
 - [ ] **Sticky player column** on wide tables at phone width, so the name stays visible while
       scrolling across the stats.
+- [ ] **Player page de-fantasy**: swap the fantasy tile and chart for receptions vs line and TD odds,
+      matching the rest of the site.
 - [ ] **Player odds history**: a weekly strip on the player page showing model TD %, book price and
       whether they scored, plus each week's reception line and result.
 - [ ] **Per-game snapshot time** on Matchups ("odds as of Thu 5:00 PM" per game), since TNF and Sunday
@@ -69,7 +71,7 @@ The focus is touchdowns and receptions betting angles. Fantasy is secondary.
 - [ ] **Sort Matchups games** by kickoff (current), by biggest TE edge, or by implied total.
 
 ## Code and reliability
-- [ ] **Shared nav**: the top bar is copied into all five pages, and a missed copy is exactly how a
+- [ ] **Shared nav**: the top bar is copied into all four pages, and a missed copy is exactly how a
       tab can go missing. Render it from `common.js`, or check in CI that every page has every tab.
 - [ ] **Odds quota guard**: skip a snapshot and open a GitHub issue if `x-requests-remaining` is low
       or the key fails, instead of silently writing an empty file.
@@ -82,7 +84,10 @@ The focus is touchdowns and receptions betting angles. Fantasy is secondary.
       doesn't publish bad numbers.
 
 ## Shipped
-- [x] Leaderboard, Player, Compare, watchlist, shareable URLs, dark mode, phone layout
+- [x] Leaderboard, Player, watchlist, shareable URLs, dark mode, phone layout
+- [x] Leaders reworked around usage and TDs (no fantasy points or LNG), Compare removed, Matchups table
+      consolidated into Usage / Receptions / Touchdowns groups, positive Edge in green, Touchdowns
+      sorted by Edge (2026-10-06)
 - [x] Red-zone splits from play-by-play, xTD, anytime-TD model with implied team points
 - [x] Matchups page with each game's TEs, defense vs TE and finished-game box scores
 - [x] Sportsbook odds snapshot (anytime TD, receptions line) on Matchups, Touchdowns and Player

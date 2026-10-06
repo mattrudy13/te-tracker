@@ -18,7 +18,6 @@
         <a href="./">Leaders</a>
         <a href="matchups.html" aria-current="page">Matchups</a>
         <a href="touchdowns.html">Touchdowns</a>
-        <a href="compare.html">Compare</a>
       </nav>
     </div>
   </header>
@@ -37,10 +36,10 @@
     <div id="games"></div>
 
     <p class="note">
-      <b>Team pts</b> are implied by the spread and total. <b>Model TD</b> is our anytime-touchdown estimate (see
-      <a href="touchdowns.html">Touchdowns</a>); <b>Book TD</b> is the best price across US sportsbooks and <b>Market</b> the median
-      book's implied chance, which includes the books' margin, so an <b>Edge</b> of a few points is roughly break-even.
-      <b>Rec line</b> is the receptions over/under most books offer, with the best over and under prices (hover for the book).
+      <b>Team pts</b> are implied by the spread and total. <b>Model</b> is our anytime-touchdown estimate (see
+      <a href="touchdowns.html">Touchdowns</a>); <b>Book</b> is the best anytime-TD price across US sportsbooks (hover for the book and the market's implied chance).
+      <b>Edge</b> is model minus market in percentage points. The market's number includes the books' margin, so a small positive edge is roughly break-even.
+      <b>Line</b> is the receptions over/under most books offer, with the best over and under prices (hover for the book).
       Props usually appear midweek, so early in the week many show "–". <span id="odds-asof"></span>
       For finished games, the box score shows the pregame price and line, and how each one landed.
       The defense line is the opponent's TE fantasy points allowed per game (PPR), ranked 1st (fewest) to 32nd.
@@ -62,35 +61,37 @@
 
     function seasonTable(rows, oddsById, watch, showOdds, g) {
       if (!rows.length) return `<p class="muted">No tight end has played for this team yet.</p>`;
-      return `<div class="table-wrap"><table class="grid"><thead><tr>
-        <th class="c"></th><th class="l">Player</th><th>G</th><th>Tgt/G</th><th title="Share of team targets">Tgt %</th><th>Rec/G</th><th>Yds/G</th><th>TD</th>
-        <th title="Targets inside the 20">RZ Tgt</th><th title="Expected TDs per game">xTD/G</th>${showOdds ? `
-        <th class="sep" title="Model anytime-TD estimate">Model TD</th><th title="Best anytime-TD price across sportsbooks">Book TD</th>
-        <th title="Median sportsbook implied probability (includes the books' margin)">Market</th><th title="Model minus market, percentage points">Edge</th>
-        <th class="sep" title="Receptions over/under most books offer">Rec line</th><th title="Best over / under price (hover for the book)">O / U</th>` : ""}
+      const recCols = showOdds ? 3 : 1, tdCols = showOdds ? 5 : 2;
+      return `<div class="table-wrap"><table class="grid"><thead>
+        <tr class="grp"><th colspan="2"></th><th colspan="2" class="sep">Usage</th><th colspan="${recCols}" class="sep">Receptions</th><th colspan="${tdCols}" class="sep">Touchdowns</th></tr>
+        <tr><th class="c"></th><th class="l">Player</th>
+        <th class="sep" title="Targets per game">Tgt/G</th><th title="Share of the team's targets">Share</th>
+        <th class="sep" title="Receptions per game">Rec/G</th>${showOdds ? `<th title="Receptions over/under most books offer">Line</th><th title="Best over / under price (hover for the book)">O / U</th>` : ""}
+        <th class="sep" title="Touchdowns this season">TD</th><th title="Targets inside the 20 this season">RZ Tgt</th>${showOdds ? `
+        <th title="Model anytime-TD estimate">Model</th><th title="Best anytime-TD price (hover for the book and market %)">Book</th><th title="Model minus market (median book's implied %, which includes the books' margin), in percentage points">Edge</th>` : ""}
         </tr></thead><tbody>${rows.map((r) => {
           const o = oddsById[r.id];
           const book = g ? playerOdds(data, r.id, g.home, g.away) : null;
           return `<tr class="${watch.has(r.id) ? "watched" : ""}${r.tgtPg < 1 ? " minor" : ""}">
             <td class="c">${starButton(r.id, watch.has(r.id))}</td>
             <td class="l"><div class="who">${headshot(r.player, 30)}${playerLink(r)}</div></td>
-            <td>${r.gp}</td><td>${fmt.d1(r.tgtPg)}</td><td>${fmt.pct0(r.tgtShare)}</td><td>${fmt.d1(r.rec / r.gp)}</td><td>${fmt.d1(r.yds / r.gp)}</td>
-            <td>${r.td + r.rushTd}</td><td>${r.tgt20}</td><td>${fmt.d2(r.xtd / r.gp)}</td>
-            ${showOdds ? `<td class="sep key">${o ? fmt.pct0(o.prob) : "–"}</td><td class="key">${bookTdCell(book)}</td>
-            <td>${fmt.pct0(book?.td?.marketProb)}</td><td>${edgeCell(o?.prob, book?.td?.marketProb)}</td>
-            <td class="sep key">${book?.rec ? book.rec.line : "–"}</td>
-            <td>${book?.rec ? `<span title="Over: ${esc(book.rec.overBook ?? "–")} · Under: ${esc(book.rec.underBook ?? "–")}">${americanText(book.rec.over)} / ${americanText(book.rec.under)}</span>` : "–"}</td>` : ""}</tr>`;
+            <td class="sep">${fmt.d1(r.tgtPg)}</td><td>${fmt.pct0(r.tgtShare)}</td>
+            <td class="sep">${fmt.d1(r.rec / r.gp)}</td>${showOdds ? `
+            <td class="key">${book?.rec ? book.rec.line : `<span class="muted">–</span>`}</td>
+            <td>${book?.rec ? `<span title="Over: ${esc(book.rec.overBook ?? "–")} · Under: ${esc(book.rec.underBook ?? "–")}">${americanText(book.rec.over)} / ${americanText(book.rec.under)}</span>` : `<span class="muted">–</span>`}</td>` : ""}
+            <td class="sep">${r.td + r.rushTd}</td><td>${r.tgt20}</td>${showOdds ? `
+            <td>${o ? fmt.pct0(o.prob) : "–"}</td><td class="key">${bookTdCell(book)}</td><td class="key">${edgeCell(o?.prob, book?.td?.marketProb)}</td>` : ""}</tr>`;
         }).join("")}</tbody></table></div>`;
     }
 
     function boxTable(lines, watch, game) {
       if (!lines.length) return `<p class="muted">No tight end stats recorded in this game.</p>`;
       return `<div class="table-wrap"><table class="grid"><thead><tr>
-        <th class="l">Player</th><th>Tgt</th><th>Rec</th><th>Yds</th><th>Lng</th><th>TD</th><th title="Targets inside the 20">RZ Tgt</th><th>Rush</th>
+        <th class="l">Player</th><th>Tgt</th><th>Rec</th><th>Yds</th><th>TD</th><th title="Targets inside the 20">RZ Tgt</th><th>Rush</th>
         <th class="sep" title="Pregame best anytime-TD price from the last snapshot">Book TD</th><th title="Pregame receptions line, and which side hit">Rec line</th>
         </tr></thead><tbody>${lines.map((g) => `<tr class="${watch.has(g.playerId) ? "watched" : ""}">
           <td class="l">${playerLink({ id: g.playerId, player: data.players[g.playerId] })}</td>
-          <td>${g.tgt}</td><td>${g.rec}</td><td>${g.yds}</td><td>${g.long}</td><td>${g.td + g.rushTd || ""}</td><td>${g.tgt20 || ""}</td>
+          <td>${g.tgt}</td><td>${g.rec}</td><td>${g.yds}</td><td>${g.td + g.rushTd || ""}</td><td>${g.tgt20 || ""}</td>
           <td>${g.rushAtt ? `${g.rushAtt}-${g.rushYds}` : ""}</td>${(() => {
             const b = playerOdds(data, g.playerId, game.home, game.away);
             const scored = g.td + g.rushTd > 0;

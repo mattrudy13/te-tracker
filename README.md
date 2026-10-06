@@ -3,24 +3,24 @@
 NFL tight end stats, usage and touchdown odds through the season. A static site on GitHub
 Pages: https://mattrudy13.github.io/te-tracker/
 
-- **Leaders** (`index.html`): sortable leaderboard covering targets, target share, yards share, catch
-  rate, Y/R, Y/Tgt, TDs, red-zone targets and fantasy points (PPR / Half / Standard, optional TE
-  premium). Filter by team, week range, minimum targets, or your ★ watchlist.
+- **Leaders** (`index.html`): usage and touchdown leaderboard, per game or season totals: targets, target
+  share, receptions, catch %, yards, yards per target, TDs, red-zone targets, xTD and TD − xTD, plus this
+  week's receptions line and best anytime-TD price. Filter by team, week range, minimum targets or your
+  ★ watchlist.
 - **Matchups** (`matchups.html`): this week's games (next week's once Monday night is final) with
   kickoff, network, spread, total and implied team points. Expand a game to see both teams' tight ends:
-  - season usage and xTD
-  - model TD % next to the sportsbook TD price, market % and edge
-  - the receptions line with best over/under prices
+  - **Usage:** targets per game and target share
+  - **Receptions:** per game, next to the line and the best over/under prices
+  - **Touchdowns:** TDs, red-zone targets, and the model TD % against the best book price, with the edge
   - how the opposing defense has fared against TEs
 
   Finished games show the TE box score with the pregame TD price and receptions line, and how each one
   landed. `?open=<gameId>,…` keeps games expanded.
-- **Touchdowns** (`touchdowns.html`): this week's anytime-TD odds for every TE, red-zone usage
+- **Touchdowns** (`touchdowns.html`): this week's anytime-TD odds for every TE (sorted by model-vs-book edge), red-zone usage
   (targets inside the 20 / 10 / 5), expected TDs (xTD) vs actual, and the TE touchdown rate by
   field position that the model uses.
 - **Player** (`player.html?id=<espn id>`): season tiles, touchdown outlook, weekly charts and
   a game log.
-- **Compare** (`compare.html?ids=a,b`): up to four TEs overlaid week by week, plus season totals.
 
 Filters live in the URL, so any view can be shared. The watchlist is saved in your browser.
 
@@ -64,8 +64,8 @@ Thursday's snapshot is the one that counts.
 
 Where the odds show up:
 - the Touchdowns table (Book, Market, Edge, Rec line)
-- the Matchups page (Model TD, Book TD, Market, Edge, Rec line, O / U before kickoff; pregame price and line
-  vs result after)
+- the Matchups page (Line, O / U, Model, Book, Edge before kickoff; pregame price and line vs result after)
+- the Leaders table (Rec line, Book TD)
 - the player page's TD tile
 
 ## The touchdown model

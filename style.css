@@ -131,6 +131,7 @@ table.grid { border-collapse: collapse; width: 100%; font-variant-numeric: tabul
 .grid td.empty { text-align: center; color: var(--muted); padding: 2rem; }
 .grid .rank { color: var(--muted); width: 2rem; }
 .grid .sep { border-left: 1px solid var(--border); }
+.grid thead tr.grp th { text-align: center; padding-bottom: .1rem; border-bottom: 0; color: var(--fg); letter-spacing: .08em; }
 .who { display: flex; align-items: center; gap: .55rem; min-width: 11rem; }
 .who small { display: block; color: var(--muted); font-size: .76rem; }
 .pname { color: var(--fg); font-weight: 600; text-decoration: none; }
@@ -168,11 +169,6 @@ table.grid { border-collapse: collapse; width: 100%; font-variant-numeric: tabul
 .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
 .chart-box { position: relative; height: 240px; }
 .chart-box.tall { height: 320px; }
-
-/* ---- Compare picker ---- */
-.picks { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
-.pick { display: inline-flex; align-items: center; gap: .4rem; background: var(--surface-2); border: 1px solid var(--border); border-left: 4px solid var(--c); border-radius: 999px; padding: .2rem .3rem .2rem .6rem; font-weight: 600; font-size: .9rem; }
-.pick button { all: unset; cursor: pointer; color: var(--muted); padding: 0 .35rem; font-size: 1.1rem; line-height: 1; }
 
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 footer { color: var(--muted); font-size: .8rem; padding: 2rem 0 3rem; }
