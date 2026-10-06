@@ -8,8 +8,13 @@ Pages: https://mattrudy13.github.io/te-tracker/
   premium). Filter by team, week range, minimum targets, or your ★ watchlist.
 - **Matchups** (`matchups.html`): this week's games (next week's once Monday night is final) with
   kickoff, network, spread, total and implied team points. Expand a game to see both teams' tight ends:
-  season usage, xTD, points per game, anytime-TD % and fantasy points from each of the last 3 games, plus how the opposing defense
-  has fared against TEs. Finished games also show their TE box score. `?open=<gameId>,…` keeps games expanded.
+  - season usage and xTD
+  - model TD % next to the sportsbook TD price, market % and edge
+  - the receptions line with best over/under prices
+  - how the opposing defense has fared against TEs
+
+  Finished games show the TE box score with the pregame TD price and receptions line, and how each one
+  landed. `?open=<gameId>,…` keeps games expanded.
 - **Touchdowns** (`touchdowns.html`): this week's anytime-TD odds for every TE, red-zone usage
   (targets inside the 20 / 10 / 5), expected TDs (xTD) vs actual, and the TE touchdown rate by
   field position that the model uses.
@@ -54,8 +59,11 @@ The key is the `ODDS_API_KEY` repository secret, so it's only used inside the wo
 with `gh secret set ODDS_API_KEY -R mattrudy13/te-tracker`. To run locally:
 `ODDS_API_KEY=... node scripts/fetch-odds.mjs`. Without the file, the site hides the odds columns' values.
 
-Where the odds show up: the Touchdowns table (Book, Market %, Edge, Rec line), the Matchups page
-(Book TD, Rec line) and the player page's TD tile.
+Where the odds show up:
+- the Touchdowns table (Book, Market %, Edge, Rec line)
+- the Matchups page (Model TD, Book TD, Market, Edge, Rec line, O / U before kickoff; pregame price and line
+  vs result after)
+- the player page's TD tile
 
 ## The touchdown model
 

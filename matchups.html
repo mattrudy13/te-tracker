@@ -31,26 +31,20 @@
     <div id="status" hidden></div>
 
     <div class="controls" id="controls" hidden>
-      <div class="field">Scoring
-        <div class="seg" id="format">
-          <button type="button" data-v="ppr" aria-pressed="true">PPR</button>
-          <button type="button" data-v="half" aria-pressed="false">Half</button>
-          <button type="button" data-v="std" aria-pressed="false">Std</button>
-        </div>
-      </div>
       <button class="btn ghost" type="button" id="toggle-all">Expand all</button>
     </div>
 
     <div id="games"></div>
 
     <p class="note">
-      <b>Team pts</b> are implied by the spread and total. <b>Pts, last 3</b> lists fantasy points from each of the player's last three games, oldest to newest (most recent in bold).
-      <b>Book TD</b> is the best anytime-TD price across US sportsbooks and <b>Rec line</b> the receptions over/under most books offer
-      (hover for prices and books). <span id="odds-asof"></span>
-      <b>TD %</b> is the anytime-touchdown estimate from the
-      <a href="touchdowns.html">Touchdowns</a> page. The defense line is that opponent's tight end fantasy points allowed per game, ranked
-      from 1st (fewest) to 32nd (most). Finished games show their tight end box score. Games in progress
-      fill in after they end, because data refreshes every few hours.
+      <b>Team pts</b> are implied by the spread and total. <b>Model TD</b> is our anytime-touchdown estimate (see
+      <a href="touchdowns.html">Touchdowns</a>); <b>Book TD</b> is the best price across US sportsbooks and <b>Market</b> the median
+      book's implied chance, which includes the books' margin, so an <b>Edge</b> of a few points is roughly break-even.
+      <b>Rec line</b> is the receptions over/under most books offer, with the best over and under prices (hover for the book).
+      Props usually appear midweek, so early in the week many show "–". <span id="odds-asof"></span>
+      For finished games, the box score shows the pregame price and line, and how each one landed.
+      The defense line is the opponent's TE fantasy points allowed per game (PPR), ranked 1st (fewest) to 32nd.
+      Games in progress fill in after they end.
     </p>
     <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
   </main>
@@ -58,17 +52,8 @@
   <script src="common.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
-    let data, format = "ppr";
+    let data;
     const open = new Set((getParams().open ?? "").split(",").filter(Boolean));
-
-    // Fantasy points in the last three games, oldest first, with the week in the tooltip.
-    function lastThree(games) {
-      return games.slice(-3).map((g, i, arr) => {
-        const pts = fantasyPoints(g, format);
-        const cls = i === arr.length - 1 ? "key" : "muted";
-        return `<span class="${cls}" title="Week ${g.week} ${g.home ? "vs" : "@"} ${esc(g.opp)}: ${pts.toFixed(1)} pts">${pts.toFixed(1)}</span>`;
-      }).join(`<span class="muted"> · </span>`);
-    }
 
     // Season rows for a team's tight ends: players whose most recent game was for this team.
     function teamTes(team, seasonRows) {
@@ -79,7 +64,10 @@
       if (!rows.length) return `<p class="muted">No tight end has played for this team yet.</p>`;
       return `<div class="table-wrap"><table class="grid"><thead><tr>
         <th class="c"></th><th class="l">Player</th><th>G</th><th>Tgt/G</th><th title="Share of team targets">Tgt %</th><th>Rec/G</th><th>Yds/G</th><th>TD</th>
-        <th title="Targets inside the 20">RZ Tgt</th><th title="Expected TDs per game">xTD/G</th><th>Pts/G</th>${showOdds ? `<th title="Model anytime-TD estimate">TD %</th><th title="Best anytime-TD price across sportsbooks">Book TD</th><th title="Receptions over/under: most common line, best over price">Rec line</th>` : ""}<th class="c" title="Fantasy points in each of the last three games, oldest to newest">Pts, last 3</th>
+        <th title="Targets inside the 20">RZ Tgt</th><th title="Expected TDs per game">xTD/G</th>${showOdds ? `
+        <th class="sep" title="Model anytime-TD estimate">Model TD</th><th title="Best anytime-TD price across sportsbooks">Book TD</th>
+        <th title="Median sportsbook implied probability (includes the books' margin)">Market</th><th title="Model minus market, percentage points">Edge</th>
+        <th class="sep" title="Receptions over/under most books offer">Rec line</th><th title="Best over / under price (hover for the book)">O / U</th>` : ""}
         </tr></thead><tbody>${rows.map((r) => {
           const o = oddsById[r.id];
           const book = g ? playerOdds(data, r.id, g.home, g.away) : null;
@@ -87,31 +75,40 @@
             <td class="c">${starButton(r.id, watch.has(r.id))}</td>
             <td class="l"><div class="who">${headshot(r.player, 30)}${playerLink(r)}</div></td>
             <td>${r.gp}</td><td>${fmt.d1(r.tgtPg)}</td><td>${fmt.pct0(r.tgtShare)}</td><td>${fmt.d1(r.rec / r.gp)}</td><td>${fmt.d1(r.yds / r.gp)}</td>
-            <td>${r.td + r.rushTd}</td><td>${r.tgt20}</td><td>${fmt.d2(r.xtd / r.gp)}</td><td class="key">${fmt.d1(r.fppg)}</td>
-            ${showOdds ? `<td class="key">${o ? fmt.pct0(o.prob) : "–"}</td><td>${bookTdCell(book)}</td><td>${recLineCell(book)}</td>` : ""}
-            <td class="c">${lastThree(r.games)}</td></tr>`;
+            <td>${r.td + r.rushTd}</td><td>${r.tgt20}</td><td>${fmt.d2(r.xtd / r.gp)}</td>
+            ${showOdds ? `<td class="sep key">${o ? fmt.pct0(o.prob) : "–"}</td><td class="key">${bookTdCell(book)}</td>
+            <td>${fmt.pct0(book?.td?.marketProb)}</td><td>${edgeCell(o?.prob, book?.td?.marketProb)}</td>
+            <td class="sep key">${book?.rec ? book.rec.line : "–"}</td>
+            <td>${book?.rec ? `<span title="Over: ${esc(book.rec.overBook ?? "–")} · Under: ${esc(book.rec.underBook ?? "–")}">${americanText(book.rec.over)} / ${americanText(book.rec.under)}</span>` : "–"}</td>` : ""}</tr>`;
         }).join("")}</tbody></table></div>`;
     }
 
-    function boxTable(lines, watch) {
+    function boxTable(lines, watch, game) {
       if (!lines.length) return `<p class="muted">No tight end stats recorded in this game.</p>`;
       return `<div class="table-wrap"><table class="grid"><thead><tr>
-        <th class="l">Player</th><th>Tgt</th><th>Rec</th><th>Yds</th><th>Lng</th><th>TD</th><th title="Targets inside the 20">RZ Tgt</th><th>Rush</th><th>Pts</th>
+        <th class="l">Player</th><th>Tgt</th><th>Rec</th><th>Yds</th><th>Lng</th><th>TD</th><th title="Targets inside the 20">RZ Tgt</th><th>Rush</th>
+        <th class="sep" title="Pregame best anytime-TD price from the last snapshot">Book TD</th><th title="Pregame receptions line, and which side hit">Rec line</th>
         </tr></thead><tbody>${lines.map((g) => `<tr class="${watch.has(g.playerId) ? "watched" : ""}">
           <td class="l">${playerLink({ id: g.playerId, player: data.players[g.playerId] })}</td>
           <td>${g.tgt}</td><td>${g.rec}</td><td>${g.yds}</td><td>${g.long}</td><td>${g.td + g.rushTd || ""}</td><td>${g.tgt20 || ""}</td>
-          <td>${g.rushAtt ? `${g.rushAtt}-${g.rushYds}` : ""}</td><td class="key">${fmt.d1(fantasyPoints(g, format))}</td></tr>`).join("")}</tbody></table></div>`;
+          <td>${g.rushAtt ? `${g.rushAtt}-${g.rushYds}` : ""}</td>${(() => {
+            const b = playerOdds(data, g.playerId, game.home, game.away);
+            const scored = g.td + g.rushTd > 0;
+            const td = b?.td ? `<span class="${scored ? "pos" : "muted"}" title="${scored ? "Scored" : "Didn't score"}">${americanText(b.td.best)} ${scored ? "✓" : "✗"}</span>` : `<span class="muted">–</span>`;
+            const rec = b?.rec ? `<span class="${g.rec > b.rec.line ? "pos" : "neg"}" title="${g.rec} catches against a line of ${b.rec.line}">${g.rec > b.rec.line ? "Over" : "Under"} ${b.rec.line}</span>` : `<span class="muted">–</span>`;
+            return `<td class="sep">${td}</td><td>${rec}</td>`;
+          })()}</tr>`).join("")}</tbody></table></div>`;
     }
 
     function render() {
       const s = data.schedule;
       const watch = getWatchlist();
-      const seasonRows = aggregate(data, data.games, { format });
+      const seasonRows = aggregate(data, data.games);
       const odds = tdOdds(data);
       const oddsById = Object.fromEntries(odds.map((r) => [r.id, r]));
       const impliedByGame = {};
       for (const u of data.upcoming ?? []) impliedByGame[`${u.gameId}:${u.team}`] = u.implied;
-      const def = defenseVsTe(data, format);
+      const def = defenseVsTe(data);
 
       let lastDay = "";
       $("games").innerHTML = s.games.map((g) => {
@@ -129,7 +126,10 @@
             ${t?.logo ? `<img src="${esc(t.logo)}" alt="" loading="lazy">` : ""}
             <span class="nm"><span class="full">${esc(t?.name ?? abbr)}</span><span class="short">${esc(t?.short ?? abbr)}</span></span>
             ${imp != null ? `<span class="imp">${fmt.d1(imp)} pts</span>` : ""}
-            ${top ? `<span class="topte">· ${esc(top.player?.short ?? "")} ${fmt.d1(top.fppg)}/g</span>` : ""}
+            ${top ? (() => {
+              const b = playerOdds(data, top.id, g.home, g.away);
+              return `<span class="topte">· ${esc(top.player?.short ?? "")} ${b?.td ? `TD ${americanText(b.td.best)}` : `${fmt.d1(top.tgtPg)} tgt/g`}</span>`;
+            })() : ""}
             ${score != null ? `<span class="sc">${score}</span>` : ""}</div>`;
         };
         const spread = g.spread == null ? "" : g.spread === 0 ? "PK" : g.spread < 0 ? `${esc(g.home)} ${g.spread}` : `${esc(g.away)} −${g.spread}`;
@@ -146,7 +146,7 @@
           const box = data.games.filter((x) => x.gameId === g.id && x.team === abbr);
           return `<div class="g-side">
             <h3>${teamChip(data, abbr)} ${esc(t?.short ?? abbr)} tight ends</h3>
-            ${done ? `<h4>This game</h4>${boxTable(box, watch)}<h4>Season</h4>` : ""}
+            ${done ? `<h4>This game</h4>${boxTable(box, watch, g)}<h4>Season</h4>` : ""}
             ${live ? `<p class="muted">Live stats appear after the game.</p>` : ""}
             ${seasonTable(rows, oddsById, watch, !done && !live, g)}
             ${minor ? `<button type="button" class="linkbtn" data-all>Show ${minor} more with under 1 target/game</button>` : ""}
@@ -169,7 +169,7 @@
     }
 
     function saveOpen() {
-      setParams({ open: [...open].join(","), fmt: format !== "ppr" ? format : "" });
+      setParams({ open: [...open].join(",") });
       updateToggleAll();
     }
     function updateToggleAll() {
@@ -185,19 +185,8 @@
         $("odds-asof").textContent = data.odds ? `${oddsAsOf(data)}.` : "";
         $("title").textContent = `Week ${data.schedule.week} matchups`;
         document.title = `Week ${data.schedule.week} Matchups — TE Tracker`;
-        format = SCORING[getParams().fmt] ? getParams().fmt : "ppr";
-        const setFmt = () => $("format").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === format));
-        setFmt();
         $("controls").hidden = false;
 
-        $("format").addEventListener("click", (e) => {
-          const b = e.target.closest("button");
-          if (!b) return;
-          format = b.dataset.v;
-          setFmt();
-          saveOpen();
-          render();
-        });
         // `toggle` doesn't bubble, so listen in the capture phase.
         $("games").addEventListener("toggle", (e) => {
           const d = e.target.closest?.(".game");

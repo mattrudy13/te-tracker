@@ -215,6 +215,7 @@ footer { color: var(--muted); font-size: .8rem; padding: 2rem 0 3rem; }
 .g-side { margin-top: .9rem; }
 .g-side h3 { display: flex; align-items: center; gap: .5rem; font-size: 1.15rem; text-transform: uppercase; margin-bottom: .3rem; }
 .g-side h4 { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: .7rem 0 .2rem; }
+.g-side .grid th, .g-side .grid td { padding-left: .4rem; padding-right: .4rem; }
 .g-side .def { font-size: .85rem; color: var(--muted); margin: .4rem 0 0; }
 .g-side .def b { color: var(--fg); }
 .grid tr.watched td { background: var(--accent-soft); }
