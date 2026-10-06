@@ -222,9 +222,6 @@ footer { color: var(--muted); font-size: .8rem; padding: 2rem 0 3rem; }
 .g-side.all .grid tr.minor { display: table-row; }
 .linkbtn { all: unset; cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; margin-top: .3rem; display: inline-block; }
 .linkbtn:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
-.spark { vertical-align: middle; }
-.spark polyline { fill: none; stroke: var(--accent); stroke-width: 1.6; }
-.spark circle { fill: var(--accent); }
 @media (max-width: 720px) {
   .game > summary { grid-template-columns: minmax(0, 1fr); }
   .g-meta { text-align: left; align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: .2rem .6rem; }

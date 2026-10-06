@@ -8,7 +8,7 @@ Pages: https://mattrudy13.github.io/te-tracker/
   premium). Filter by team, week range, minimum targets, or your ★ watchlist.
 - **Matchups** (`matchups.html`): this week's games (next week's once Monday night is final) with
   kickoff, network, spread, total and implied team points. Expand a game to see both teams' tight ends:
-  season usage, xTD, points per game, anytime-TD % and a last-3 sparkline, plus how the opposing defense
+  season usage, xTD, points per game, anytime-TD % and fantasy points from each of the last 3 games, plus how the opposing defense
   has fared against TEs. Finished games also show their TE box score. `?open=<gameId>,…` keeps games expanded.
 - **Touchdowns** (`touchdowns.html`): this week's anytime-TD odds for every TE, red-zone usage
   (targets inside the 20 / 10 / 5), expected TDs (xTD) vs actual, and the TE touchdown rate by
