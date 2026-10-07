@@ -3,7 +3,11 @@
 NFL tight end stats, usage and touchdown odds through the season. A static site on GitHub
 Pages: https://mattrudy13.github.io/te-tracker/
 
-- **Matchups** (`index.html`, the home page): this week's games (next week's once Monday night is final) with
+- **Best Bets** (`index.html`, the home page): this week's anytime-TD picks in five categories: most likely to
+  score, best value, longshots, due for a TD, and fades. Each pick shows the best price, model %, market %, edge,
+  expected profit per $100 and a one-line reason. Below that is a **track record** of every past pick, graded after
+  the games (W–L–void, hit rate, units, ROI). Players listed as Out, Doubtful or on IR are never picked.
+- **Matchups** (`matchups.html`): this week's games (next week's once Monday night is final) with
   kickoff, network, spread, total and implied team points. Expand a game to see both teams' tight ends:
   - **Usage:** targets per game and target share
   - **Receptions:** per game, next to the line and the best over/under prices
@@ -11,7 +15,7 @@ Pages: https://mattrudy13.github.io/te-tracker/
   - how the opposing defense has fared against TEs
 
   Finished games show the TE box score with the pregame TD price and receptions line, and how each one
-  landed. `?open=<gameId>,…` keeps games expanded. The old `matchups.html` address redirects here.
+  landed. `?open=<gameId>,…` keeps games expanded.
 - **Leaders** (`leaders.html`): usage and touchdown leaderboard, per game or season totals: targets, target
   share, receptions, catch %, yards, yards per target, TDs, red-zone targets, xTD and TD − xTD, plus this
   week's receptions line and best anytime-TD price. Filter by team, week range, minimum targets or your
@@ -69,6 +73,27 @@ Where the odds show up:
 - the Leaders table (Rec line, Book TD)
 - the player page's TD tile
 
+## Best bets and the track record
+
+The picks logic is `bestBets()` in `model.js`. That file is shared by the site and the Node scripts, so the
+Action computes exactly what the page shows.
+
+| Category | Rule (top 5 each) |
+|---|---|
+| Most likely to score | Highest model TD % |
+| Best value | Expected profit > 0 at the best price, price under +400, model ≥ 15%, ≥ 2 books |
+| Longshots | Price +400 or longer, expected profit > 0, at least 1 red-zone target |
+| Due for a TD | TD − xTD ≤ −0.8 with ≥ 3 red-zone targets |
+| Fades | Price +250 or shorter and model at least 8 points below the market |
+
+- `scripts/record-picks.mjs` runs after each odds snapshot, following a fresh stats/injury build. It saves the
+  picks to `data/picks-<season>.json`. Picks lock at kickoff: Sunday's snapshot only replaces picks for games
+  that haven't started.
+- `scripts/grade-picks.mjs` runs after every stats build. It grades final games: a TD (receiving or rushing)
+  wins, a box-score line without a TD loses, and no line is void. Profit is per $100 at the recorded price.
+  Fades are graded right/wrong only. Reruns don't change graded picks.
+- Until a snapshot records the week's picks, the page shows a live preview.
+
 ## The touchdown model
 
 - **xTD** credits each target with the league-wide TE TD rate for where the ball was snapped:
@@ -94,10 +119,13 @@ python3 -m http.server 8000          # then open http://localhost:8000
 - ESPN doesn't publish snap counts or routes run, so usage means targets, target share and yards share.
 - Red-zone splits come from play-by-play text and match box-score targets in ~95% of games
   (sometimes off by one).
-- "Missed last game" means no box-score line. A TE who played but drew no targets is flagged too.
+- Injury status comes from ESPN rosters (refreshed every 3 hours and before each odds snapshot). "Missed last game"
+  appears only for players without an injury tag, and means no box-score line, so it also catches a TE who
+  played but drew no targets.
 - Two-point conversions aren't counted toward fantasy points.
-- The TD model is calibrated against one snapshot and hasn't been scored against real results yet
-  (see ENHANCEMENTS.md).
+- The TD model is calibrated against one snapshot. The Best Bets track record is the first real test of it.
+- A defense-vs-TE matchup factor was tested and left out of the model: four weeks of data is mostly noise.
+  Defense context still appears in each pick's reason.
 - Regular season only.
 - GitHub Pages lets browsers cache pages for 10 minutes, so hard refresh (⌘⇧R) right after a deploy.
 

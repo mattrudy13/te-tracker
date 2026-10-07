@@ -15,7 +15,8 @@
     <div class="wrap">
       <a class="wordmark" href="./">TE <span>Tracker</span></a>
       <nav class="tabs">
-        <a href="./">Matchups</a>
+        <a href="./">Best Bets</a>
+        <a href="matchups.html">Matchups</a>
         <a href="leaders.html">Leaders</a>
         <a href="touchdowns.html">Touchdowns</a>
       </nav>
@@ -61,6 +62,7 @@
     <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
   </main>
 
+  <script src="model.js"></script>
   <script src="common.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -140,7 +142,7 @@
       const team = data.teams[a.team];
       document.title = `${p.name} — TE Tracker`;
       $("head").innerHTML = `${headshot(p, 96)}
-        <div><h1>${esc(p.name)}</h1>
+        <div><h1>${esc(p.name)}${injuryTag(p)}</h1>
         <div class="meta">${teamChip(data, a.team)} ${esc(team?.name ?? "")}${p.jersey ? ` · #${esc(p.jersey)}` : ""}${p.age ? ` · Age ${esc(p.age)}` : ""}${p.exp != null ? ` · ${p.exp ? `Year ${p.exp + 1}` : "Rookie"}` : ""}${p.onRoster ? "" : ` · <span class="flag">not on a current roster</span>`}</div></div>
         <div class="actions">${starButton(id, getWatchlist().has(id))}</div>`;
 

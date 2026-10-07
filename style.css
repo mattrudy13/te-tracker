@@ -140,6 +140,8 @@ table.grid { border-collapse: collapse; width: 100%; font-variant-numeric: tabul
 .neg { color: var(--neg); }
 .muted { color: var(--muted); }
 .flag { font-size: .72rem; color: var(--neg); font-weight: 600; }
+.inj { display: inline-block; font-size: .66rem; font-weight: 800; letter-spacing: .03em; line-height: 1; padding: .15rem .3rem; border-radius: 4px; vertical-align: 1px; color: #fff; background: var(--neg); }
+.inj.q { background: #d18b00; }
 
 .hs { border-radius: 50%; background: var(--surface-2); object-fit: cover; flex: none; border: 1px solid var(--border); }
 .hs-x { display: inline-block; width: 36px; height: 36px; }
@@ -223,3 +225,12 @@ footer { color: var(--muted); font-size: .8rem; padding: 2rem 0 3rem; }
   .g-team .short { display: inline; }
   .tabs a { padding: .35rem .45rem; font-size: .98rem; letter-spacing: .04em; }
 }
+
+/* ---- Best bets ---- */
+.cat-head { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem 1rem; flex-wrap: wrap; }
+.cat-head p { margin: .2rem 0 0; color: var(--muted); font-size: .88rem; max-width: 60ch; }
+.why { display: block; color: var(--muted); font-size: .76rem; font-weight: 400; white-space: normal; max-width: 46ch; margin-top: .15rem; }
+.bets .grid td { vertical-align: top; }
+.bets .who { align-items: flex-start; }
+.result { font-weight: 700; }
+.banner { padding: .8rem 1rem; border-radius: 10px; background: var(--accent-soft); margin: 1rem 0; font-size: .92rem; }

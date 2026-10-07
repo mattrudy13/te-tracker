@@ -156,13 +156,18 @@ async function main() {
           jersey: a.jersey ?? null,
           age: a.age ?? null,
           exp: a.experience?.years ?? null,
+          // Most recent injury report entry: "Questionable", "Out", "Injured Reserve", ...
+          injury: a.injuries?.[0]?.status ? { status: a.injuries[0].status, date: a.injuries[0].date ?? null } : null,
           onRoster: true,
         };
       }
     }
   });
   for (const [id, p] of Object.entries(players)) {
-    if (!rosterTe.has(id)) p.onRoster = false;
+    if (!rosterTe.has(id)) {
+      p.onRoster = false;
+      p.injury = null;
+    }
   }
 
   // Completed regular-season games, by week.

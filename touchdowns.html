@@ -15,7 +15,8 @@
     <div class="wrap">
       <a class="wordmark" href="./">TE <span>Tracker</span></a>
       <nav class="tabs">
-        <a href="./">Matchups</a>
+        <a href="./">Best Bets</a>
+        <a href="matchups.html">Matchups</a>
         <a href="leaders.html">Leaders</a>
         <a href="touchdowns.html" aria-current="page">Touchdowns</a>
       </nav>
@@ -76,6 +77,7 @@
     <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
   </main>
 
+  <script src="model.js"></script>
   <script src="common.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -83,7 +85,7 @@
     const rzState = { sort: "tgt20", dir: "desc" };
     let data;
 
-    const who = (r) => `<div class="who">${headshot(r.player)}<div>${playerLink(r)}<small>${teamChip(data, r.team)}${r.missedLast ? ` <span class="flag" title="Didn't play in the team's most recent game">missed last game</span>` : ""}</small></div></div>`;
+    const who = (r) => `<div class="who">${headshot(r.player)}<div>${playerLink(r)}<small>${teamChip(data, r.team)}${r.missedLast && !r.player?.injury ? ` <span class="flag" title="Didn't play in the team's most recent game">missed last game</span>` : ""}</small></div></div>`;
 
     const oddsCols = [
       { key: "star", label: "", cls: "c", nosort: true, fmt: (r) => starButton(r.id, getWatchlist().has(r.id)) },

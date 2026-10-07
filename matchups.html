@@ -2,11 +2,220 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Matchups — TE Tracker</title>
-  <meta name="robots" content="noindex">
-  <!-- Matchups moved to the home page; keep old links (and ?open=) working. -->
-  <script>location.replace("./" + location.search + location.hash);</script>
-  <meta http-equiv="refresh" content="0; url=./">
+  <meta name="description" content="This week's NFL games with each team's tight ends, usage and touchdown odds.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body><a href="./">Matchups moved to the home page.</a></body>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="wordmark" href="./">TE <span>Tracker</span></a>
+      <nav class="tabs">
+        <a href="./">Best Bets</a>
+        <a href="matchups.html" aria-current="page">Matchups</a>
+        <a href="leaders.html">Leaders</a>
+        <a href="touchdowns.html">Touchdowns</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="page-head">
+      <h1 id="title">Matchups</h1>
+      <p class="sub">Open a game to see both teams' tight ends. <span class="updated" id="updated"></span></p>
+    </div>
+    <div id="status" hidden></div>
+
+    <div class="controls" id="controls" hidden>
+      <button class="btn ghost" type="button" id="toggle-all">Expand all</button>
+    </div>
+
+    <div id="games"></div>
+
+    <p class="note">
+      <b>Team pts</b> are implied by the spread and total. <b>Model</b> is our anytime-touchdown estimate (see
+      <a href="touchdowns.html">Touchdowns</a>); <b>Book</b> is the best anytime-TD price across US sportsbooks (hover for the book and the market's implied chance).
+      <b>Edge</b> is model minus market in percentage points. The market's number includes the books' margin, so a small positive edge is roughly break-even.
+      <b>Line</b> is the receptions over/under most books offer, with the best over and under prices (hover for the book).
+      Props usually appear midweek, so early in the week many show "–". <span id="odds-asof"></span>
+      For finished games, the box score shows the pregame price and line, and how each one landed.
+      The defense line is the opponent's TE fantasy points allowed per game (PPR), ranked 1st (fewest) to 32nd.
+      Games in progress fill in after they end.
+    </p>
+    <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
+  </main>
+
+  <script src="model.js"></script>
+  <script src="common.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let data;
+    const open = new Set((getParams().open ?? "").split(",").filter(Boolean));
+
+    // Season rows for a team's tight ends: players whose most recent game was for this team.
+    function teamTes(team, seasonRows) {
+      return seasonRows.filter((r) => r.team === team).sort((a, b) => b.tgtPg - a.tgtPg || b.fppg - a.fppg);
+    }
+
+    function seasonTable(rows, oddsById, watch, showOdds, g) {
+      if (!rows.length) return `<p class="muted">No tight end has played for this team yet.</p>`;
+      const recCols = showOdds ? 3 : 1, tdCols = showOdds ? 5 : 2;
+      return `<div class="table-wrap"><table class="grid"><thead>
+        <tr class="grp"><th colspan="2"></th><th colspan="2" class="sep">Usage</th><th colspan="${recCols}" class="sep">Receptions</th><th colspan="${tdCols}" class="sep">Touchdowns</th></tr>
+        <tr><th class="c"></th><th class="l">Player</th>
+        <th class="sep" title="Targets per game">Tgt/G</th><th title="Share of the team's targets">Share</th>
+        <th class="sep" title="Receptions per game">Rec/G</th>${showOdds ? `<th title="Receptions over/under most books offer">Line</th><th title="Best over / under price (hover for the book)">O / U</th>` : ""}
+        <th class="sep" title="Touchdowns this season">TD</th><th title="Targets inside the 20 this season">RZ Tgt</th>${showOdds ? `
+        <th title="Model anytime-TD estimate">Model</th><th title="Best anytime-TD price (hover for the book and market %)">Book</th><th title="Model minus market (median book's implied %, which includes the books' margin), in percentage points">Edge</th>` : ""}
+        </tr></thead><tbody>${rows.map((r) => {
+          const o = oddsById[r.id];
+          const book = g ? playerOdds(data, r.id, g.home, g.away) : null;
+          return `<tr class="${watch.has(r.id) ? "watched" : ""}${r.tgtPg < 1 ? " minor" : ""}">
+            <td class="c">${starButton(r.id, watch.has(r.id))}</td>
+            <td class="l"><div class="who">${headshot(r.player, 30)}${playerLink(r)}</div></td>
+            <td class="sep">${fmt.d1(r.tgtPg)}</td><td>${fmt.pct0(r.tgtShare)}</td>
+            <td class="sep">${fmt.d1(r.rec / r.gp)}</td>${showOdds ? `
+            <td class="key">${book?.rec ? book.rec.line : `<span class="muted">–</span>`}</td>
+            <td>${book?.rec ? `<span title="Over: ${esc(book.rec.overBook ?? "–")} · Under: ${esc(book.rec.underBook ?? "–")}">${americanText(book.rec.over)} / ${americanText(book.rec.under)}</span>` : `<span class="muted">–</span>`}</td>` : ""}
+            <td class="sep">${r.td + r.rushTd}</td><td>${r.tgt20}</td>${showOdds ? `
+            <td>${o ? fmt.pct0(o.prob) : "–"}</td><td class="key">${bookTdCell(book)}</td><td class="key">${edgeCell(o?.prob, book?.td?.marketProb)}</td>` : ""}</tr>`;
+        }).join("")}</tbody></table></div>`;
+    }
+
+    function boxTable(lines, watch, game) {
+      if (!lines.length) return `<p class="muted">No tight end stats recorded in this game.</p>`;
+      return `<div class="table-wrap"><table class="grid"><thead><tr>
+        <th class="l">Player</th><th>Tgt</th><th>Rec</th><th>Yds</th><th>TD</th><th title="Targets inside the 20">RZ Tgt</th><th>Rush</th>
+        <th class="sep" title="Pregame best anytime-TD price from the last snapshot">Book TD</th><th title="Pregame receptions line, and which side hit">Rec line</th>
+        </tr></thead><tbody>${lines.map((g) => `<tr class="${watch.has(g.playerId) ? "watched" : ""}">
+          <td class="l">${playerLink({ id: g.playerId, player: data.players[g.playerId] })}</td>
+          <td>${g.tgt}</td><td>${g.rec}</td><td>${g.yds}</td><td>${g.td + g.rushTd || ""}</td><td>${g.tgt20 || ""}</td>
+          <td>${g.rushAtt ? `${g.rushAtt}-${g.rushYds}` : ""}</td>${(() => {
+            const b = playerOdds(data, g.playerId, game.home, game.away);
+            const scored = g.td + g.rushTd > 0;
+            const td = b?.td ? `<span class="${scored ? "pos" : "muted"}" title="${scored ? "Scored" : "Didn't score"}">${americanText(b.td.best)} ${scored ? "✓" : "✗"}</span>` : `<span class="muted">–</span>`;
+            const rec = b?.rec ? `<span class="${g.rec > b.rec.line ? "pos" : "neg"}" title="${g.rec} catches against a line of ${b.rec.line}">${g.rec > b.rec.line ? "Over" : "Under"} ${b.rec.line}</span>` : `<span class="muted">–</span>`;
+            return `<td class="sep">${td}</td><td>${rec}</td>`;
+          })()}</tr>`).join("")}</tbody></table></div>`;
+    }
+
+    function render() {
+      const s = data.schedule;
+      const watch = getWatchlist();
+      const seasonRows = aggregate(data, data.games);
+      const odds = tdOdds(data);
+      const oddsById = Object.fromEntries(odds.map((r) => [r.id, r]));
+      const impliedByGame = {};
+      for (const u of data.upcoming ?? []) impliedByGame[`${u.gameId}:${u.team}`] = u.implied;
+      const def = defenseVsTe(data);
+
+      let lastDay = "";
+      $("games").innerHTML = s.games.map((g) => {
+        const day = new Date(g.date).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+        const dayHead = day !== lastDay ? `<h2 class="day">${esc(day)}</h2>` : "";
+        lastDay = day;
+        const done = g.state === "post", live = g.state === "in";
+        const teamLine = (abbr, side) => {
+          const t = data.teams[abbr];
+          const score = side === "home" ? g.homeScore : g.awayScore;
+          const other = side === "home" ? g.awayScore : g.homeScore;
+          const top = teamTes(abbr, seasonRows)[0];
+          const imp = impliedByGame[`${g.id}:${abbr}`];
+          return `<div class="g-team${done && score < other ? " lost" : ""}">
+            ${t?.logo ? `<img src="${esc(t.logo)}" alt="" loading="lazy">` : ""}
+            <span class="nm"><span class="full">${esc(t?.name ?? abbr)}</span><span class="short">${esc(t?.short ?? abbr)}</span></span>
+            ${imp != null ? `<span class="imp">${fmt.d1(imp)} pts</span>` : ""}
+            ${top ? (() => {
+              const b = playerOdds(data, top.id, g.home, g.away);
+              return `<span class="topte">· ${esc(top.player?.short ?? "")} ${b?.td ? `TD ${americanText(b.td.best)}` : `${fmt.d1(top.tgtPg)} tgt/g`}</span>`;
+            })() : ""}
+            ${score != null ? `<span class="sc">${score}</span>` : ""}</div>`;
+        };
+        const spread = g.spread == null ? "" : g.spread === 0 ? "PK" : g.spread < 0 ? `${esc(g.home)} ${g.spread}` : `${esc(g.away)} −${g.spread}`;
+        const status = done
+          ? `<span class="st">${esc(g.detail || "Final")}</span>`
+          : live
+          ? `<span class="st live">● ${esc(g.detail)}</span>`
+          : `<span class="st">${new Date(g.date).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>`;
+        const side = (abbr, oppAbbr) => {
+          const t = data.teams[abbr];
+          const d = def.byTeam[oppAbbr];
+          const rows = teamTes(abbr, seasonRows);
+          const minor = rows.filter((r) => r.tgtPg < 1).length;
+          const box = data.games.filter((x) => x.gameId === g.id && x.team === abbr);
+          return `<div class="g-side">
+            <h3>${teamChip(data, abbr)} ${esc(t?.short ?? abbr)} tight ends</h3>
+            ${done ? `<h4>This game</h4>${boxTable(box, watch, g)}<h4>Season</h4>` : ""}
+            ${live ? `<p class="muted">Live stats appear after the game.</p>` : ""}
+            ${seasonTable(rows, oddsById, watch, !done && !live, g)}
+            ${minor ? `<button type="button" class="linkbtn" data-all>Show ${minor} more with under 1 target/game</button>` : ""}
+            ${d ? `<p class="def">vs ${esc(oppAbbr)} defense: <b>${fmt.d1(d.fptsPg)}</b> TE pts/game allowed (${ordinal(d.rank)} of ${def.count}) · ${fmt.d1(d.ydsPg)} yds · ${d.td} TD in ${d.gp} games</p>` : ""}
+          </div>`;
+        };
+        return `${dayHead}<details class="game" data-id="${esc(g.id)}" ${open.has(g.id) ? "open" : ""}>
+          <summary>
+            <div class="g-teams">${teamLine(g.away, "away")}${teamLine(g.home, "home")}</div>
+            <div class="g-meta">${status}
+              ${g.network ? `<span>${esc(g.network)}</span>` : ""}
+              ${spread || g.total != null ? `<span>${spread}${spread && g.total != null ? " · " : ""}${g.total != null ? `O/U ${g.total}` : ""}</span>` : ""}
+              ${g.neutral ? `<span>Neutral site</span>` : ""}
+              <span class="chev" aria-hidden="true">▾</span></div>
+          </summary>
+          <div class="g-body">${side(g.away, g.home)}${side(g.home, g.away)}</div>
+        </details>`;
+      }).join("");
+      updateToggleAll();
+    }
+
+    function saveOpen() {
+      setParams({ open: [...open].join(",") });
+      updateToggleAll();
+    }
+    function updateToggleAll() {
+      const all = document.querySelectorAll(".game");
+      $("toggle-all").textContent = all.length && [...all].every((d) => d.open) ? "Collapse all" : "Expand all";
+    }
+
+    (async () => {
+      try {
+        data = await loadData();
+        $("updated").textContent = updatedText(data);
+        if (!data.schedule?.games?.length) throw new Error("No games scheduled right now.");
+        $("odds-asof").textContent = data.odds ? `${oddsAsOf(data)}.` : "";
+        $("title").textContent = `Week ${data.schedule.week} matchups`;
+        document.title = `Week ${data.schedule.week} Matchups — TE Tracker`;
+        $("controls").hidden = false;
+
+        // `toggle` doesn't bubble, so listen in the capture phase.
+        $("games").addEventListener("toggle", (e) => {
+          const d = e.target.closest?.(".game");
+          if (!d || e.target !== d) return;
+          d.open ? open.add(d.dataset.id) : open.delete(d.dataset.id);
+          saveOpen();
+        }, true);
+        $("games").addEventListener("click", (e) => {
+          const b = e.target.closest("[data-all]");
+          if (!b) return;
+          const side = b.closest(".g-side");
+          b.dataset.label ??= b.textContent;
+          side.classList.toggle("all");
+          b.textContent = side.classList.contains("all") ? "Show fewer" : b.dataset.label;
+        });
+        $("toggle-all").addEventListener("click", () => {
+          const games = [...document.querySelectorAll(".game")];
+          const expand = !games.every((d) => d.open);
+          for (const d of games) d.open = expand;
+        });
+        initStars(render);
+        render();
+      } catch (err) {
+        showError(err);
+      }
+    })();
+  </script>
+</body>
 </html>

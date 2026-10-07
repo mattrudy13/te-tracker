@@ -30,6 +30,8 @@ jobs:
           node-version: 22
       - name: Build data
         run: node scripts/build-data.mjs ${{ inputs.season }}
+      - name: Grade best-bets picks
+        run: node scripts/grade-picks.mjs
       - name: Commit if changed
         run: |
           # `updated` changes on every run, so ignore it when deciding whether anything changed.

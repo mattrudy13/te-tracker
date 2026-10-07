@@ -24,10 +24,14 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+      - name: Refresh stats and injuries
+        run: node scripts/build-data.mjs
       - name: Fetch odds
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: node scripts/fetch-odds.mjs
+      - name: Record best-bets picks
+        run: node scripts/record-picks.mjs
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"

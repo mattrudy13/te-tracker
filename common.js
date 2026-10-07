@@ -46,190 +46,16 @@ function updatedText(data) {
   return `Through week ${data.weeks.at(-1) ?? "–"} · updated ${d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
 }
 
-// ---- Fantasy scoring ----
+// ---- Sportsbook odds ----
 
-const SCORING = {
-  ppr: { label: "PPR", rec: 1 },
-  half: { label: "Half PPR", rec: 0.5 },
-  std: { label: "Standard", rec: 0 },
-};
-// tep: TE premium, extra points per catch.
-function fantasyPoints(g, format = "ppr", tep = false) {
-  const perRec = (SCORING[format]?.rec ?? 1) + (tep ? 0.5 : 0);
-  return g.rec * perRec + (g.yds + g.rushYds) * 0.1 + (g.td + g.rushTd) * 6 - g.fumLost * 2;
-}
-
-// ---- Aggregation ----
-
-function gamesFor(data, { from = 1, to = 99, team = "", playerId = null } = {}) {
-  return data.games.filter(
-    (g) => g.week >= from && g.week <= to && (!team || g.team === team) && (!playerId || g.playerId === playerId)
-  );
-}
-
-const SUM_KEYS = ["rec", "tgt", "yds", "td", "rushAtt", "rushYds", "rushTd", "fumLost", "teamTgt", "teamRecYds", "tgt5", "tgt10", "tgt20", "td5", "td10", "td20"];
-
-// One summary row per player over the given games.
-function aggregate(data, games, { format = "ppr", tep = false } = {}) {
-  const model = tdModel(data);
-  const by = new Map();
-  for (const g of games) {
-    let a = by.get(g.playerId);
-    if (!a) {
-      a = { id: g.playerId, player: data.players[g.playerId], team: g.team, gp: 0, fpts: 0, long: 0, xtd: 0, games: [] };
-      for (const k of SUM_KEYS) a[k] = 0;
-      by.set(g.playerId, a);
-    }
-    a.gp++;
-    a.team = g.team; // latest team, since games are in week order
-    for (const k of SUM_KEYS) a[k] += g[k];
-    a.long = Math.max(a.long, g.long);
-    a.fpts += fantasyPoints(g, format, tep);
-    a.xtd += model.xtd(g);
-    a.games.push(g);
-  }
-  for (const a of by.values()) {
-    a.tgtShare = a.teamTgt ? a.tgt / a.teamTgt : null;
-    a.ydsShare = a.teamRecYds ? a.yds / a.teamRecYds : null;
-    a.catchPct = a.tgt ? a.rec / a.tgt : null;
-    a.ypr = a.rec ? a.yds / a.rec : null;
-    a.ypt = a.tgt ? a.yds / a.tgt : null;
-    a.fppg = a.fpts / a.gp;
-    a.tgtPg = a.tgt / a.gp;
-    a.rzPg = a.tgt20 / a.gp;
-    a.tdDiff = a.td - a.xtd;
-  }
-  return [...by.values()];
-}
-
-// ---- Touchdown model ----
-//
-// Expected receiving TDs (xTD): each target is worth the league-wide TE TD rate for where it was
-// thrown from (inside the 5, 6–10, 11–20, or outside the red zone). Rates are this season's
-// actual TE results blended with long-run priors; the priors carry most of the weight early on.
-//
-// Anytime-TD odds: a player's expected TDs per game is shrunk toward a volume-only baseline
-// (targets per game x a long-run 5% TE TD-per-target rate), worth SHRINK_GAMES games of data, so a
-// few red-zone looks in September don't dominate. Season and last-3 estimates are blended, scaled by
-// the team's implied points for the matchup, then P = 1 − e^(−λ) (Poisson).
-//
-// Calibrated on 2026-10-05 against the first sportsbook snapshot (30 priced TEs, books de-vigged by
-// ~12%): RMSE went from 11.2 to 6.4 percentage points and the average matched the market. The model
-// still disagrees with the books on purpose (it only knows targets and field position).
-
-const TD_ZONES = [
-  { key: "i5", label: "Inside 5", prior: 0.45, weight: 400 },
-  { key: "i10", label: "6–10", prior: 0.27, weight: 400 },
-  { key: "i20", label: "11–20", prior: 0.12, weight: 600 },
-  { key: "out", label: "Outside 20", prior: 0.025, weight: 3000 },
-];
-const TD_PER_TARGET_PRIOR = 0.05;
-const SHRINK_GAMES = 8;
-const RECENT_WEIGHT = 0.3;
-
-function zoneCounts(g) {
-  return {
-    i5: { tgt: g.tgt5, td: g.td5 },
-    i10: { tgt: g.tgt10 - g.tgt5, td: g.td10 - g.td5 },
-    i20: { tgt: g.tgt20 - g.tgt10, td: g.td20 - g.td10 },
-    out: { tgt: Math.max(0, g.tgt - g.tgt20), td: Math.max(0, g.td - g.td20) },
-  };
-}
-
-function tdModel(data) {
-  if (data._tdModel) return data._tdModel;
-  const tot = Object.fromEntries(TD_ZONES.map((z) => [z.key, { tgt: 0, td: 0 }]));
-  for (const g of data.games) {
-    const z = zoneCounts(g);
-    for (const k in z) {
-      tot[k].tgt += z[k].tgt;
-      tot[k].td += z[k].td;
-    }
-  }
-  const rates = {};
-  for (const z of TD_ZONES) rates[z.key] = (tot[z.key].td + z.prior * z.weight) / (tot[z.key].tgt + z.weight);
-  const xtd = (g) => {
-    const z = zoneCounts(g);
-    return TD_ZONES.reduce((s, { key }) => s + z[key].tgt * rates[key], 0);
-  };
-  const implied = (data.upcoming ?? []).map((u) => u.implied).filter((n) => n != null);
-  const avgImplied = implied.length ? implied.reduce((a, b) => a + b, 0) / implied.length : 22;
-  data._tdModel = { rates, totals: tot, xtd, avgImplied };
-  return data._tdModel;
-}
-
-// Expected TDs per game over `games`, shrunk toward the player's volume-only baseline.
-function shrunkXtdPg(model, games, tgtPg) {
-  const x = games.reduce((s, g) => s + model.xtd(g), 0);
-  return (x + SHRINK_GAMES * tgtPg * TD_PER_TARGET_PRIOR) / (games.length + SHRINK_GAMES);
-}
-
-// Anytime-TD probability for each TE with a game in the upcoming week.
-function tdOdds(data) {
-  const model = tdModel(data);
-  const byTeam = Object.fromEntries((data.upcoming ?? []).map((u) => [u.team, u]));
-  const lastTeamWeek = {};
-  for (const g of data.games) lastTeamWeek[g.team] = Math.max(lastTeamWeek[g.team] ?? 0, g.week);
-  const rows = [];
-  for (const a of aggregate(data, data.games)) {
-    const p = a.player;
-    const team = p?.onRoster ? p.team : a.team;
-    const u = byTeam[team];
-    if (!u || team !== a.team) continue; // no game this week, or changed teams
-    const recent = a.games.slice(-3);
-    const xtdSeason = a.xtd / a.gp;
-    const season = shrunkXtdPg(model, a.games, a.tgtPg);
-    const recentPg = shrunkXtdPg(model, recent, a.tgtPg);
-    // Small rushing-TD bump for the few TEs who get carries near the goal line.
-    const rush = a.rushTd / a.gp;
-    const base = (a.gp >= 3 ? (1 - RECENT_WEIGHT) * season + RECENT_WEIGHT * recentPg : season) + 0.5 * rush;
-    const scale = u.implied ? u.implied / model.avgImplied : 1;
-    const lambda = base * scale;
-    const missedLast = (lastTeamWeek[team] ?? 0) > a.games.at(-1).week;
-    rows.push({ ...a, team, up: u, xtdPg: xtdSeason, lambda, prob: 1 - Math.exp(-lambda), missedLast });
-  }
-  return rows.sort((x, y) => y.prob - x.prob);
-}
-
-// What each defense allows to tight ends, per game. rank 1 = fewest fantasy points allowed.
-function defenseVsTe(data, format = "ppr") {
-  const by = {};
-  for (const g of data.games) {
-    const d = (by[g.opp] ??= { team: g.opp, gameIds: new Set(), tgt: 0, rec: 0, yds: 0, td: 0, fpts: 0 });
-    d.gameIds.add(g.gameId);
-    d.tgt += g.tgt;
-    d.rec += g.rec;
-    d.yds += g.yds;
-    d.td += g.td + g.rushTd;
-    d.fpts += fantasyPoints(g, format);
-  }
-  const rows = Object.values(by).map((d) => {
-    const n = d.gameIds.size;
-    return { team: d.team, gp: n, tgtPg: d.tgt / n, recPg: d.rec / n, ydsPg: d.yds / n, tdPg: d.td / n, fptsPg: d.fpts / n, td: d.td };
-  });
-  rows.sort((a, b) => a.fptsPg - b.fptsPg).forEach((r, i) => (r.rank = i + 1));
-  return { byTeam: Object.fromEntries(rows.map((r) => [r.team, r])), count: rows.length };
-}
 function ordinal(n) {
   const s = ["th", "st", "nd", "rd"], v = n % 100;
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-// ---- Sportsbook odds ----
 
-// American odds -> implied probability. Includes the book's margin, so it runs a bit high.
-function impliedProb(o) {
-  return o == null ? null : o > 0 ? 100 / (o + 100) : -o / (-o + 100);
-}
 function americanText(o) {
   return o == null ? "–" : o > 0 ? `+${o}` : `−${Math.abs(o)}`;
-}
-// A player's snapshot odds for a specific game (matched by teams, so last week's snapshot never
-// shows up against this week's game).
-function playerOdds(data, id, home, away) {
-  const p = data.odds?.players?.[id];
-  const g = p && data.odds.games?.[p.oddsGameId];
-  return g && g.home === home && g.away === away ? p : null;
 }
 function oddsAsOf(data) {
   if (!data.odds?.takenAt) return "";
@@ -308,12 +134,19 @@ function headshot(p, size = 36) {
   }
   return `<span class="hs hs-x" style="width:${size}px;height:${size}px"></span>`;
 }
+// Small injury badge: Q (amber), D / O / IR / SUS (red). Empty when healthy.
+function injuryTag(p) {
+  const st = p?.injury?.status;
+  if (!st) return "";
+  const short = /^questionable/i.test(st) ? "Q" : /^doubtful/i.test(st) ? "D" : /^out/i.test(st) ? "O" : /^injured reserve/i.test(st) ? "IR" : /^suspen/i.test(st) ? "SUS" : /^physically/i.test(st) ? "PUP" : st.slice(0, 3).toUpperCase();
+  return ` <span class="inj${short === "Q" ? " q" : ""}" title="${esc(st)}${p.injury.date ? ` (${esc(new Date(p.injury.date).toLocaleDateString(undefined, { month: "short", day: "numeric" }))})` : ""}">${short}</span>`;
+}
 function teamChip(data, abbr) {
   const t = data.teams[abbr];
   return `<span class="team" style="--team:${esc(t?.color ?? "#888")}">${esc(abbr)}</span>`;
 }
 function playerLink(a) {
-  return `<a class="pname" href="player.html?id=${encodeURIComponent(a.id)}">${esc(a.player?.name ?? a.id)}</a>`;
+  return `<a class="pname" href="player.html?id=${encodeURIComponent(a.id)}">${esc(a.player?.name ?? a.id)}</a>${injuryTag(a.player)}`;
 }
 function matchup(u) {
   return `${u.home ? "vs" : "@"} ${esc(u.opp)}`;

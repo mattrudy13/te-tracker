@@ -4,21 +4,22 @@ Ideas for the site, roughly in priority order within each section. `[x]` done, `
 The focus is touchdowns and receptions betting angles. Fantasy is secondary.
 
 ## Quick wins
-- [ ] **Injury tags**: ESPN game summaries (`injuries`) and team rosters carry each player's status
+- [x] **Injury tags**: ESPN game summaries (`injuries`) and team rosters carry each player's status
       (Questionable / Doubtful / Out / IR). Show a Q/D/O tag next to the name on Matchups and
       Touchdowns, set TD % to 0 for Out, and replace the vague "missed last game" flag with the real
       reason.
-- [ ] **"Missed last game" false positives**: a TE who played but drew no targets has no box-score
+- [~] **"Missed last game" false positives**: hidden when an injury tag explains it. Still open otherwise: a TE who played but drew no targets has no box-score
       line, so they're flagged too. Injury data (above) or the box score's full participant list
       would fix it.
-- [ ] **Best edges card**: a short "biggest model-vs-market gaps this week" list at the top of
+- [x] **Best edges card**: now the Best Bets page. a short "biggest model-vs-market gaps this week" list at the top of
       Matchups (top 5 positive and negative TD edges, plus any receptions edges once those exist).
 - [ ] **Watchlist filter on Matchups**: show only games with a starred TE, and open them by default.
 - [ ] **Cache-busting**: add `?v=<commit>` to `style.css` / `common.js` (stamped by the workflow), so
       a deploy isn't half-stale for 10 minutes, as happened with a nav tab.
 
 ## Touchdown model
-- [ ] **Score the model and the books against results**: at each Thursday/Sunday snapshot, save
+- [~] **Score the model and the books against results**: Best Bets records and grades its picks (W–L,
+      units, ROI). Still open, the full version: at each Thursday/Sunday snapshot, save
       the model's TD % and the book prices for every priced TE (`data/predictions-<season>.json`).
       After the games, record who scored. Show a calibration table on Touchdowns (predicted vs
       actual by bucket), Brier score / log loss for model vs market, and the ROI from betting every
@@ -28,8 +29,8 @@ The focus is touchdowns and receptions betting angles. Fantasy is secondary.
 - [ ] **Red-zone target share**: count every receiver's red-zone targets from the play-by-play
       (not just TEs), so a TE's share of team RZ looks can feed the model. That's a stronger signal than raw
       counts when teams differ in red-zone trips.
-- [ ] **Defense vs TE touchdowns**: rank defenses by TE TDs and red-zone targets allowed, not just
-      fantasy points, and feed the opponent into the TD model as a small adjustment.
+- [~] **Defense vs TE touchdowns**: shown in each Best Bets reason. A model multiplier was tested and left
+      out (it worsened the market fit after 4 weeks). Retest around week 9 with more data.
 - [ ] **Goal-line role**: flag TEs with targets or carries inside the 5 in the last few games.
       Those are a small sample, but they're the plays books seem to price hardest.
 - [ ] **First TD scorer odds**: the Odds API market `player_1st_td` (+1 credit per game, ~16 per
@@ -83,11 +84,21 @@ The focus is touchdowns and receptions betting angles. Fantasy is secondary.
       today) and validate the output shape (rows per game, players with no team), so a quiet change
       doesn't publish bad numbers.
 
+## Best Bets
+- [ ] **Receptions picks**: add over/under categories once a receptions projection exists (see Receptions).
+- [ ] **Tracking by price band and book**: break the track record down by price range and sportsbook, to
+      see whether the edge only exists at one offshore book's stale lines.
+- [ ] **Closing-line value**: compare each pick's price with the Sunday-morning price for the same player.
+      Beating the close is a faster signal than W–L.
+- [ ] **Best book only from major US books**: an option to ignore offshore books (e.g. BetOnline) when
+      choosing the best price, since many users can't bet there.
+
 ## Shipped
 - [x] Leaderboard, Player, watchlist, shareable URLs, dark mode, phone layout
 - [x] Leaders reworked around usage and TDs (no fantasy points or LNG), Compare removed, Matchups table
       consolidated into Usage / Receptions / Touchdowns groups, positive Edge in green, Touchdowns
-      sorted by Edge, Matchups is the home page, player page refocused on lines (2026-10-06)
+      sorted by Edge, player page refocused on lines (2026-10-06)
+- [x] Best Bets home page with five categories, recorded and graded picks, and injury tags (2026-10-06)
 - [x] Red-zone splits from play-by-play, xTD, anytime-TD model with implied team points
 - [x] Matchups page with each game's TEs, defense vs TE and finished-game box scores
 - [x] Sportsbook odds snapshot (anytime TD, receptions line) on Matchups, Touchdowns and Player

@@ -7,8 +7,9 @@ no build step, globals in `common.js`, Barlow Condensed + Inter, dark top bar.
 ## Status (2026-10-06)
 
 Live and working end to end:
-- Pages: Matchups (home), Leaders, Touchdowns, Player. Watchlist, shareable URLs, dark mode, phone layout.
-  Compare was removed on request (2026-10-06).
+- Pages: Best Bets (home), Matchups, Leaders, Touchdowns, Player. Watchlist, shareable URLs, dark mode,
+  phone layout. Compare was removed on request (2026-10-06).
+- Best Bets track record starts with week 5 (picks are recorded at the Thu/Sun snapshots, graded by update-data).
 - Data: `update-data.yml` (ESPN, every 3 h Thu–Mon + Tue) and `snapshot-odds.yml` (The Odds API, Thu 5 PM ET
   + Sun 8 AM ET). `ODDS_API_KEY` secret is set. The first real snapshot (Mon night) priced 37 TEs, 483
   credits left.
@@ -34,14 +35,26 @@ results, and a receptions projection vs the line.
 - Both workflows share the `update-data` concurrency group and `git pull --rebase` before pushing.
 - `.github/workflows/update-data.yml`: scheduled build; commits `data/` only if something other
   than `updated` changed.
-- `common.js`: data loading, `aggregate()`, `fantasyPoints()`, `tdModel()` / `tdOdds()`,
-  `renderTable()` (sortable), URL params, watchlist (localStorage), markup helpers.
-- Pages: `index.html` (Matchups, the home page by request), `leaders.html`, `touchdowns.html`, `player.html`.
-  `matchups.html` is only a redirect to `./` that keeps `?open=` (old links);
+- `model.js`: all data and model code, with no DOM access, shared by the pages (globals) and the Node scripts
+  (`createRequire`): `aggregate`, `tdModel` / `tdOdds`, `isOut`, `defenseVsTe`, `playerOdds`, `bestBets`,
+  `evPer100`. Pages load `model.js` before `common.js`. **Any model change affects recorded picks, so the page
+  and the Action always agree.**
+- `common.js`: DOM side: data loading, formatting, `renderTable()` (sortable), URL params, watchlist, markup
+  helpers (`playerLink` includes `injuryTag`), odds cell helpers.
+- `scripts/record-picks.mjs` (snapshot-odds.yml: build → fetch-odds → record) and `scripts/grade-picks.mjs`
+  (update-data.yml: build → grade) maintain `data/picks-<season>.json` `{ weeks: { N: { picks: [{ cat, playerId,
+  gameId, kickoff, price, book, modelProb, marketProb, ev, why, takenAt, result?, scored?, profit? }] } } }`.
+  Picks lock at kickoff. Test with `NOW=<iso>` and a scratch copy of `data/`.
+- Pages: `index.html` (Best Bets, the home page by request), `matchups.html`, `leaders.html`, `touchdowns.html`,
+  `player.html`. Matchups was briefly the home page, so `index.html` forwards `?open=` links to `matchups.html`;
   each keeps its page logic in an inline script. The nav is copied into each page; add new tabs to all of them.
-- `defenseVsTe()` in common.js: TE fantasy points allowed per game by each defense (PPR, rank 1 = fewest).
-- Odds helpers in common.js: `playerOdds()`, `impliedProb()`, `americanText()`, `bookTdCell()`,
-  `recLineCell()`, `edgeCell()`, `oddsAsOf()`.
+- `defenseVsTe()` in model.js: TE fantasy points allowed per game by each defense (PPR, rank 1 = fewest).
+- Odds helpers: `playerOdds()` / `impliedProb()` in model.js; `americanText()`, `bookTdCell()`,
+  `recLineCell()`, `edgeCell()`, `oddsAsOf()` in common.js.
+- Injuries: `players[id].injury = { status, date }` from the ESPN roster (`a.injuries[0]`). `isOut()` (Out,
+  Doubtful, IR, suspended, PUP, NFI) sets `tdOdds` rows `out: true` and `prob: null`; those players are never picked.
+- A defense-vs-TE multiplier was tested (2026-10-06) and left out: it worsened the market fit at every
+  strength (RMSE 6.39 → 6.58–7.19). The note is in model.js. Revisit mid-season.
 
 ## Page notes
 
