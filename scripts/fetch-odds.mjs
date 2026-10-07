@@ -18,6 +18,10 @@ const API = "https://api.the-odds-api.com/v4/sports/americanfootball_nfl";
 const DATA_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "data");
 const MARKETS = ["player_anytime_td", "player_receptions"];
 const DAYS_AHEAD = 7;
+// Offshore books in The Odds API's "us" region. They're dropped before picking the best price and the
+// market median, so every price on the site (and every recorded pick) is one a US bettor can take at a
+// licensed book. Keys are The Odds API's bookmaker keys.
+const OFFSHORE_BOOKS = new Set(["betonlineag", "bovada", "betus", "mybookieag", "lowvig", "betanysports", "everygame"]);
 
 const fixtureArg = process.argv.indexOf("--fixture");
 const fixture = fixtureArg > 0 ? JSON.parse(await readFile(process.argv[fixtureArg + 1], "utf8")) : null;
@@ -97,7 +101,8 @@ async function main() {
     games[ev.id] = { home, away, commence: ev.commence_time, takenAt: new Date().toISOString() };
 
     const byPlayer = {}; // espn id -> { td: {book: price}, rec: {point: {over: {book: price}, under: {book: price}}} }
-    for (const bm of odds.bookmakers ?? []) {
+    const books = (odds.bookmakers ?? []).filter((bm) => !OFFSHORE_BOOKS.has(bm.key));
+    for (const bm of books) {
       for (const m of bm.markets ?? []) {
         for (const o of m.outcomes ?? []) {
           const name = o.description ?? o.name;
@@ -125,7 +130,7 @@ async function main() {
         const probs = tdBooks.map(([, o]) => implied(o)).sort((a, b) => a - b);
         const mid = probs.length / 2;
         const median = probs.length % 2 ? probs[Math.floor(mid)] : (probs[mid - 1] + probs[mid]) / 2;
-        out.td = { best: price, book, books: tdBooks.length, marketProb: median };
+        out.td = { best: price, book, books: tdBooks.length, marketProb: median, prices: Object.fromEntries(tdBooks) };
       }
       // Receptions: use the line most books hang, and the best price on each side of it.
       const lines = Object.entries(p.rec).sort((a, b) => Object.keys(b[1].over).length - Object.keys(a[1].over).length);
@@ -145,7 +150,7 @@ async function main() {
     for (const n of names) if (!findTe(n, [home, away])) unmatched.push(n);
   }
 
-  const out = { season, takenAt: new Date().toISOString(), source: "The Odds API (US books)", games, players };
+  const out = { season, takenAt: new Date().toISOString(), source: "The Odds API (US-licensed books only)", excluded: [...OFFSHORE_BOOKS], games, players };
   await writeFile(outFile, JSON.stringify(out) + "\n");
   console.log(`odds: ${events.length} games fetched, ${Object.keys(players).length} TEs priced${remaining != null ? `, ${remaining} credits left` : ""}`);
   console.log(`(${unmatched.length} non-TE or unmatched prop names skipped)`);

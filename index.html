@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=73a39d40">
   <script>
     // Matchups was the home page briefly; forward its old ?open= links.
     if (new URLSearchParams(location.search).has("open")) location.replace("matchups.html" + location.search);
@@ -55,7 +55,8 @@
       aren't (injuries, game plans), so treat these as a starting point, not betting advice. Players listed as Out, Doubtful or on IR are
       never picked. A <span class="inj q">Q</span> tag means Questionable.
       <span class="cc">CC</span> rows are <b>close calls</b>: the next-best players, shown in lighter text to fill a category to five when
-      fewer meet its rule. They aren't official picks and aren't graded.
+      fewer meet its rule. They aren't official picks. They're graded in a separate shadow record, which shows whether
+      the rules are too strict or too loose, and never count toward the official record.
       Grading: a pick wins if the player scores a receiving or rushing TD. A player with no box-score line is voided, the way books handle
       inactive players (a TE who played but drew no targets also lands there). Fades win when the player doesn't score, and have no
       profit figure because the "No" price isn't tracked.
@@ -63,8 +64,8 @@
     <footer>Data from ESPN and The Odds API. Regular season only.</footer>
   </main>
 
-  <script src="model.js"></script>
-  <script src="common.js"></script>
+  <script src="model.js?v=a6ff0cdb"></script>
+  <script src="common.js?v=38d53430"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let data, picksStore = null;
@@ -100,15 +101,17 @@
         <td class="l"><div class="who">${headshot(player, 36)}<div>${playerLink(a)} <small>${teamChip(data, p.team)} ${p.home ? "vs" : "@"} ${esc(p.opp)} · ${esc(when)}</small><span class="why">Close call · ${esc(p.why ?? "")}</span></div></div></td>
         <td class="key">${p.price != null ? americanText(p.price) : "–"}${p.book ? `<small class="why" style="max-width:none">${esc(p.book)}</small>` : ""}</td>
         <td>${fmt.pct0(p.modelProb)}</td><td>${fmt.pct0(p.marketProb)}</td>
-        <td>${p.marketProb != null ? edgeCell(p.modelProb, p.marketProb) : "–"}</td><td>${evText(p.ev)}</td><td></td>
+        <td>${p.marketProb != null ? edgeCell(p.modelProb, p.marketProb) : "–"}</td><td>${evText(p.ev)}</td><td>${resultText(p.result)}</td>
       </tr>`;
     }
 
     function renderCats(week, picks, source, close) {
       $("cats").innerHTML = BET_CATEGORIES.map((c) => {
-        const real = picks.filter((p) => p.cat === c.key);
+        const real = picks.filter((p) => p.cat === c.key && !p.shadow);
         const ids = new Set(real.map((p) => p.playerId));
-        const fill = (close[c.key] ?? []).filter((p) => !ids.has(p.playerId)).slice(0, Math.max(0, PICKS_PER_CATEGORY - real.length));
+        const savedClose = picks.filter((p) => p.cat === c.key && p.shadow);
+        const pool = source === "saved" ? savedClose : close[c.key] ?? [];
+        const fill = pool.filter((p) => !ids.has(p.playerId)).slice(0, Math.max(0, PICKS_PER_CATEGORY - real.length));
         const rows = [...real, ...fill.map((p) => ({ ...p, cat: c.key, close: true }))];
         const anyResult = rows.some((p) => p.result);
         return `<section class="card">
@@ -126,12 +129,23 @@
 
     function renderRecord() {
       const all = Object.entries(picksStore?.weeks ?? {}).flatMap(([w, wk]) => wk.picks.map((p) => ({ ...p, week: +w })));
-      const graded = all.filter((p) => p.result);
-      if (!graded.length) {
+      const graded = all.filter((p) => p.result && !p.shadow);
+      const shadow = all.filter((p) => p.result && p.shadow);
+      if (!graded.length && !shadow.length) {
         $("record").innerHTML = `<p class="muted">No graded picks yet. Results appear after this week's games are final.</p>`;
         $("recent").innerHTML = "";
         return;
       }
+      $("record").innerHTML = recordTable(graded, "Official picks") + (shadow.length ? recordTable(shadow, "Close calls (shadow record, not official)") : "");
+      if (!graded.length) {
+        $("recent").innerHTML = "";
+        return;
+      }
+      const lastWeek = Math.max(...graded.map((p) => p.week));
+      renderRecent(graded.filter((p) => p.week === lastWeek), lastWeek);
+    }
+
+    function recordTable(graded, title) {
       const rows = BET_CATEGORIES.map((c) => {
         const g = graded.filter((p) => p.cat === c.key);
         const won = g.filter((p) => p.result === "won").length, lost = g.filter((p) => p.result === "lost").length, vd = g.filter((p) => p.result === "void").length;
@@ -139,13 +153,14 @@
         const profit = staked.reduce((s, p) => s + p.profit, 0);
         return { c, n: g.length, won, lost, vd, hit: won + lost ? won / (won + lost) : null, units: staked.length ? profit / 100 : null, roi: staked.length ? profit / (100 * staked.length) : null };
       });
-      $("record").innerHTML = `<table class="grid"><thead><tr><th class="l">Category</th><th>Picks</th><th>W–L–Void</th><th>Hit rate</th><th title="Profit in $100 units">Units</th><th>ROI</th></tr></thead><tbody>${rows
+      return `<h3 style="margin:.9rem 0 .3rem">${esc(title)}</h3><table class="grid"><thead><tr><th class="l">Category</th><th>Picks</th><th>W–L–Void</th><th>Hit rate</th><th title="Profit in $100 units">Units</th><th>ROI</th></tr></thead><tbody>${rows
         .map((r) => `<tr><td class="l">${esc(r.c.label)}</td><td>${r.n}</td><td>${r.won}–${r.lost}–${r.vd}</td><td>${fmt.pct0(r.hit)}</td>
           <td class="key">${r.units == null ? "–" : `<span class="${r.units > 0 ? "pos" : r.units < 0 ? "neg" : ""}">${r.units > 0 ? "+" : r.units < 0 ? "−" : ""}${Math.abs(r.units).toFixed(2)}</span>`}</td>
           <td>${r.roi == null ? "–" : `<span class="${r.roi > 0 ? "pos" : r.roi < 0 ? "neg" : ""}">${r.roi > 0 ? "+" : r.roi < 0 ? "−" : ""}${Math.abs(r.roi * 100).toFixed(0)}%</span>`}</td></tr>`)
         .join("")}</tbody></table>`;
-      const lastWeek = Math.max(...graded.map((p) => p.week));
-      const recent = graded.filter((p) => p.week === lastWeek);
+    }
+
+    function renderRecent(recent, lastWeek) {
       $("recent").innerHTML = `<h3 style="margin:1.2rem 0 .4rem">Week ${lastWeek} results</h3><div class="table-wrap tight"><table class="grid"><thead><tr>
         <th class="l">Category</th><th class="l">Player</th><th>Price</th><th>Model</th><th>Result</th><th>Profit</th></tr></thead><tbody>${recent
         .map((p) => `<tr><td class="l">${esc(BET_CATEGORIES.find((c) => c.key === p.cat)?.label ?? p.cat)}</td>

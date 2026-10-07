@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Saves this week's Best Bets picks to data/picks-<season>.json so they can be graded later.
+// Saves this week's Best Bets picks (and close calls, flagged `shadow`) to data/picks-<season>.json so
+// they can be graded later.
 // Runs after each odds snapshot. A pick locks at kickoff: later snapshots only replace picks whose
 // games haven't started, so Thursday's TNF picks survive the Sunday run.
 //
@@ -38,14 +39,18 @@ if (!bets.week) {
 const wk = (store.weeks[bets.week] ??= { picks: [] });
 const started = (p) => Date.parse(p.kickoff) <= now;
 const locked = wk.picks.filter(started);
-const lockedKeys = new Set(locked.map((p) => `${p.cat}:${p.playerId}`));
+const key = (p) => `${p.cat}:${p.playerId}:${p.shadow ? 1 : 0}`;
+const lockedKeys = new Set(locked.map(key));
 const takenAt = new Date(now).toISOString();
 const fresh = [];
-for (const [cat, rows] of Object.entries(bets.cats)) {
+// Official picks, plus close calls as a "shadow" record: graded the same way but never counted in the
+// official record. They show whether the category rules are too strict or too loose.
+const sets = [[bets.cats, false], [bets.closeCalls ?? {}, true]];
+for (const [cats, shadow] of sets) for (const [cat, rows] of Object.entries(cats)) {
   for (const c of rows) {
-    if (lockedKeys.has(`${cat}:${c.playerId}`)) continue;
+    if (lockedKeys.has(key({ cat, playerId: c.playerId, shadow }))) continue;
     fresh.push({
-      cat, playerId: c.playerId, name: c.name, team: c.team, opp: c.opp, home: c.home,
+      cat, ...(shadow ? { shadow: true } : {}), playerId: c.playerId, name: c.name, team: c.team, opp: c.opp, home: c.home,
       gameId: c.gameId, kickoff: c.kickoff, price: c.price, book: c.book,
       modelProb: round(c.modelProb), marketProb: c.marketProb == null ? null : round(c.marketProb),
       ev: c.ev == null ? null : Math.round(c.ev * 10) / 10, why: c.why, takenAt, oddsAt: data.odds?.takenAt ?? null,
@@ -55,7 +60,9 @@ for (const [cat, rows] of Object.entries(bets.cats)) {
 wk.picks = [...locked, ...fresh];
 store.updated = takenAt;
 await writeFile(file, JSON.stringify(store, null, 1) + "\n");
-console.log(`week ${bets.week}: ${locked.length} locked picks kept, ${fresh.length} picks from this snapshot (${bets.priced} TEs priced)`);
+const n = (rows, sh) => rows.filter((p) => !!p.shadow === sh).length;
+console.log(`week ${bets.week}: kept ${n(locked, false)} locked picks + ${n(locked, true)} close calls; ` +
+  `recorded ${n(fresh, false)} picks + ${n(fresh, true)} close calls (${bets.priced} TEs priced)`);
 
 function round(x) {
   return Math.round(x * 10000) / 10000;

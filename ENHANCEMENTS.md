@@ -5,7 +5,7 @@ Ideas for the site, roughly in priority order within each section. `[x]` done, `
 Fantasy points are deliberately out of scope.
 
 ## Quick wins
-- [ ] **Cache-busting** (higher priority now): pages load `model.js`, `common.js` and `style.css`
+- [x] **Cache-busting** (done 2026-10-06: `scripts/stamp-assets.mjs` content-hash stamps, plus a CI check): pages load `model.js`, `common.js` and `style.css`
       separately, and GitHub Pages lets browsers cache each for 10 minutes. Right after a deploy, a new
       page can run against an old `model.js` and break. Stamp `?v=<commit>` on those tags in the
       workflow (or a tiny pre-push script).
@@ -17,16 +17,17 @@ Fantasy points are deliberately out of scope.
       issue listing the official picks. GitHub emails you, so the picks arrive without opening the site.
 
 ## Best Bets
-- [ ] **(new) Shadow record for close calls**: save close calls too, flagged so they never count in the
+- [x] **(new) Shadow record for close calls** (done 2026-10-06): save close calls too, flagged so they never count in the
       official record, and show their results separately. After a few weeks this shows whether the
       category rules are too strict or too loose. It's the data needed to tune them (next item).
 - [ ] **(new) Tune the category rules from results** (around week 9): thresholds like "+400 for
       longshots", "TD − xTD ≤ −0.8" and "edge ≤ −8" were set by judgment. Check them against the
       official and shadow records.
-- [ ] **Best book only from major US books**: an option to ignore offshore books (e.g. BetOnline.ag) when
-      choosing the best price. Many of this week's best prices come from them, and many people can't
-      bet there.
-- [ ] **Tracking by price band and book**: break the record down by price range and sportsbook, to see
+- [x] **Best book only from US-licensed books** (done 2026-10-06, everywhere, no toggle): offshore books
+      (e.g. BetOnline.ag) are ignored when choosing the best price and market median. Before, they supplied
+      7 of the 30 best prices in the first snapshot.
+- [ ] **Tracking by price band and book** (per-book prices are now saved in `td.prices`): break the record
+      down by price range and sportsbook, to see
       whether the edge only exists at one book's stale lines.
 - [ ] **Closing-line value**: compare each Thursday pick's price with Sunday's price for the same player.
       Beating the closing line is a faster, less noisy signal than W–L.

@@ -19,6 +19,12 @@ Live and working end to end:
 Next steps: ENHANCEMENTS.md. The highest-value items are injury tags, scoring the model and books against
 results, and a receptions projection vs the line.
 
+## Before every commit that touches model.js, common.js or style.css
+
+Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every HTML file.
+`.github/workflows/check-assets.yml` fails the push otherwise. New pages must load those files with the same
+`src="model.js"` / `href="style.css"` form so the stamper finds them.
+
 ## Layout
 
 - `scripts/build-data.mjs`: the only thing that talks to ESPN. Writes `data/<season>.json`,
@@ -45,9 +51,13 @@ results, and a receptions projection vs the line.
   (update-data.yml: build → grade) maintain `data/picks-<season>.json` `{ weeks: { N: { picks: [{ cat, playerId,
   gameId, kickoff, price, book, modelProb, marketProb, ev, why, takenAt, result?, scored?, profit? }] } } }`.
   Picks lock at kickoff. Test with `NOW=<iso>` and a scratch copy of `data/`.
-- `bestBets()` returns `cats` (strict rules: recorded and graded) and `closeCalls` (a looser pool that fills
-  each category to 5, display only, `tr.close` with a "CC" label). The user asked for full lists but wanted
-  the track record kept clean, so never record close calls.
+- `bestBets()` returns `cats` (strict rules: official picks) and `closeCalls` (a looser pool that fills each
+  category to 5, `tr.close` with a "CC" label). record-picks saves close calls with `shadow: true`; they're
+  graded like picks but shown only in the separate "shadow record" table. **Never let shadow picks into the
+  official record.** Every consumer must filter on `!p.shadow`. The lock key includes the shadow flag.
+- Odds are US-licensed books only: `OFFSHORE_BOOKS` in fetch-odds.mjs (Odds API bookmaker keys) are dropped
+  before best price / market median. The user chose "exclude everywhere, no toggle". `td.prices` keeps the
+  per-book prices for future by-book tracking.
 - Pages: `index.html` (Best Bets, the home page by request), `matchups.html`, `leaders.html`, `touchdowns.html`,
   `player.html`. Matchups was briefly the home page, so `index.html` forwards `?open=` links to `matchups.html`;
   each keeps its page logic in an inline script. The nav is copied into each page; add new tabs to all of them.

@@ -55,7 +55,10 @@ by hand from the Actions tab ("Run workflow").
 ## Sportsbook odds
 
 `scripts/fetch-odds.mjs` takes a snapshot of tight end props from [The Odds API](https://the-odds-api.com):
-anytime-TD prices and the receptions over/under, across US books. It writes `data/odds-<season>.json`.
+anytime-TD prices and the receptions over/under, from **US-licensed books only** (DraftKings, FanDuel, BetMGM,
+Caesars, BetRivers, ESPN BET, Fanatics…). Offshore books (BetOnline.ag, Bovada, BetUS, MyBookie, LowVig) are
+dropped before the best price and market median are chosen, so every price on the site can be bet at a
+licensed book. It writes `data/odds-<season>.json`.
 `.github/workflows/snapshot-odds.yml` runs it Thursday at 5 PM ET (before TNF) and Sunday at 8 AM ET.
 Games that have already kicked off keep their earlier snapshot. Each snapshot costs about 2 credits per
 game, ~32 a week, which fits the free tier (500/month).
@@ -94,8 +97,9 @@ Action computes exactly what the page shows.
   Fades are graded right/wrong only. Reruns don't change graded picks.
 - Until a snapshot records the week's picks, the page shows a live preview.
 - When fewer than five players meet a category's rule, the list is filled with **close calls**: the next-best
-  players from a looser pool, in lighter text with a "CC" label. They're never recorded or graded. A fade close
-  call never repeats a real "due" pick, and vice versa.
+  players from a looser pool, in lighter text with a "CC" label. They're recorded and graded as a separate
+  **shadow record** that never counts toward the official one, to show whether the rules are too strict or
+  too loose. A fade close call never repeats a real "due" pick, and vice versa.
 
 ## The touchdown model
 
@@ -109,6 +113,13 @@ Action computes exactly what the page shows.
 - **Calibration** (Oct 5, 2026, first odds snapshot): with books de-vigged by ~12%, the error against the
   market fell from 11.2 to 6.4 percentage points (RMSE over 30 TEs) and the model's average matched the
   market's. Constants live at the top of the TD model section in `common.js`.
+
+## Cache-busting
+
+GitHub Pages lets browsers cache files for 10 minutes. The pages load `model.js`, `common.js` and
+`style.css` with a content-hash stamp (`model.js?v=1a2b3c4d`), so a new page never runs against a stale
+cached script. **After editing any of those three files, run `node scripts/stamp-assets.mjs` before
+committing.** The "Check asset stamps" workflow fails on a push if you forget.
 
 ## Running locally
 
