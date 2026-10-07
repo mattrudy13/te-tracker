@@ -45,6 +45,9 @@ results, and a receptions projection vs the line.
   (update-data.yml: build → grade) maintain `data/picks-<season>.json` `{ weeks: { N: { picks: [{ cat, playerId,
   gameId, kickoff, price, book, modelProb, marketProb, ev, why, takenAt, result?, scored?, profit? }] } } }`.
   Picks lock at kickoff. Test with `NOW=<iso>` and a scratch copy of `data/`.
+- `bestBets()` returns `cats` (strict rules: recorded and graded) and `closeCalls` (a looser pool that fills
+  each category to 5, display only, `tr.close` with a "CC" label). The user asked for full lists but wanted
+  the track record kept clean, so never record close calls.
 - Pages: `index.html` (Best Bets, the home page by request), `matchups.html`, `leaders.html`, `touchdowns.html`,
   `player.html`. Matchups was briefly the home page, so `index.html` forwards `?open=` links to `matchups.html`;
   each keeps its page logic in an inline script. The nav is copied into each page; add new tabs to all of them.

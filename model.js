@@ -245,17 +245,45 @@ function bestBets(data, now = Date.now()) {
   }
   const top = (rows, by) => rows.sort(by).slice(0, PICKS_PER_CATEGORY);
   const priced = cands.filter((c) => c.price != null);
+  // Each category: the strict rule (real picks, recorded and graded) and a looser pool that fills
+  // the list to PICKS_PER_CATEGORY with labeled "close calls" (shown only, never recorded).
+  const byEv = (a, b) => b.ev - a.ev;
+  const rules = {
+    likely: { pick: () => cands, near: () => [], by: (a, b) => b.modelProb - a.modelProb },
+    value: {
+      pick: () => priced.filter((c) => c.ev > 0 && c.price < 400 && c.modelProb >= 0.15 && c.books >= 2),
+      near: () => priced.filter((c) => c.price < 400), by: byEv,
+    },
+    longshot: {
+      pick: () => priced.filter((c) => c.price >= 400 && c.ev > 0 && c.tgt20 >= 1),
+      near: () => priced.filter((c) => c.price >= 400), by: byEv,
+    },
+    due: {
+      pick: () => priced.filter((c) => c.tdDiff <= -0.8 && c.tgt20 >= 3),
+      near: () => priced.filter((c) => c.tdDiff < 0 && c.tgt20 >= 1), by: (a, b) => a.tdDiff - b.tdDiff,
+    },
+    fade: {
+      pick: () => priced.filter((c) => c.price <= 250 && c.edge <= -0.08),
+      near: () => priced.filter((c) => c.price <= 300 && c.edge < 0), by: (a, b) => a.edge - b.edge,
+    },
+  };
+  const cats = {}, closeCalls = {};
+  for (const [k, r] of Object.entries(rules)) cats[k] = top([...r.pick()], r.by);
+  // A fade close call shouldn't contradict a real "due" pick (or vice versa).
+  const avoid = { fade: new Set(cats.due.map((c) => c.playerId)), due: new Set(cats.fade.map((c) => c.playerId)) };
+  for (const [k, r] of Object.entries(rules)) {
+    const taken = new Set(cats[k].map((c) => c.playerId));
+    closeCalls[k] = r.near()
+      .filter((c) => !taken.has(c.playerId) && !avoid[k]?.has(c.playerId))
+      .sort(r.by)
+      .slice(0, Math.max(0, PICKS_PER_CATEGORY - cats[k].length));
+  }
   return {
     week: cands[0]?.week ?? data.upcoming?.[0]?.week ?? null,
     candidates: cands.length,
     priced: priced.length,
-    cats: {
-      likely: top([...cands], (a, b) => b.modelProb - a.modelProb),
-      value: top(priced.filter((c) => c.ev > 0 && c.price < 400 && c.modelProb >= 0.15 && c.books >= 2), (a, b) => b.ev - a.ev),
-      longshot: top(priced.filter((c) => c.price >= 400 && c.ev > 0 && c.tgt20 >= 1), (a, b) => b.ev - a.ev),
-      due: top(priced.filter((c) => c.tdDiff <= -0.8 && c.tgt20 >= 3), (a, b) => a.tdDiff - b.tdDiff),
-      fade: top(priced.filter((c) => c.price <= 250 && c.edge <= -0.08), (a, b) => a.edge - b.edge),
-    },
+    cats,
+    closeCalls,
   };
 }
 

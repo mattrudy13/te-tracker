@@ -54,6 +54,8 @@
       <i>if</i> the model is right. A model that only knows targets, field position and team scoring will be wrong in ways the books
       aren't (injuries, game plans), so treat these as a starting point, not betting advice. Players listed as Out, Doubtful or on IR are
       never picked. A <span class="inj q">Q</span> tag means Questionable.
+      <span class="cc">CC</span> rows are <b>close calls</b>: the next-best players, shown in lighter text to fill a category to five when
+      fewer meet its rule. They aren't official picks and aren't graded.
       Grading: a pick wins if the player scores a receiving or rushing TD. A player with no box-score line is voided, the way books handle
       inactive players (a TE who played but drew no targets also lands there). Fades win when the player doesn't score, and have no
       profit figure because the "No" price isn't tracked.
@@ -72,6 +74,7 @@
       r === "won" ? `<span class="result pos">✓ Won</span>` : r === "lost" ? `<span class="result neg">✗ Lost</span>` : r === "void" ? `<span class="result muted">Void</span>` : "";
 
     function pickRow(p, i) {
+      if (p.close) return closeRow(p);
       const player = data.players[p.playerId];
       const a = { id: p.playerId, player: player ?? { name: p.name } };
       const when = new Date(p.kickoff).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
@@ -87,9 +90,26 @@
       </tr>`;
     }
 
-    function renderCats(week, picks, source) {
+    // Next-best players that miss the category's rule: shown to fill the list, never recorded or graded.
+    function closeRow(p) {
+      const player = data.players[p.playerId];
+      const a = { id: p.playerId, player: player ?? { name: p.name } };
+      const when = new Date(p.kickoff).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
+      return `<tr class="close">
+        <td class="rank"><span class="cc" title="Just misses this category's rule. Not an official pick and not graded.">CC</span></td>
+        <td class="l"><div class="who">${headshot(player, 36)}<div>${playerLink(a)} <small>${teamChip(data, p.team)} ${p.home ? "vs" : "@"} ${esc(p.opp)} · ${esc(when)}</small><span class="why">Close call · ${esc(p.why ?? "")}</span></div></div></td>
+        <td class="key">${p.price != null ? americanText(p.price) : "–"}${p.book ? `<small class="why" style="max-width:none">${esc(p.book)}</small>` : ""}</td>
+        <td>${fmt.pct0(p.modelProb)}</td><td>${fmt.pct0(p.marketProb)}</td>
+        <td>${p.marketProb != null ? edgeCell(p.modelProb, p.marketProb) : "–"}</td><td>${evText(p.ev)}</td><td></td>
+      </tr>`;
+    }
+
+    function renderCats(week, picks, source, close) {
       $("cats").innerHTML = BET_CATEGORIES.map((c) => {
-        const rows = picks.filter((p) => p.cat === c.key);
+        const real = picks.filter((p) => p.cat === c.key);
+        const ids = new Set(real.map((p) => p.playerId));
+        const fill = (close[c.key] ?? []).filter((p) => !ids.has(p.playerId)).slice(0, Math.max(0, PICKS_PER_CATEGORY - real.length));
+        const rows = [...real, ...fill.map((p) => ({ ...p, cat: c.key, close: true }))];
         const anyResult = rows.some((p) => p.result);
         return `<section class="card">
           <div class="cat-head"><div><h2>${esc(c.label)}</h2><p>${esc(c.blurb)}</p></div></div>
@@ -163,7 +183,7 @@
             ? `<b>Preview.</b> These picks become official (and get graded) at the next odds snapshot: Thursday 5 PM ET and Sunday 8 AM ET.`
             : `<b>Lines aren't up yet.</b> Sportsbooks post most TE props midweek, so the price-based picks fill in after Thursday's 5 PM ET snapshot. "Most likely to score" below uses the model alone.`;
         }
-        renderCats(week, picks, source);
+        renderCats(week, picks, source, live.closeCalls);
         renderRecord();
       } catch (err) {
         showError(err);

@@ -93,6 +93,9 @@ Action computes exactly what the page shows.
   wins, a box-score line without a TD loses, and no line is void. Profit is per $100 at the recorded price.
   Fades are graded right/wrong only. Reruns don't change graded picks.
 - Until a snapshot records the week's picks, the page shows a live preview.
+- When fewer than five players meet a category's rule, the list is filled with **close calls**: the next-best
+  players from a looser pool, in lighter text with a "CC" label. They're never recorded or graded. A fade close
+  call never repeats a real "due" pick, and vice versa.
 
 ## The touchdown model
 
