@@ -1,6 +1,6 @@
 # te-tracker
 
-NFL tight end stats, usage and touchdown odds through the season. A static site on GitHub
+NFL tight end usage, touchdown odds and betting picks through the season. A static site on GitHub
 Pages: https://mattrudy13.github.io/te-tracker/
 
 - **Best Bets** (`index.html`, the home page): this week's anytime-TD picks in five categories: most likely to
@@ -31,12 +31,27 @@ Filters live in the URL, so any view can be shared. The watchlist is saved in yo
 
 ## How it works
 
+No server and no build step: GitHub Actions write JSON into `data/`, and GitHub Pages serves the HTML plus
+that JSON.
+
 ```
-GitHub Action (cron) → scripts/build-data.mjs → ESPN public API (no key)
-                     → data/2026.json committed → GitHub Pages serves the site + JSON
+update-data.yml    every 3 h Thu–Mon + Tue   build-data.mjs (ESPN) → grade-picks.mjs
+snapshot-odds.yml  Thu 5 PM + Sun 8 AM ET    build-data.mjs → fetch-odds.mjs (The Odds API) → record-picks.mjs
+check-assets.yml   on push                   stamp-assets.mjs --check
+                                    ↓
+          data/2026.json · odds-2026.json · picks-2026.json → GitHub Pages
 ```
 
-The site only loads one JSON file. `scripts/build-data.mjs` (Node 20+, no dependencies):
+| File | What it is |
+|---|---|
+| `index.html`, `matchups.html`, `leaders.html`, `touchdowns.html`, `player.html` | The pages. Each keeps its page logic in an inline script |
+| `model.js` | Data and model code (aggregation, TD model, injuries, best bets), shared by the pages and the scripts |
+| `common.js` | Browser helpers: data loading, formatting, tables, URL state, watchlist |
+| `style.css` | All styles (light/dark) |
+| `scripts/` | `build-data`, `fetch-odds`, `record-picks`, `grade-picks`, `stamp-assets` (Node 20+, no dependencies) |
+| `data/` | Generated JSON, committed by the workflows |
+
+`scripts/build-data.mjs`:
 
 1. Reads the season calendar and every completed regular-season game.
 2. Finds tight ends from the 32 team rosters, plus ESPN athlete lookups for players no longer
@@ -45,6 +60,7 @@ The site only loads one JSON file. `scripts/build-data.mjs` (Node 20+, no depend
    parses play-by-play for red-zone targets and TDs.
 4. Saves the current week's schedule (state, score, network, lines) for the Matchups page, and the
    unplayed games' implied team points for the TD odds.
+5. Saves each TE's injury status from the rosters (Questionable / Doubtful / Out / IR).
 
 Games already in the file are reused, so a rerun only fetches new games.
 
@@ -60,8 +76,9 @@ Caesars, BetRivers, ESPN BET, Fanatics…). Offshore books (BetOnline.ag, Bovada
 dropped before the best price and market median are chosen, so every price on the site can be bet at a
 licensed book. It writes `data/odds-<season>.json`.
 `.github/workflows/snapshot-odds.yml` runs it Thursday at 5 PM ET (before TNF) and Sunday at 8 AM ET.
-Games that have already kicked off keep their earlier snapshot. Each snapshot costs about 2 credits per
-game, ~32 a week, which fits the free tier (500/month).
+Games that have already kicked off keep their earlier snapshot. Each snapshot costs 1 credit per market per
+game (2 markets, ~15 games), so about 20–30 credits, ~50–60 a week and ~250 a month. That leaves room for a
+few manual runs on the free tier (500/month). Each run logs the credits left.
 
 The key is the `ODDS_API_KEY` repository secret, so it's only used inside the workflow. Set or replace it
 with `gh secret set ODDS_API_KEY -R mattrudy13/te-tracker`. To run locally:
@@ -74,7 +91,7 @@ Where the odds show up:
 - the Touchdowns table (Book, Market, Edge, Rec line)
 - the Matchups page (Line, O / U, Model, Book, Edge before kickoff; pregame price and line vs result after)
 - the Leaders table (Rec line, Book TD)
-- the player page's TD tile
+- the "This week" card on each player page
 
 ## Best bets and the track record
 
@@ -112,7 +129,8 @@ Action computes exactly what the page shows.
   and run through a Poisson: P = 1 − e^(−λ). It's shown as a probability and as fair American odds.
 - **Calibration** (Oct 5, 2026, first odds snapshot): with books de-vigged by ~12%, the error against the
   market fell from 11.2 to 6.4 percentage points (RMSE over 30 TEs) and the model's average matched the
-  market's. Constants live at the top of the TD model section in `common.js`.
+  market's. Constants live at the top of the TD model section in `model.js`.
+- **Injuries:** players listed as Out, Doubtful, on IR or suspended get no TD % and are never picked.
 
 ## Cache-busting
 
@@ -130,17 +148,19 @@ python3 -m http.server 8000          # then open http://localhost:8000
 
 ## Known limits
 
-- ESPN doesn't publish snap counts or routes run, so usage means targets, target share and yards share.
+- ESPN doesn't publish snap counts or routes run, so usage means targets and target share.
 - Red-zone splits come from play-by-play text and match box-score targets in ~95% of games
   (sometimes off by one).
 - Injury status comes from ESPN rosters (refreshed every 3 hours and before each odds snapshot). "Missed last game"
   appears only for players without an injury tag, and means no box-score line, so it also catches a TE who
   played but drew no targets.
-- Two-point conversions aren't counted toward fantasy points.
-- The TD model is calibrated against one snapshot. The Best Bets track record is the first real test of it.
+- The TD model is calibrated against one snapshot. The Best Bets track record (first graded week: week 5)
+  is the first real test of it.
+- A grade of "void" can hide a real loss: a TE who played but drew no targets has no box-score line.
 - A defense-vs-TE matchup factor was tested and left out of the model: four weeks of data is mostly noise.
   Defense context still appears in each pick's reason.
 - Regular season only.
-- GitHub Pages lets browsers cache pages for 10 minutes, so hard refresh (⌘⇧R) right after a deploy.
+- GitHub Pages lets browsers cache pages for 10 minutes, so hard refresh (⌘⇧R) right after a deploy. Scripts
+  and styles are cache-busted (see above). The HTML itself can still be up to 10 minutes stale.
 
 Ideas and next steps are in [ENHANCEMENTS.md](ENHANCEMENTS.md).

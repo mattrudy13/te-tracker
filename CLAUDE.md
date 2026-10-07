@@ -2,22 +2,29 @@
 
 NFL tight end stats/usage/TD-odds site on GitHub Pages: https://mattrudy13.github.io/te-tracker/
 See README.md for features, the TD model and how to run it. Same conventions as `../h2h`: plain HTML/CSS/JS,
-no build step, globals in `common.js`, Barlow Condensed + Inter, dark top bar.
+no build step, globals in `model.js` (data/model) and `common.js` (DOM), Barlow Condensed + Inter, dark top bar.
 
-## Status (2026-10-06)
+## Status (2026-10-06, end of session)
 
 Live and working end to end:
 - Pages: Best Bets (home), Matchups, Leaders, Touchdowns, Player. Watchlist, shareable URLs, dark mode,
-  phone layout. Compare was removed on request (2026-10-06).
-- Best Bets track record starts with week 5 (picks are recorded at the Thu/Sun snapshots, graded by update-data).
-- Data: `update-data.yml` (ESPN, every 3 h Thu–Mon + Tue) and `snapshot-odds.yml` (The Odds API, Thu 5 PM ET
-  + Sun 8 AM ET). `ODDS_API_KEY` secret is set. The first real snapshot (Mon night) priced 37 TEs, 483
-  credits left.
-- TD model calibrated against that snapshot (RMSE 11.2 → 6.4 pts). Constants are at the top of the TD
-  model section in common.js.
+  phone layout, injury tags. Compare was removed on request.
+- Workflows: `update-data.yml` (ESPN every 3 h Thu–Mon + Tue → grade picks), `snapshot-odds.yml`
+  (Thu 21:00 / Sun 12:00 UTC: build → odds → record picks), `check-assets.yml` (stamp check on push).
+  `ODDS_API_KEY` secret is set.
+- Odds: US-licensed books only. The latest snapshot (Tue night, manual) priced 61 TEs; **462 credits left**
+  this month. The first two snapshots used 17 and 21 credits.
+- Best Bets: week 5 picks recorded (21 official + 4 close calls) from that snapshot. Thursday's snapshot
+  replaces any that haven't kicked off. **Week 5 is the first graded week** (grading runs after games are final).
+- TD model calibrated against the first snapshot (RMSE 11.2 → 6.4 pts vs de-vigged market). Constants are at
+  the top of the TD model section in `model.js`.
 
-Next steps: ENHANCEMENTS.md. The highest-value items are injury tags, scoring the model and books against
-results, and a receptions projection vs the line.
+Next steps: ENHANCEMENTS.md. Highest value now:
+- check the first graded results after week 5
+- the receptions projection vs the line (unlocks receptions picks)
+- scoring the model and books on every priced TE
+- closing-line value
+- around week 9: tune the category rules from the official and shadow records, and retest the defense factor
 
 ## Before every commit that touches model.js, common.js or style.css
 
@@ -32,15 +39,17 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   by the site to pick the file).
 - `scripts/fetch-odds.mjs` + `.github/workflows/snapshot-odds.yml`: The Odds API snapshot (Thu 21:00 /
   Sun 12:00 UTC) → `data/odds-<season>.json` `{ takenAt, games: {oddsEventId: {home, away, commence}},
-  players: {espnId: {oddsGameId, td: {best, book, books, marketProb}, rec: {line, over, under, ...}}} }`.
+  players: {espnId: {oddsGameId, td: {best, book, books, marketProb, prices: {book: price}}, rec: {line, over,
+  under, overBook, underBook, books}}}, excluded: [offshore keys] }`.
   Needs the `ODDS_API_KEY` secret. It costs 1 credit per market per game (free tier 500/month), so don't
   schedule it more often without checking the quota (`x-requests-remaining` is logged). Players are matched
   by normalized name, then last name + first initial, among the two teams' TEs. The site shows odds only
   when the snapshot game's home/away match (`playerOdds()`), so stale weeks never leak. Test offline with
   `--fixture`.
 - Both workflows share the `update-data` concurrency group and `git pull --rebase` before pushing.
-- `.github/workflows/update-data.yml`: scheduled build; commits `data/` only if something other
+- `.github/workflows/update-data.yml`: scheduled build + grading; commits `data/` only if something other
   than `updated` changed.
+- `.github/workflows/check-assets.yml`: runs `stamp-assets.mjs --check` on pushes that touch pages or shared assets.
 - `model.js`: all data and model code, with no DOM access, shared by the pages (globals) and the Node scripts
   (`createRequire`): `aggregate`, `tdModel` / `tdOdds`, `isOut`, `defenseVsTe`, `playerOdds`, `bestBets`,
   `evPer100`. Pages load `model.js` before `common.js`. **Any model change affects recorded picks, so the page
@@ -49,7 +58,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   helpers (`playerLink` includes `injuryTag`), odds cell helpers.
 - `scripts/record-picks.mjs` (snapshot-odds.yml: build → fetch-odds → record) and `scripts/grade-picks.mjs`
   (update-data.yml: build → grade) maintain `data/picks-<season>.json` `{ weeks: { N: { picks: [{ cat, playerId,
-  gameId, kickoff, price, book, modelProb, marketProb, ev, why, takenAt, result?, scored?, profit? }] } } }`.
+  gameId, kickoff, price, book, modelProb, marketProb, ev, why, takenAt, oddsAt, shadow?, result?, scored?,
+  profit? }] } } }`.
   Picks lock at kickoff. Test with `NOW=<iso>` and a scratch copy of `data/`.
 - `bestBets()` returns `cats` (strict rules: official picks) and `closeCalls` (a looser pool that fills each
   category to 5, `tr.close` with a "CC" label). record-picks saves close calls with `shadow: true`; they're
@@ -82,10 +92,10 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   `.table-wrap.tight`) so they fit at 1280px without sideways scrolling. Check `scrollWidth <= clientWidth`
   on the table wrapper when adding columns.
 - "Missed last game" (tdOdds `missedLast`) means no box-score row in the team's latest game, which also
-  catches a TE who played but drew no targets.
+  catches a TE who played but drew no targets. It's hidden when an injury tag already explains the absence.
 - The user cares about TD and receptions betting angles more than fantasy points. Keep new features
   pointed that way. Fantasy points survive only in the PPR defense line on Matchups (`defenseVsTe`) and
-  `fantasyPoints()` in common.js. The player page is odds-first too: a "This week" card (rec line, O/U, over-the-line
+  `fantasyPoints()` in model.js. The player page is odds-first too: a "This week" card (rec line, O/U, over-the-line
   hit rate, model TD vs book), receptions chart with the line drawn in, no scoring toggle.
 - Player names (`.pname`) have a dotted underline so it's clear they link to player pages (the user didn't
   know the page existed).
@@ -94,6 +104,7 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 
 ## Data shape (data/<season>.json)
 
+`players{}`: `name, short, team, headshot, jersey, age, exp, onRoster, injury: {status, date} | null`.
 `games[]` has one row per TE per completed game: box score `rec,tgt,yds,td,long,rushAtt,rushYds,rushTd,
 fumLost`, team totals `teamTgt,teamRecYds` (share denominators), and play-by-play red-zone splits
 `tgt5,tgt10,tgt20,td5,td10,td20` (cumulative: inside the 5 ⊂ 10 ⊂ 20). `upcoming[]` has one row per team for
@@ -131,3 +142,5 @@ finished games, so those are null. `upcoming` can be a week ahead of `schedule` 
 - Test odds UI offline: intercept `data/odds-2026.json` (and `data/2026.json` for a pre-kickoff week) with
   Playwright `page.route`. Never commit fixture odds.
 - Commit prefixes: `feat:`, `fix:`, `docs:`, `data:` (the bot uses `data:`).
+- The user's global rule: no commits or pushes 8 AM–5 PM ET on weekdays unless they ask (a hook enforces it).
+  Check `TZ=America/New_York date` before committing.
