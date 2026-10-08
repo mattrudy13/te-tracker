@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// Snapshots sportsbook odds for tight ends from The Odds API: anytime-TD prices and
+// Snapshots sportsbook odds for tight ends from The Odds API: anytime-TD and first-TD prices and
 // receptions over/under. Writes data/odds-<season>.json. Needs ODDS_API_KEY in the environment.
 //
 // Cost: listing events is free; each game's odds cost 1 credit per market per region
-// (2 markets x 1 region = 2 per game, ~32 per full-week snapshot). Free tier is 500/month.
+// (3 markets x 1 region = 3 per game, ~45 per full-week snapshot, ~375/month at two snapshots a
+// week). Free tier is 500/month.
 // Games that have already kicked off keep their earlier snapshot, so a Sunday run leaves
 // Thursday's game alone.
 //
@@ -16,7 +17,10 @@ import path from "node:path";
 
 const API = "https://api.the-odds-api.com/v4/sports/americanfootball_nfl";
 const DATA_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "data");
-const MARKETS = ["player_anytime_td", "player_receptions"];
+const MARKETS = ["player_anytime_td", "player_1st_td", "player_receptions"];
+// A book's first-TD market is only de-vigged when it lists at least this many outcomes for the game:
+// a partial list undercounts the margin and would inflate every fair price.
+const MIN_FIRST_TD_OUTCOMES = 20;
 const DAYS_AHEAD = 7;
 // Offshore books in The Odds API's "us" region. They're dropped before picking the best price and the
 // market median, so every price on the site (and every recorded pick) is one a US bettor can take at a
@@ -47,6 +51,11 @@ const norm = (s) => s.replace(SUFFIX, "").toLowerCase().replace(/[^a-z]/g, "");
 // American odds -> implied probability (includes the book's margin).
 const implied = (o) => (o > 0 ? 100 / (o + 100) : -o / (-o + 100));
 const better = (a, b) => (b == null || implied(a) < implied(b) ? a : b); // longer price is better for the bettor
+const bestOf = (entries) => entries.reduce((a, b) => (better(b[1], a[1]) === b[1] ? b : a));
+function median(xs) {
+  const s = [...xs].sort((a, b) => a - b), mid = s.length / 2;
+  return s.length % 2 ? s[Math.floor(mid)] : (s[mid - 1] + s[mid]) / 2;
+}
 
 async function main() {
   const { current: season } = JSON.parse(await readFile(path.join(DATA_DIR, "seasons.json"), "utf8"));
@@ -100,19 +109,29 @@ async function main() {
     const odds = await api(`/events/${ev.id}/odds?regions=us&markets=${MARKETS.join(",")}&oddsFormat=american`);
     games[ev.id] = { home, away, commence: ev.commence_time, takenAt: new Date().toISOString() };
 
-    const byPlayer = {}; // espn id -> { td: {book: price}, rec: {point: {over: {book: price}, under: {book: price}}} }
+    const byPlayer = {}; // espn id -> { td: {book: price}, first: {book: price}, rec: {point: {over: {book: price}, under: {book: price}}} }
     const books = (odds.bookmakers ?? []).filter((bm) => !OFFSHORE_BOOKS.has(bm.key));
+    // Each book's first-TD overround for this game: implied probabilities summed over every outcome
+    // (all players plus "No Touchdown"), so a TE's fair chance at that book is implied / overround.
+    const firstOverround = {};
+    for (const bm of books) {
+      const outs = bm.markets?.find((m) => m.key === "player_1st_td")?.outcomes ?? [];
+      if (outs.length >= MIN_FIRST_TD_OUTCOMES) firstOverround[bm.title] = outs.reduce((s, o) => s + implied(o.price), 0);
+    }
     for (const bm of books) {
       for (const m of bm.markets ?? []) {
         for (const o of m.outcomes ?? []) {
           const name = o.description ?? o.name;
-          if (!name || /^(no|under|over|yes)$/i.test(name)) continue;
+          if (!name || /^(no|under|over|yes|no (touchdown|td)( scorer)?)$/i.test(name)) continue;
           const id = findTe(name, [home, away]);
           if (!id) continue; // not a tight end (or a name we can't match)
-          const p = (byPlayer[id] ??= { td: {}, rec: {} });
+          const p = (byPlayer[id] ??= { td: {}, first: {}, rec: {} });
           if (m.key === "player_anytime_td") {
             if (/^no$/i.test(o.name)) continue;
             p.td[bm.title] = o.price;
+          } else if (m.key === "player_1st_td") {
+            if (/^no$/i.test(o.name)) continue;
+            p.first[bm.title] = o.price;
           } else if (m.key === "player_receptions" && o.point != null) {
             const side = /^over$/i.test(o.name) ? "over" : /^under$/i.test(o.name) ? "under" : null;
             if (side) ((p.rec[o.point] ??= { over: {}, under: {} })[side][bm.title] = o.price);
@@ -125,12 +144,22 @@ async function main() {
       const out = { oddsGameId: ev.id };
       const tdBooks = Object.entries(p.td);
       if (tdBooks.length) {
-        const [book, price] = tdBooks.reduce((a, b) => (better(b[1], a[1]) === b[1] ? b : a));
+        const [book, price] = bestOf(tdBooks);
         // Median of the books' implied probabilities: a steadier "market" number than the best price.
-        const probs = tdBooks.map(([, o]) => implied(o)).sort((a, b) => a - b);
-        const mid = probs.length / 2;
-        const median = probs.length % 2 ? probs[Math.floor(mid)] : (probs[mid - 1] + probs[mid]) / 2;
-        out.td = { best: price, book, books: tdBooks.length, marketProb: median, prices: Object.fromEntries(tdBooks) };
+        out.td = { best: price, book, books: tdBooks.length, marketProb: median(tdBooks.map(([, o]) => implied(o))), prices: Object.fromEntries(tdBooks) };
+      }
+      const firstBooks = Object.entries(p.first);
+      if (firstBooks.length) {
+        const [book, price] = bestOf(firstBooks);
+        // First-TD margins run 25-40%, so the raw median is far above any fair chance. fairProb is the
+        // median after removing each book's margin (null if no book listed the full market).
+        const fair = firstBooks.filter(([b]) => firstOverround[b]).map(([b, o]) => implied(o) / firstOverround[b]);
+        out.first = {
+          best: price, book, books: firstBooks.length,
+          marketProb: median(firstBooks.map(([, o]) => implied(o))),
+          fairProb: fair.length ? median(fair) : null,
+          prices: Object.fromEntries(firstBooks),
+        };
       }
       // Receptions: use the line most books hang, and the best price on each side of it.
       const lines = Object.entries(p.rec).sort((a, b) => Object.keys(b[1].over).length - Object.keys(a[1].over).length);
@@ -138,7 +167,7 @@ async function main() {
         const [point, sides] = lines[0];
         const best = (s) => {
           const e = Object.entries(s);
-          return e.length ? e.reduce((a, b) => (better(b[1], a[1]) === b[1] ? b : a)) : null;
+          return e.length ? bestOf(e) : null;
         };
         const over = best(sides.over), under = best(sides.under);
         out.rec = { line: Number(point), over: over?.[1] ?? null, overBook: over?.[0] ?? null, under: under?.[1] ?? null, underBook: under?.[0] ?? null, books: Object.keys(sides.over).length };
