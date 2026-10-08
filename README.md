@@ -95,7 +95,7 @@ Thursday's snapshot is the one that counts.
 Where the odds show up:
 - the Touchdowns table (Book, Market, Edge, Rec line; the 1st TD view swaps in first-TD prices)
 - the Matchups page (Line, O / U, Model, Book, Edge before kickoff; pregame price and line vs result after;
-  first-TD model and price in the Model and Book tooltips)
+  first-TD model and price as a second line under Model and Book)
 - the Leaders table (Rec line, Book TD)
 - the "This week" card on each player page
 

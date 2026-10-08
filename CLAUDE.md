@@ -92,8 +92,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   the default (`?mode=tot` for totals); TD, xTD and TD − xTD are always season totals. It also shows this week's
   Rec line and Book TD.
 - Matchups is odds-first by request: no fantasy columns and no scoring toggle. The TE table has grouped headers
-  (Usage: Tgt/G, Share · Receptions: Rec/G, Line, O/U · Touchdowns: TD, RZ Tgt, Model, Book, Edge). Market %
-  lives in the Book cell's tooltip. Finished games show the pregame price (✓/✗) and line
+  (Usage: Tgt/G, Share · Receptions: Rec/G, Line, O/U · Touchdowns: TD, RZ Tgt, Model, Book, Edge). Market % isn't
+  shown (it only feeds Edge); the book name and the first-TD model and price are second lines in their cells. Finished games show the pregame price (✓/✗) and line
   (Over/Under) next to the box score. Data refreshes every 3 h, so in-progress games show no live stats.
 - Wide tables: the matchup and Touchdowns odds tables use tighter cell padding (`.g-side .grid`,
   `.table-wrap.tight`) so they fit at 1280px without sideways scrolling. Check `scrollWidth <= clientWidth`
@@ -109,7 +109,10 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 - Edge is green for any positive value and red for any negative one (`edgeCell`). Touchdowns sorts by Edge by default.
 - Touchdowns has an Anytime / 1st TD toggle (`?mkt=first`). The 1st TD view swaps the Rec line column for
   "1st TDs" so the table still fits at 1280px. Column keys stay the same, so the sort carries over.
-- Explain jargon in plain words in page notes and header tooltips (the user asked what "Tgt %" meant).
+- Explain jargon in plain words in the page notes (the user asked what "Tgt %" meant).
+- **No tooltips** (`title=` attributes), by request: they don't work on phones. Anything worth knowing is visible
+  text: a second line in the cell (`<small class="ln">`, e.g. the book under a price), a page note, or a
+  card subtitle. `renderTable` columns have no `title` field. Use `aria-label` for icon-only buttons.
 
 ## Data shape (data/<season>.json)
 

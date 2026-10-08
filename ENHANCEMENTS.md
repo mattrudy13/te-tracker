@@ -122,7 +122,9 @@ Fantasy points are deliberately out of scope.
       bad numbers.
 
 ## Shipped
-- [x] First TD scorer: odds (de-vigged), model, Touchdowns toggle, player card, Matchups tooltips, and a graded
+- [x] No tooltips anywhere: book names, O/U books, first-TD numbers and injury status are visible text, and
+      column terms are explained in each page's notes, so phones see everything (2026-10-07)
+- [x] First TD scorer: odds (de-vigged), model, Touchdowns toggle, player card, Matchups first-TD lines, and a graded
       "First TD value" Best Bets category, with first-TD scorers backfilled for weeks 1–4 (2026-10-07)
 - [x] Best Bets home page: five categories, EV per $100, a reason per pick, picks recorded at each snapshot
       and locked at kickoff, graded after games (W–L–void, units, ROI) (2026-10-06)
