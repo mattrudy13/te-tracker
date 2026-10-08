@@ -110,9 +110,12 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 - Touchdowns has an Anytime / 1st TD toggle (`?mkt=first`). The 1st TD view swaps the Rec line column for
   "1st TDs" so the table still fits at 1280px. Column keys stay the same, so the sort carries over.
 - Explain jargon in plain words in the page notes (the user asked what "Tgt %" meant).
-- **No tooltips** (`title=` attributes), by request: they don't work on phones. Anything worth knowing is visible
-  text: a second line in the cell (`<small class="ln">`, e.g. the book under a price), a page note, or a
-  card subtitle. `renderTable` columns have no `title` field. Use `aria-label` for icon-only buttons.
+- **Tooltips only for definitions** (`title=` attributes), by request: they don't work on phones. A tooltip may
+  define a term or give a helpful hint (e.g. what a column abbreviation means), but never carry information
+  that's needed to use the page. Say why when adding one. Anything worth knowing is visible text: a second line
+  in the cell (`<small class="ln">`, e.g. the book under a price), a page note, or a card subtitle. Jargon is
+  still explained in the page notes too, so phone users get it. `renderTable` columns have no `title` field
+  yet. Use `aria-label` for icon-only buttons.
 
 ## Data shape (data/<season>.json)
 
