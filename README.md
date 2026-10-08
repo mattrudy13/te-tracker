@@ -3,8 +3,8 @@
 NFL tight end usage, touchdown odds and betting picks through the season. A static site on GitHub
 Pages: https://mattrudy13.github.io/te-tracker/
 
-- **Best Bets** (`index.html`, the home page): this week's anytime-TD picks in five categories: most likely to
-  score, best value, longshots, due for a TD, and fades. Each pick shows the best price, model %, market %, edge,
+- **Best Bets** (`index.html`, the home page): this week's TD picks in six categories: most likely to
+  score, best value, longshots, due for a TD, fades, and first-TD value. Each pick shows the best price, model %, market %, edge,
   expected profit per $100 and a one-line reason. Below that is a **track record** of every past pick, graded after
   the games (W–L–void, hit rate, units, ROI). Players listed as Out, Doubtful or on IR are never picked.
 - **Matchups** (`matchups.html`): this week's games (next week's once Monday night is final) with
@@ -20,11 +20,12 @@ Pages: https://mattrudy13.github.io/te-tracker/
   share, receptions, catch %, yards, yards per target, TDs, red-zone targets, xTD and TD − xTD, plus this
   week's receptions line and best anytime-TD price. Filter by team, week range, minimum targets or your
   ★ watchlist.
-- **Touchdowns** (`touchdowns.html`): this week's anytime-TD odds for every TE (sorted by model-vs-book edge), red-zone usage
+- **Touchdowns** (`touchdowns.html`): this week's anytime-TD or first-TD odds for every TE (an Anytime / 1st TD toggle,
+  `?mkt=first`; sorted by model-vs-book edge), red-zone usage
   (targets inside the 20 / 10 / 5), expected TDs (xTD) vs actual, and the TE touchdown rate by
   field position that the model uses.
 - **Player** (`player.html?id=<espn id>`, click any player name): this week's game with the receptions line
-  (best over/under, how often the player has gone over it) and anytime-TD model vs book; season usage; touchdown
+  (best over/under, how often the player has gone over it), anytime-TD and first-TD model vs book; season usage; touchdown
   profile; charts of targets, receptions against the line, red-zone targets and yards; and a game log.
 
 Filters live in the URL, so any view can be shared. The watchlist is saved in your browser.
@@ -71,25 +72,30 @@ by hand from the Actions tab ("Run workflow").
 ## Sportsbook odds
 
 `scripts/fetch-odds.mjs` takes a snapshot of tight end props from [The Odds API](https://the-odds-api.com):
-anytime-TD prices and the receptions over/under, from **US-licensed books only** (DraftKings, FanDuel, BetMGM,
+anytime-TD and first-TD-scorer prices and the receptions over/under, from **US-licensed books only** (DraftKings, FanDuel, BetMGM,
 Caesars, BetRivers, ESPN BET, Fanatics…). Offshore books (BetOnline.ag, Bovada, BetUS, MyBookie, LowVig) are
 dropped before the best price and market median are chosen, so every price on the site can be bet at a
 licensed book. It writes `data/odds-<season>.json`.
 `.github/workflows/snapshot-odds.yml` runs it Thursday at 5 PM ET (before TNF) and Sunday at 8 AM ET.
 Games that have already kicked off keep their earlier snapshot. Each snapshot costs 1 credit per market per
-game (2 markets, ~15 games), so about 20–30 credits, ~50–60 a week and ~250 a month. That leaves room for a
-few manual runs on the free tier (500/month). Each run logs the credits left.
+game (3 markets, ~15 games), so about 30–45 credits, ~85 a week and ~375 a month. That leaves ~125 for
+manual runs on the free tier (500/month). Each run logs the credits left.
 
 The key is the `ODDS_API_KEY` repository secret, so it's only used inside the workflow. Set or replace it
 with `gh secret set ODDS_API_KEY -R mattrudy13/te-tracker`. To run locally:
 `ODDS_API_KEY=... node scripts/fetch-odds.mjs`. Without the file, the odds columns just show "–".
 
+First-TD markets carry a 25–40% margin, so the snapshot also stores a de-vigged `fairProb`: each book's
+prices are divided by that book's total implied probability over every first-TD outcome in the game
+(books listing fewer than 20 outcomes are skipped, since a partial list understates the margin).
+
 Sportsbooks post most TE props midweek, so a Monday-night or Tuesday run prices only a few players.
 Thursday's snapshot is the one that counts.
 
 Where the odds show up:
-- the Touchdowns table (Book, Market, Edge, Rec line)
-- the Matchups page (Line, O / U, Model, Book, Edge before kickoff; pregame price and line vs result after)
+- the Touchdowns table (Book, Market, Edge, Rec line; the 1st TD view swaps in first-TD prices)
+- the Matchups page (Line, O / U, Model, Book, Edge before kickoff; pregame price and line vs result after;
+  first-TD model and price in the Model and Book tooltips)
 - the Leaders table (Rec line, Book TD)
 - the "This week" card on each player page
 
@@ -105,13 +111,15 @@ Action computes exactly what the page shows.
 | Longshots | Price +400 or longer, expected profit > 0, at least 1 red-zone target |
 | Due for a TD | TD − xTD ≤ −0.8 with ≥ 3 red-zone targets |
 | Fades | Price +250 or shorter and model at least 8 points below the market |
+| First TD value | First-TD bet: expected profit > 0 at the best price, model ≥ 4%, ≥ 2 books, ≥ 1 red-zone target |
 
 - `scripts/record-picks.mjs` runs after each odds snapshot, following a fresh stats/injury build. It saves the
   picks to `data/picks-<season>.json`. Picks lock at kickoff: Sunday's snapshot only replaces picks for games
   that haven't started.
 - `scripts/grade-picks.mjs` runs after every stats build. It grades final games: a TD (receiving or rushing)
   wins, a box-score line without a TD loses, and no line is void. Profit is per $100 at the recorded price.
-  Fades are graded right/wrong only. Reruns don't change graded picks.
+  Fades are graded right/wrong only. First-TD picks win only if the player scored the game's first TD
+  (`firstTd` on the game row) and lose otherwise, including games with no TD. Reruns don't change graded picks.
 - Until a snapshot records the week's picks, the page shows a live preview.
 - When fewer than five players meet a category's rule, the list is filled with **close calls**: the next-best
   players from a looser pool, in lighter text with a "CC" label. They're recorded and graded as a separate
@@ -130,6 +138,13 @@ Action computes exactly what the page shows.
 - **Calibration** (Oct 5, 2026, first odds snapshot): with books de-vigged by ~12%, the error against the
   market fell from 11.2 to 6.4 percentage points (RMSE over 30 TEs) and the model's average matched the
   market's. Constants live at the top of the TD model section in `model.js`.
+- **First TD %**: the game's expected TDs are Λ = both teams' implied points × `TD_PER_POINT` (0.105, about
+  2.4 TDs on 23 points). If TDs arrive independently, the first one is the player's with chance λ/Λ, and
+  there is one at all with chance 1 − e^(−Λ): P = λ/Λ · (1 − e^(−Λ)). `TD_PER_POINT` isn't calibrated against
+  the first-TD market yet. Over weeks 1–4 a TE scored first in 10 of 64 games (16%); the model's TE share is about 20%.
+- **First-TD scorer**: `build-data.mjs` reads ESPN's `scoringPlays` and flags the TE row that scored the game's
+  first TD (`firstTd: true`). Games processed before this existed were filled in with
+  `node scripts/build-data.mjs --backfill-first-td`.
 - **Injuries:** players listed as Out, Doubtful, on IR or suspended get no TD % and are never picked.
 
 ## Cache-busting

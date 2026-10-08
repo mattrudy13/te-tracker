@@ -41,6 +41,10 @@ Fantasy points are deliberately out of scope.
       capped), shown only once the track record supports trusting the model's edge.
 - [ ] **(new) Copy picks**: a button that copies the week's picks as plain text (player, market, price,
       book) for a notes app or group chat.
+- [ ] **(new) Calibrate the first-TD model** (after 2–3 snapshots with first-TD prices): fit `TD_PER_POINT`
+      against the de-vigged first-TD market, the way the anytime model was calibrated. Until then the model
+      runs a bit above the actual TE first-TD rate (about 20% of games vs 16% in weeks 1–4), so the
+      "First TD value" category may be too generous.
 - [ ] **Receptions picks**: over/under categories, once the receptions projection exists (see Receptions).
 
 ## Touchdown model
@@ -118,6 +122,8 @@ Fantasy points are deliberately out of scope.
       bad numbers.
 
 ## Shipped
+- [x] First TD scorer: odds (de-vigged), model, Touchdowns toggle, player card, Matchups tooltips, and a graded
+      "First TD value" Best Bets category, with first-TD scorers backfilled for weeks 1–4 (2026-10-07)
 - [x] Best Bets home page: five categories, EV per $100, a reason per pick, picks recorded at each snapshot
       and locked at kickoff, graded after games (W–L–void, units, ROI) (2026-10-06)
 - [x] Close calls fill short categories to five, shown lighter with a "CC" label and never graded (2026-10-06)

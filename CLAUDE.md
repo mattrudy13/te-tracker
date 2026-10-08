@@ -39,9 +39,13 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   by the site to pick the file).
 - `scripts/fetch-odds.mjs` + `.github/workflows/snapshot-odds.yml`: The Odds API snapshot (Thu 21:00 /
   Sun 12:00 UTC) → `data/odds-<season>.json` `{ takenAt, games: {oddsEventId: {home, away, commence}},
-  players: {espnId: {oddsGameId, td: {best, book, books, marketProb, prices: {book: price}}, rec: {line, over,
-  under, overBook, underBook, books}}}, excluded: [offshore keys] }`.
-  Needs the `ODDS_API_KEY` secret. It costs 1 credit per market per game (free tier 500/month), so don't
+  players: {espnId: {oddsGameId, td: {best, book, books, marketProb, prices: {book: price}}, first: {best, book,
+  books, marketProb, fairProb, prices}, rec: {line, over, under, overBook, underBook, books}}}, excluded: [offshore keys] }`.
+  `first` is the first-TD-scorer market (`player_1st_td`); `fairProb` is the median de-vigged chance (each book's
+  prices divided by its overround over every outcome in the game; books with < 20 outcomes skipped). Always use
+  `fairProb`, not `marketProb`, for first-TD edges: the margin is 25–40%.
+  Needs the `ODDS_API_KEY` secret. It costs 1 credit per market per game (3 markets, ~375/month at two snapshots
+  a week; free tier 500/month), so don't
   schedule it more often without checking the quota (`x-requests-remaining` is logged). Players are matched
   by normalized name, then last name + first initial, among the two teams' TEs. The site shows odds only
   when the snapshot game's home/away match (`playerOdds()`), so stale weeks never leak. Test offline with
@@ -52,7 +56,7 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 - `.github/workflows/check-assets.yml`: runs `stamp-assets.mjs --check` on pushes that touch pages or shared assets.
 - `model.js`: all data and model code, with no DOM access, shared by the pages (globals) and the Node scripts
   (`createRequire`): `aggregate`, `tdModel` / `tdOdds`, `isOut`, `defenseVsTe`, `playerOdds`, `bestBets`,
-  `evPer100`. Pages load `model.js` before `common.js`. **Any model change affects recorded picks, so the page
+  `evPer100`. `tdOdds` rows also carry `firstProb` (first-TD chance, `TD_PER_POINT`). Pages load `model.js` before `common.js`. **Any model change affects recorded picks, so the page
   and the Action always agree.**
 - `common.js`: DOM side: data loading, formatting, `renderTable()` (sortable), URL params, watchlist, markup
   helpers (`playerLink` includes `injuryTag`), odds cell helpers.
@@ -61,6 +65,9 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   gameId, kickoff, price, book, modelProb, marketProb, ev, why, takenAt, oddsAt, shadow?, result?, scored?,
   profit? }] } } }`.
   Picks lock at kickoff. Test with `NOW=<iso>` and a scratch copy of `data/`.
+- The "first" Best Bets category (first TD scorer) builds rows whose `price/book/modelProb/marketProb/ev` are the
+  first-TD values, so record-picks needs no special case. grade-picks grades `cat === "first"` on the row's
+  `firstTd` flag.
 - `bestBets()` returns `cats` (strict rules: official picks) and `closeCalls` (a looser pool that fills each
   category to 5, `tr.close` with a "CC" label). record-picks saves close calls with `shadow: true`; they're
   graded like picks but shown only in the separate "shadow record" table. **Never let shadow picks into the
@@ -100,13 +107,15 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 - Player names (`.pname`) have a dotted underline so it's clear they link to player pages (the user didn't
   know the page existed).
 - Edge is green for any positive value and red for any negative one (`edgeCell`). Touchdowns sorts by Edge by default.
+- Touchdowns has an Anytime / 1st TD toggle (`?mkt=first`). The 1st TD view swaps the Rec line column for
+  "1st TDs" so the table still fits at 1280px. Column keys stay the same, so the sort carries over.
 - Explain jargon in plain words in page notes and header tooltips (the user asked what "Tgt %" meant).
 
 ## Data shape (data/<season>.json)
 
 `players{}`: `name, short, team, headshot, jersey, age, exp, onRoster, injury: {status, date} | null`.
 `games[]` has one row per TE per completed game: box score `rec,tgt,yds,td,long,rushAtt,rushYds,rushTd,
-fumLost`, team totals `teamTgt,teamRecYds` (share denominators), and play-by-play red-zone splits
+fumLost`, `firstTd` (true if this TE scored the game's first TD), team totals `teamTgt,teamRecYds` (share denominators), and play-by-play red-zone splits
 `tgt5,tgt10,tgt20,td5,td10,td20` (cumulative: inside the 5 ⊂ 10 ⊂ 20). `upcoming[]` has one row per team for
 the next week, with `implied` points (from `total` and `spread`). `spread` is from that team's side.
 `schedule` = `{ week, games[] }` for the matchups page: the first not-yet-ended calendar week that still has
@@ -126,6 +135,9 @@ finished games, so those are null. `upcoming` can be a week ahead of `schedule` 
   TEs by last name + first-name prefix (`matchesPbpName`). Some scoring plays are mistyped (e.g.
   "Fumble Recovery (Own)") and carry summary text ("X 13 Yd pass from Y"), which has its own fallback.
   Skip `NULLIFIED` / `No Play`.
+- First TD scorer: the first `scoringPlays[]` entry with `type.abbreviation === "TD"`, name parsed from
+  "X 2 Yd pass from Y" and matched to that team's TEs. The TE's game row gets `firstTd: true` (absent otherwise).
+  `--backfill-first-td` refetches processed games to reset the flags (it was run once on 2026-10-07 for weeks 1–4).
 - Games are only processed once `status.type.completed`, and `processedEvents` stops
   them from being fetched again. To force a full rebuild, delete `data/<season>.json`.
 - Around Monday night the current week has no unplayed games left, so `upcoming` looks at the next
