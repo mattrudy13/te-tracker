@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=73a39d40">
+  <link rel="stylesheet" href="style.css?v=4ae3f8e0">
   <script>
     // Matchups was the home page briefly; forward its old ?open= links.
     if (new URLSearchParams(location.search).has("open")) location.replace("matchups.html" + location.search);
@@ -41,7 +41,7 @@
       <div class="cat-head">
         <div>
           <h2>Track record</h2>
-          <p>Every pick is saved at the odds snapshot and locks at kickoff, then gets graded after the game. Profit is per $100 at the listed price.</p>
+          <p>Every pick is saved at the odds snapshot and locks at kickoff, then gets graded after the game. Profit is per $100 at the listed price; <b>Units</b> is total profit in $100 units.</p>
         </div>
       </div>
       <div class="table-wrap tight" style="margin-top:.75rem"><div id="record"></div></div>
@@ -49,7 +49,7 @@
     </section>
 
     <p class="note">
-      <b>Model</b> is our anytime-TD chance; <b>Market</b> is the median sportsbook's implied chance, which includes the books' margin.
+      <b>Book</b> is the best price across US sportsbooks, with the book under it. <b>Model</b> is our anytime-TD chance (first-TD chance in the First TD category); <b>Market</b> is the median sportsbook's implied chance, which includes the books' margin.
       <b>Edge</b> is model minus market in percentage points. <b>EV / $100</b> is the expected profit on a $100 bet at the best price
       <i>if</i> the model is right. A model that only knows targets, field position and team scoring will be wrong in ways the books
       aren't (injuries, game plans), so treat these as a starting point, not betting advice. Players listed as Out, Doubtful or on IR are
@@ -68,7 +68,7 @@
   </main>
 
   <script src="model.js?v=1c841dd8"></script>
-  <script src="common.js?v=06504ab7"></script>
+  <script src="common.js?v=7c817432"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let data, picksStore = null;
@@ -100,7 +100,7 @@
       const a = { id: p.playerId, player: player ?? { name: p.name } };
       const when = new Date(p.kickoff).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
       return `<tr class="close">
-        <td class="rank"><span class="cc" title="Just misses this category's rule. Not an official pick and not graded.">CC</span></td>
+        <td class="rank"><span class="cc">CC</span></td>
         <td class="l"><div class="who">${headshot(player, 36)}<div>${playerLink(a)} <small>${teamChip(data, p.team)} ${p.home ? "vs" : "@"} ${esc(p.opp)} · ${esc(when)}</small><span class="why">Close call · ${esc(p.why ?? "")}</span></div></div></td>
         <td class="key">${p.price != null ? americanText(p.price) : "–"}${p.book ? `<small class="why" style="max-width:none">${esc(p.book)}</small>` : ""}</td>
         <td>${fmt.pct0(p.modelProb)}</td><td>${fmt.pct0(p.marketProb)}</td>
@@ -117,15 +117,13 @@
         const fill = pool.filter((p) => !ids.has(p.playerId)).slice(0, Math.max(0, PICKS_PER_CATEGORY - real.length));
         const rows = [...real, ...fill.map((p) => ({ ...p, cat: c.key, close: true }))];
         const anyResult = rows.some((p) => p.result);
-        const mkt = c.key === "first" ? "first-TD" : "anytime-TD";
-        const marketTitle = c.key === "first" ? "Median book's chance with the margin removed (first-TD margins run 25–40%)" : "Median book's implied chance (includes the margin)";
         return `<section class="card">
           <div class="cat-head"><div><h2>${esc(c.label)}</h2><p>${esc(c.blurb)}</p></div></div>
           ${rows.length
             ? `<div class="table-wrap tight" style="margin-top:.6rem"><table class="grid"><thead><tr>
-                <th class="rank">#</th><th class="l">Player</th><th title="Best ${mkt} price across books">Book</th><th title="Model ${mkt} chance">Model</th>
-                <th title="${marketTitle}">Market</th><th title="Model minus market, percentage points">Edge</th>
-                <th title="Expected profit on $100 at the best price, if the model is right">EV / $100</th><th>${anyResult ? "Result" : ""}</th>
+                <th class="rank">#</th><th class="l">Player</th><th>Book</th><th>Model</th>
+                <th>Market</th><th>Edge</th>
+                <th>EV / $100</th><th>${anyResult ? "Result" : ""}</th>
               </tr></thead><tbody>${rows.map(pickRow).join("")}</tbody></table></div>`
             : `<p class="muted" style="margin:.6rem 0 0">No player meets this rule ${source === "live" && !data.odds ? "until sportsbook lines are in" : "this week"}.</p>`}
         </section>`;
@@ -158,7 +156,7 @@
         const profit = staked.reduce((s, p) => s + p.profit, 0);
         return { c, n: g.length, won, lost, vd, hit: won + lost ? won / (won + lost) : null, units: staked.length ? profit / 100 : null, roi: staked.length ? profit / (100 * staked.length) : null };
       });
-      return `<h3 style="margin:.9rem 0 .3rem">${esc(title)}</h3><table class="grid"><thead><tr><th class="l">Category</th><th>Picks</th><th>W–L–Void</th><th>Hit rate</th><th title="Profit in $100 units">Units</th><th>ROI</th></tr></thead><tbody>${rows
+      return `<h3 style="margin:.9rem 0 .3rem">${esc(title)}</h3><table class="grid"><thead><tr><th class="l">Category</th><th>Picks</th><th>W–L–Void</th><th>Hit rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>${rows
         .map((r) => `<tr><td class="l">${esc(r.c.label)}</td><td>${r.n}</td><td>${r.won}–${r.lost}–${r.vd}</td><td>${fmt.pct0(r.hit)}</td>
           <td class="key">${r.units == null ? "–" : `<span class="${r.units > 0 ? "pos" : r.units < 0 ? "neg" : ""}">${r.units > 0 ? "+" : r.units < 0 ? "−" : ""}${Math.abs(r.units).toFixed(2)}</span>`}</td>
           <td>${r.roi == null ? "–" : `<span class="${r.roi > 0 ? "pos" : r.roi < 0 ? "neg" : ""}">${r.roi > 0 ? "+" : r.roi < 0 ? "−" : ""}${Math.abs(r.roi * 100).toFixed(0)}%</span>`}</td></tr>`)

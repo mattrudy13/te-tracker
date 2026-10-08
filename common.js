@@ -62,19 +62,17 @@ function oddsAsOf(data) {
   const d = new Date(data.odds.takenAt);
   return `Sportsbook odds as of ${d.toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })}`;
 }
-// key: "td" (anytime) or "first" (first TD scorer, whose market % has the margin removed).
+// Best price with the book under it. key: "td" (anytime) or "first" (first TD scorer).
+// No tooltips anywhere on the site: they don't work on phones, so everything is visible text.
 function bookTdCell(o, key = "td") {
   const m = o?.[key];
   if (!m) return `<span class="muted">–</span>`;
-  const p = key === "first" ? m.fairProb : m.marketProb;
-  const market = p != null ? ` · market ${(p * 100).toFixed(key === "first" ? 1 : 0)}%${key === "first" ? " (no margin)" : ""}` : "";
-  const first = key === "td" && o.first ? ` · 1st TD ${americanText(o.first.best)} (${esc(o.first.book)})` : "";
-  return `<span title="Best of ${m.books} book${m.books > 1 ? "s" : ""}: ${esc(m.book)}${market}${first}">${americanText(m.best)}</span>`;
+  return `${americanText(m.best)}<small class="ln">${esc(m.book)}</small>`;
 }
 function recLineCell(o) {
   if (!o?.rec) return `<span class="muted">–</span>`;
   const r = o.rec;
-  return `<span title="Over ${americanText(r.over)} (${esc(r.overBook ?? "–")}) · Under ${americanText(r.under)} (${esc(r.underBook ?? "–")})">${r.line} <small class="muted">o${americanText(r.over)}</small></span>`;
+  return `${r.line} <small class="muted">o${americanText(r.over)}</small><small class="ln">${esc(r.overBook ?? "")}</small>`;
 }
 function edgeCell(model, market) {
   if (model == null || market == null) return `<span class="muted">–</span>`;
@@ -113,7 +111,7 @@ function toggleWatch(id) {
   return w.has(id);
 }
 function starButton(id, watched) {
-  return `<button class="star${watched ? " on" : ""}" data-star="${esc(id)}" aria-pressed="${watched}" title="${watched ? "Remove from" : "Add to"} watchlist">${watched ? "★" : "☆"}</button>`;
+  return `<button class="star${watched ? " on" : ""}" data-star="${esc(id)}" aria-pressed="${watched}" aria-label="${watched ? "Remove from" : "Add to"} watchlist">${watched ? "★" : "☆"}</button>`;
 }
 // Star clicks anywhere on the page; `onChange` re-renders if the page needs to.
 function initStars(onChange) {
@@ -143,7 +141,7 @@ function injuryTag(p) {
   const st = p?.injury?.status;
   if (!st) return "";
   const short = /^questionable/i.test(st) ? "Q" : /^doubtful/i.test(st) ? "D" : /^out/i.test(st) ? "O" : /^injured reserve/i.test(st) ? "IR" : /^suspen/i.test(st) ? "SUS" : /^physically/i.test(st) ? "PUP" : st.slice(0, 3).toUpperCase();
-  return ` <span class="inj${short === "Q" ? " q" : ""}" title="${esc(st)}${p.injury.date ? ` (${esc(new Date(p.injury.date).toLocaleDateString(undefined, { month: "short", day: "numeric" }))})` : ""}">${short}</span>`;
+  return ` <span class="inj${short === "Q" ? " q" : ""}" aria-label="${esc(st)}${p.injury.date ? ` (${esc(new Date(p.injury.date).toLocaleDateString(undefined, { month: "short", day: "numeric" }))})` : ""}">${short}</span>`;
 }
 function teamChip(data, abbr) {
   const t = data.teams[abbr];
@@ -156,7 +154,7 @@ function matchup(u) {
   return `${u.home ? "vs" : "@"} ${esc(u.opp)}`;
 }
 
-// Sortable table: columns are { key, label, fmt, cls, title, sort }. Sort state lives on `state`.
+// Sortable table: columns are { key, label, fmt, cls, sort }. Sort state lives on `state`.
 function renderTable(el, rows, cols, state, onSort) {
   const dir = state.dir === "asc" ? 1 : -1;
   const col = cols.find((c) => c.key === state.sort) ?? cols[0];
@@ -171,7 +169,7 @@ function renderTable(el, rows, cols, state, onSort) {
   el.innerHTML = `<table class="grid"><thead><tr>${cols
     .map(
       (c) =>
-        `<th class="${c.cls ?? ""}${c.key === col.key ? " sorted " + state.dir : ""}" ${c.title ? `title="${esc(c.title)}"` : ""}>${
+        `<th class="${c.cls ?? ""}${c.key === col.key ? " sorted " + state.dir : ""}">${
           c.nosort ? c.label : `<button data-sort="${c.key}">${c.label}</button>`
         }</th>`
     )

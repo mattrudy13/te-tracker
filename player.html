@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=73a39d40">
+  <link rel="stylesheet" href="style.css?v=4ae3f8e0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
@@ -57,13 +57,16 @@
       <section class="card">
         <h2>Game log</h2>
         <div class="table-wrap" style="margin-top:.75rem"><div id="log"></div></div>
+        <p class="note"><b>Tgt share</b> is the share of the team's targets. <b>RZ Tgt</b> counts targets inside the opponent's 20, and
+          <b>xTD</b> is the TDs those targets would normally produce. Once this week's receptions line is posted, <b>Rec</b> is green in
+          games that went over it and red in games under it.</p>
       </section>
     </div>
     <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
   </main>
 
   <script src="model.js?v=1c841dd8"></script>
-  <script src="common.js?v=06504ab7"></script>
+  <script src="common.js?v=7c817432"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let data, id;
@@ -140,7 +143,7 @@
         ${tile("1st TDs", a.firstTd, `in ${a.gp} game${a.gp > 1 ? "s" : ""}`)}
       </div>`;
       $("week").innerHTML = `<div><h3 style="margin-bottom:.5rem">Receptions</h3>${recHtml}</div><div><h3 style="margin-bottom:.5rem">Anytime touchdown</h3>${tdHtml}
-        <h3 style="margin:1rem 0 .5rem" title="Scores the game's first touchdown, by either team">First touchdown</h3>${firstHtml}</div>`;
+        <h3 style="margin:1rem 0 .5rem">First touchdown <small class="muted" style="font-weight:400">· scores the game's first TD, by either team</small></h3>${firstHtml}</div>`;
       $("week-note").textContent = `${data.odds ? oddsAsOf(data) + ". " : ""}Anytime Market is the median book's implied chance and includes the books' margin, so a small positive edge is roughly break-even. First-TD books take a much bigger margin, so that Market has it removed. Props usually post midweek.`;
     }
 
@@ -152,7 +155,7 @@
       document.title = `${p.name} — TE Tracker`;
       $("head").innerHTML = `${headshot(p, 96)}
         <div><h1>${esc(p.name)}${injuryTag(p)}</h1>
-        <div class="meta">${teamChip(data, a.team)} ${esc(team?.name ?? "")}${p.jersey ? ` · #${esc(p.jersey)}` : ""}${p.age ? ` · Age ${esc(p.age)}` : ""}${p.exp != null ? ` · ${p.exp ? `Year ${p.exp + 1}` : "Rookie"}` : ""}${p.onRoster ? "" : ` · <span class="flag">not on a current roster</span>`}</div></div>
+        <div class="meta">${teamChip(data, a.team)} ${esc(team?.name ?? "")}${p.jersey ? ` · #${esc(p.jersey)}` : ""}${p.age ? ` · Age ${esc(p.age)}` : ""}${p.exp != null ? ` · ${p.exp ? `Year ${p.exp + 1}` : "Rookie"}` : ""}${p.onRoster ? "" : ` · <span class="flag">not on a current roster</span>`}${p.injury?.status ? ` · <span class="flag">${esc(p.injury.status)}${p.injury.date ? ` (${esc(new Date(p.injury.date).toLocaleDateString(undefined, { month: "short", day: "numeric" }))})` : ""}</span>` : ""}</div></div>
         <div class="actions">${starButton(id, getWatchlist().has(id))}</div>`;
 
       const wk = thisWeek(a);
@@ -213,8 +216,8 @@
       });
 
       $("log").innerHTML = `<table class="grid"><thead><tr>
-        <th class="l">Wk</th><th class="l">Opp</th><th class="l">Result</th><th>Tgt</th><th title="Share of the team's targets">Tgt share</th>
-        <th title="${line != null ? `Green: over this week's line of ${line}` : "Receptions"}">Rec</th><th>Yds</th><th>TD</th><th title="Targets inside the 20">RZ Tgt</th><th title="Expected TDs from target locations">xTD</th><th>Rush</th>
+        <th class="l">Wk</th><th class="l">Opp</th><th class="l">Result</th><th>Tgt</th><th>Tgt share</th>
+        <th>Rec</th><th>Yds</th><th>TD</th><th>RZ Tgt</th><th>xTD</th><th>Rush</th>
         </tr></thead><tbody>${games.map((g) => {
           const res = g.score > g.oppScore ? "W" : g.score < g.oppScore ? "L" : "T";
           const recCls = line == null ? "" : g.rec > line ? "pos" : "neg";

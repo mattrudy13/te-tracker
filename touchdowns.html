@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=73a39d40">
+  <link rel="stylesheet" href="style.css?v=4ae3f8e0">
 </head>
 <body>
   <header class="topbar">
@@ -47,16 +47,19 @@
       </div>
       <div class="table-wrap tight"><div id="odds"></div></div>
       <p class="note">
+        <b>Team pts</b> is the team's implied points from the spread and total. <b>Tgt/G</b> and <b>RZ Tgt/G</b> are targets per game
+        overall and inside the opponent's 20; <b>xTD/G</b> is the TDs per game those targets would normally produce.
+        "Missed last game" means the player had no stat line in the team's most recent game.
         <b>TD %</b> is the chance of at least one TD in the game. It starts from the player's expected TDs per game, pulled toward what their target volume alone would predict (so a few early red-zone looks don't dominate), blends in the last 3 games, and is scaled by the team's
         <b>implied points</b> from the betting line, compared with the week's average (<span id="avg-implied"></span>).
         <b>Fair odds</b> is that probability as an American price with no vig, for comparing against a sportsbook's.
-        <b>Book</b> is the best anytime-TD price across US sportsbooks; <b>Market</b> is the median book's implied chance, which includes
+        <b>Book</b> is the best anytime-TD price across US sportsbooks, with the book under it; <b>Market</b> is the median book's implied chance, which includes
         the books' margin, so it runs a few points high. <b>Edge</b> is model minus market, in percentage points.
         <b>1st TD</b> switches the table to first-touchdown-scorer bets: the chance the player scores the game's first TD, by either team.
         The model takes the player's share of both teams' expected TDs, times the chance anyone scores one. First-TD books keep a 25–40% margin,
-        so in that view <b>Market</b> has the margin removed.
-        <b>Rec line</b> is the receptions over/under most books offer, with the best over price. <span id="odds-asof"></span>
-        These are model estimates and a snapshot of prices, not betting advice.
+        so in that view <b>Market</b> has the margin removed. <b>1st TDs</b> counts the games this season where the player scored first.
+        <b>Rec line</b> is the receptions over/under most books offer, with the best over price and its book. <span id="odds-asof"></span>
+        These are model estimates and a snapshot of prices, not betting advice. Injury tags: <span class="inj q">Q</span> Questionable, <span class="inj">D</span> Doubtful, <span class="inj">O</span> Out, <span class="inj">IR</span> injured reserve.
       </p>
     </section>
 
@@ -71,6 +74,8 @@
       </div>
       <div class="table-wrap"><div id="rz"></div></div>
       <p class="note">
+        <b>RZ Tgt</b>, <b>In 10</b> and <b>In 5</b> are targets inside the opponent's 20, 10 and 5. <b>RZ % of Tgt</b> is the share of the
+        player's targets that came in the red zone.
         <b>xTD</b> is expected receiving TDs: each target is worth the league-wide TE touchdown rate for where it was thrown from.
         <b>TD − xTD</b> above zero means the player has scored more than the usage suggests and is likely to cool off; below zero means the player has been unlucky.
         Red-zone splits come from ESPN play-by-play and can miss an occasional target.
@@ -87,14 +92,14 @@
   </main>
 
   <script src="model.js?v=1c841dd8"></script>
-  <script src="common.js?v=06504ab7"></script>
+  <script src="common.js?v=7c817432"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     const oddsState = { sort: "edge", dir: "desc" };
     const rzState = { sort: "tgt20", dir: "desc" };
     let data;
 
-    const who = (r) => `<div class="who">${headshot(r.player)}<div>${playerLink(r)}<small>${teamChip(data, r.team)}${r.missedLast && !r.player?.injury ? ` <span class="flag" title="Didn't play in the team's most recent game">missed last game</span>` : ""}</small></div></div>`;
+    const who = (r) => `<div class="who">${headshot(r.player)}<div>${playerLink(r)}<small>${teamChip(data, r.team)}${r.missedLast && !r.player?.injury ? ` <span class="flag">missed last game</span>` : ""}</small></div></div>`;
 
     // Anytime or first-TD view. The probability, price and market columns keep their keys in both,
     // so the chosen sort carries over when switching.
@@ -105,27 +110,23 @@
       { key: "star", label: "", cls: "c", nosort: true, fmt: (r) => starButton(r.id, getWatchlist().has(r.id)) },
       { key: "name", label: "Player", cls: "l", asc: true, sort: (r) => r.player?.name ?? "", fmt: who },
       { key: "opp", label: "Game", cls: "l", asc: true, sort: (r) => r.up.opp, fmt: (r) => `${matchup(r.up)} <small class="muted">${new Date(r.up.date).toLocaleDateString(undefined, { weekday: "short" })}</small>` },
-      { key: "implied", label: "Team pts", title: "Implied team points from the spread and total", sort: (r) => r.up.implied, fmt: (r) => fmt.d1(r.up.implied) },
+      { key: "implied", label: "Team pts", sort: (r) => r.up.implied, fmt: (r) => fmt.d1(r.up.implied) },
       { key: "tgtPg", label: "Tgt/G", cls: "sep", fmt: (r) => fmt.d1(r.tgtPg) },
       { key: "rzPg", label: "RZ Tgt/G", fmt: (r) => fmt.d1(r.rzPg) },
       { key: "xtdPg", label: "xTD/G", fmt: (r) => fmt.d2(r.xtdPg) },
       { key: "td", label: "TD", fmt: (r) => r.td + r.rushTd },
       ...(mkt() === "first"
-        ? [{ key: "firstTd", label: "1st TDs", title: "Games this season where the player scored the game's first TD", fmt: (r) => r.firstTd }]
+        ? [{ key: "firstTd", label: "1st TDs", fmt: (r) => r.firstTd }]
         : []),
       { key: "prob", label: mkt() === "first" ? "1st TD %" : "TD %", cls: "sep key", sort: pr, fmt: (r) => (mkt() === "first" ? fmt.pct(r.firstProb) : fmt.pct0(r.prob)) },
       { key: "odds", label: "Fair odds", cls: "key", sort: pr, fmt: (r) => fmt.odds(pr(r)) },
-      { key: "book", label: "Book", cls: "sep", title: `Best ${mkt() === "first" ? "first-TD" : "anytime-TD"} price across sportsbooks`, sort: (r) => impliedProb(r.book?.[mkt()]?.best), fmt: (r) => bookTdCell(r.book, mkt()) },
-      {
-        key: "market", label: "Market",
-        title: mkt() === "first" ? "Median sportsbook chance with the margin removed" : "Median sportsbook implied probability (includes the books' margin)",
-        sort: mktProb, fmt: (r) => (mkt() === "first" ? fmt.pct(mktProb(r)) : fmt.pct0(mktProb(r))),
-      },
-      { key: "edge", label: "Edge", title: "Model % minus market %, in percentage points", sort: (r) => (pr(r) != null && mktProb(r) != null ? pr(r) - mktProb(r) : null), fmt: (r) => edgeCell(pr(r), mktProb(r)) },
+      { key: "book", label: "Book", cls: "sep", sort: (r) => impliedProb(r.book?.[mkt()]?.best), fmt: (r) => bookTdCell(r.book, mkt()) },
+      { key: "market", label: "Market", sort: mktProb, fmt: (r) => (mkt() === "first" ? fmt.pct(mktProb(r)) : fmt.pct0(mktProb(r))) },
+      { key: "edge", label: "Edge", sort: (r) => (pr(r) != null && mktProb(r) != null ? pr(r) - mktProb(r) : null), fmt: (r) => edgeCell(pr(r), mktProb(r)) },
       // The 1st TD view swaps the receptions line for the 1st TDs column so the table still fits at 1280px.
       ...(mkt() === "first"
         ? []
-        : [{ key: "rec", label: "Rec line", cls: "sep", title: "Receptions over/under: the most common line, with the best over price", sort: (r) => r.book?.rec?.line, fmt: (r) => recLineCell(r.book) }]),
+        : [{ key: "rec", label: "Rec line", cls: "sep", sort: (r) => r.book?.rec?.line, fmt: (r) => recLineCell(r.book) }]),
     ];
 
     const rzCols = [
@@ -133,10 +134,10 @@
       { key: "name", label: "Player", cls: "l", asc: true, sort: (r) => r.player?.name ?? "", fmt: who },
       { key: "gp", label: "G", fmt: (r) => r.gp },
       { key: "tgt", label: "Tgt", fmt: (r) => r.tgt },
-      { key: "tgt20", label: "RZ Tgt", cls: "sep", title: "Targets inside the 20", fmt: (r) => r.tgt20 },
-      { key: "tgt10", label: "In 10", title: "Targets inside the 10", fmt: (r) => r.tgt10 },
-      { key: "tgt5", label: "In 5", title: "Targets inside the 5", fmt: (r) => r.tgt5 },
-      { key: "rzShare", label: "RZ % of Tgt", title: "Share of the player's targets that came in the red zone", fmt: (r) => fmt.pct0(r.rzShare) },
+      { key: "tgt20", label: "RZ Tgt", cls: "sep", fmt: (r) => r.tgt20 },
+      { key: "tgt10", label: "In 10", fmt: (r) => r.tgt10 },
+      { key: "tgt5", label: "In 5", fmt: (r) => r.tgt5 },
+      { key: "rzShare", label: "RZ % of Tgt", fmt: (r) => fmt.pct0(r.rzShare) },
       { key: "td", label: "Rec TD", cls: "sep", fmt: (r) => r.td },
       { key: "td20", label: "RZ TD", fmt: (r) => r.td20 },
       { key: "xtd", label: "xTD", cls: "key", fmt: (r) => fmt.d1(r.xtd) },

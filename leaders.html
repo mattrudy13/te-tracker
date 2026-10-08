@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=73a39d40">
+  <link rel="stylesheet" href="style.css?v=4ae3f8e0">
 </head>
 <body>
   <header class="topbar">
@@ -53,7 +53,7 @@
         <b>xTD</b> is the TDs those targets would normally produce, given where on the field they came. <b>TD − xTD</b> above zero means
         more TDs than the usage suggests (likely to cool off); below zero means fewer (due for some). TD, xTD and TD − xTD are
         always season totals. <b>Rec line</b> and <b>Book TD</b> are this week's receptions over/under and best anytime-TD price
-        (<span id="odds-asof">no odds snapshot yet</span>).
+        (<span id="odds-asof">no odds snapshot yet</span>). Injury tags: <span class="inj q">Q</span> Questionable, <span class="inj">D</span> Doubtful, <span class="inj">O</span> Out, <span class="inj">IR</span> injured reserve.
       </p>
     </section>
 
@@ -61,15 +61,15 @@
   </main>
 
   <script src="model.js?v=1c841dd8"></script>
-  <script src="common.js?v=06504ab7"></script>
+  <script src="common.js?v=7c817432"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     const state = { sort: "tgt", dir: "desc", mode: "pg" };
     let data, weekOdds = {};
 
     // Volume stats switch between per-game and season totals; TD columns are always totals.
-    const vol = (key, label, title, opts = {}) => ({
-      key, label, title: title ?? "", cls: opts.cls,
+    const vol = (key, label, opts = {}) => ({
+      key, label, cls: opts.cls,
       sort: (r) => (state.mode === "pg" ? r[key] / r.gp : r[key]),
       fmt: (r) => (state.mode === "pg" ? fmt.d1(r[key] / r.gp) : fmt.int(r[key])),
     });
@@ -82,18 +82,18 @@
         { key: "name", label: "Player", cls: "l", asc: true, sort: (r) => r.player?.name ?? "",
           fmt: (r) => `<div class="who">${headshot(r.player)}<div>${playerLink(r)}<small>${teamChip(data, r.team)}</small></div></div>` },
         { key: "gp", label: "G", fmt: (r) => r.gp },
-        { ...vol("tgt", pg ? "Tgt/G" : "Tgt", "Targets"), cls: "sep key" },
-        { key: "tgtShare", label: "Tgt share", title: "Share of the team's targets in the games played", fmt: (r) => fmt.pct0(r.tgtShare) },
-        vol("rec", pg ? "Rec/G" : "Rec", "Receptions", { cls: "sep" }),
-        { key: "catchPct", label: "Catch %", title: "Receptions per target", fmt: (r) => fmt.pct0(r.catchPct) },
-        vol("yds", pg ? "Yds/G" : "Yds", "Receiving yards"),
-        { key: "ypt", label: "Y/Tgt", title: "Yards per target", fmt: (r) => fmt.d1(r.ypt) },
-        { key: "td", label: "TD", cls: "sep", title: "Touchdowns (season)", sort: (r) => r.td + r.rushTd, fmt: (r) => r.td + r.rushTd },
-        vol("tgt20", pg ? "RZ Tgt/G" : "RZ Tgt", "Targets inside the opponent's 20"),
-        { key: "xtd", label: "xTD", title: "Expected receiving TDs from target locations (season)", fmt: (r) => fmt.d1(r.xtd) },
-        { key: "tdDiff", label: "TD − xTD", title: "Above zero: scoring more than usage suggests", fmt: (r) => `<span class="${r.tdDiff >= 0.05 ? "pos" : r.tdDiff <= -0.05 ? "neg" : ""}">${fmt.signed(r.tdDiff)}</span>` },
-        { key: "recLine", label: "Rec line", cls: "sep", title: "This week's receptions over/under (most common line)", sort: (r) => weekOdds[r.id]?.rec?.line, fmt: (r) => (weekOdds[r.id]?.rec ? weekOdds[r.id].rec.line : `<span class="muted">–</span>`) },
-        { key: "bookTd", label: "Book TD", title: "This week's best anytime-TD price", sort: (r) => impliedProb(weekOdds[r.id]?.td?.best), fmt: (r) => bookTdCell(weekOdds[r.id]) },
+        { ...vol("tgt", pg ? "Tgt/G" : "Tgt"), cls: "sep key" },
+        { key: "tgtShare", label: "Tgt share", fmt: (r) => fmt.pct0(r.tgtShare) },
+        vol("rec", pg ? "Rec/G" : "Rec", { cls: "sep" }),
+        { key: "catchPct", label: "Catch %", fmt: (r) => fmt.pct0(r.catchPct) },
+        vol("yds", pg ? "Yds/G" : "Yds"),
+        { key: "ypt", label: "Y/Tgt", fmt: (r) => fmt.d1(r.ypt) },
+        { key: "td", label: "TD", cls: "sep", sort: (r) => r.td + r.rushTd, fmt: (r) => r.td + r.rushTd },
+        vol("tgt20", pg ? "RZ Tgt/G" : "RZ Tgt"),
+        { key: "xtd", label: "xTD", fmt: (r) => fmt.d1(r.xtd) },
+        { key: "tdDiff", label: "TD − xTD", fmt: (r) => `<span class="${r.tdDiff >= 0.05 ? "pos" : r.tdDiff <= -0.05 ? "neg" : ""}">${fmt.signed(r.tdDiff)}</span>` },
+        { key: "recLine", label: "Rec line", cls: "sep", sort: (r) => weekOdds[r.id]?.rec?.line, fmt: (r) => (weekOdds[r.id]?.rec ? weekOdds[r.id].rec.line : `<span class="muted">–</span>`) },
+        { key: "bookTd", label: "Book TD", sort: (r) => impliedProb(weekOdds[r.id]?.td?.best), fmt: (r) => bookTdCell(weekOdds[r.id]) },
       ];
     }
 
