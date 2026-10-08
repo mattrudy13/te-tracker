@@ -45,13 +45,13 @@
       and their books. <b>Tgt/G</b> is targets per game, <b>Share</b> the share of the team's targets, and <b>RZ Tgt</b> targets inside the opponent's 20.
       Props usually appear midweek, so early in the week many show "–". <span id="odds-asof"></span>
       For finished games, the box score shows the pregame TD price (✓ scored, ✗ didn't) and receptions line (Over or Under), from the last snapshot.
-      The defense line is the opponent's TE fantasy points allowed per game (PPR), ranked 1st (fewest) to 32nd.
+      The defense line is what the opponent allows to all tight ends combined, per game: receptions (ranked 1st, fewest, to 32nd), targets and yards, plus total TE touchdowns this season.
       Games in progress fill in after they end. Injury tags: <span class="inj q">Q</span> Questionable, <span class="inj">D</span> Doubtful, <span class="inj">O</span> Out, <span class="inj">IR</span> injured reserve.
     </p>
     <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
   </main>
 
-  <script src="model.js?v=1c841dd8"></script>
+  <script src="model.js?v=420f584d"></script>
   <script src="common.js?v=7c817432"></script>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -156,7 +156,7 @@
             ${live ? `<p class="muted">Live stats appear after the game.</p>` : ""}
             ${seasonTable(rows, oddsById, watch, !done && !live, g)}
             ${minor ? `<button type="button" class="linkbtn" data-all>Show ${minor} more with under 1 target/game</button>` : ""}
-            ${d ? `<p class="def">vs ${esc(oppAbbr)} defense: <b>${fmt.d1(d.fptsPg)}</b> TE pts/game allowed (${ordinal(d.rank)} of ${def.count}) · ${fmt.d1(d.ydsPg)} yds · ${d.td} TD in ${d.gp} games</p>` : ""}
+            ${d ? `<p class="def">vs ${esc(oppAbbr)} defense: <b>${fmt.d1(d.recPg)}</b> TE rec/game allowed (${ordinal(d.rank)} fewest of ${def.count}) · ${fmt.d1(d.tgtPg)} tgt · ${fmt.d1(d.ydsPg)} yds · ${d.td} TD in ${d.gp} games</p>` : ""}
           </div>`;
         };
         return `${dayHead}<details class="game" data-id="${esc(g.id)}" ${open.has(g.id) ? "open" : ""}>

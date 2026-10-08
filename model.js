@@ -168,23 +168,23 @@ function tdOdds(data) {
   return rows.sort((x, y) => (y.prob ?? -1) - (x.prob ?? -1));
 }
 
-// What each defense allows to tight ends, per game. rank 1 = fewest fantasy points allowed.
-function defenseVsTe(data, format = "ppr") {
+// What each defense allows to tight ends, per game. rank 1 = fewest receptions allowed, since the
+// receptions line is the market this feeds (the user bets TDs and receptions, not fantasy).
+function defenseVsTe(data) {
   const by = {};
   for (const g of data.games) {
-    const d = (by[g.opp] ??= { team: g.opp, gameIds: new Set(), tgt: 0, rec: 0, yds: 0, td: 0, fpts: 0 });
+    const d = (by[g.opp] ??= { team: g.opp, gameIds: new Set(), tgt: 0, rec: 0, yds: 0, td: 0 });
     d.gameIds.add(g.gameId);
     d.tgt += g.tgt;
     d.rec += g.rec;
     d.yds += g.yds;
     d.td += g.td + g.rushTd;
-    d.fpts += fantasyPoints(g, format);
   }
   const rows = Object.values(by).map((d) => {
     const n = d.gameIds.size;
-    return { team: d.team, gp: n, tgtPg: d.tgt / n, recPg: d.rec / n, ydsPg: d.yds / n, tdPg: d.td / n, fptsPg: d.fpts / n, td: d.td };
+    return { team: d.team, gp: n, tgtPg: d.tgt / n, recPg: d.rec / n, ydsPg: d.yds / n, tdPg: d.td / n, td: d.td };
   });
-  rows.sort((a, b) => a.fptsPg - b.fptsPg).forEach((r, i) => (r.rank = i + 1));
+  rows.sort((a, b) => a.recPg - b.recPg).forEach((r, i) => (r.rank = i + 1));
   return { byTeam: Object.fromEntries(rows.map((r) => [r.team, r])), count: rows.length };
 }
 

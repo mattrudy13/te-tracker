@@ -78,7 +78,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 - Pages: `index.html` (Best Bets, the home page by request), `matchups.html`, `leaders.html`, `touchdowns.html`,
   `player.html`. Matchups was briefly the home page, so `index.html` forwards `?open=` links to `matchups.html`;
   each keeps its page logic in an inline script. The nav is copied into each page; add new tabs to all of them.
-- `defenseVsTe()` in model.js: TE fantasy points allowed per game by each defense (PPR, rank 1 = fewest).
+- `defenseVsTe()` in model.js: TE receptions, targets, yards and TDs allowed per game by each defense
+  (rank 1 = fewest receptions). `bestBets()` ranks by `tdPg` itself, so the rank doesn't touch picks.
 - Odds helpers: `playerOdds()` / `impliedProb()` in model.js; `americanText()`, `bookTdCell()`,
   `recLineCell()`, `edgeCell()`, `oddsAsOf()` in common.js.
 - Injuries: `players[id].injury = { status, date }` from the ESPN roster (`a.injuries[0]`). `isOut()` (Out,
@@ -101,8 +102,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 - "Missed last game" (tdOdds `missedLast`) means no box-score row in the team's latest game, which also
   catches a TE who played but drew no targets. It's hidden when an injury tag already explains the absence.
 - The user cares about TD and receptions betting angles more than fantasy points. Keep new features
-  pointed that way. Fantasy points survive only in the PPR defense line on Matchups (`defenseVsTe`) and
-  `fantasyPoints()` in model.js. The player page is odds-first too: a "This week" card (rec line, O/U, over-the-line
+  pointed that way. Fantasy points survive only in `fantasyPoints()` / `aggregate` in model.js (no page
+  shows them). The player page is odds-first too: a "This week" card (rec line, O/U, over-the-line
   hit rate, model TD vs book), receptions chart with the line drawn in, no scoring toggle.
 - Player names (`.pname`) have a dotted underline so it's clear they link to player pages (the user didn't
   know the page existed).
