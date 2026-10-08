@@ -31,7 +31,7 @@ function aggregate(data, games, { format = "ppr", tep = false } = {}) {
   for (const g of games) {
     let a = by.get(g.playerId);
     if (!a) {
-      a = { id: g.playerId, player: data.players[g.playerId], team: g.team, gp: 0, fpts: 0, long: 0, xtd: 0, games: [] };
+      a = { id: g.playerId, player: data.players[g.playerId], team: g.team, gp: 0, fpts: 0, long: 0, xtd: 0, firstTd: 0, games: [] };
       for (const k of SUM_KEYS) a[k] = 0;
       by.set(g.playerId, a);
     }
@@ -39,6 +39,7 @@ function aggregate(data, games, { format = "ppr", tep = false } = {}) {
     a.team = g.team; // latest team, since games are in week order
     for (const k of SUM_KEYS) a[k] += g[k];
     a.long = Math.max(a.long, g.long);
+    if (g.firstTd) a.firstTd++; // games where this player scored the game's first TD
     a.fpts += fantasyPoints(g, format, tep);
     a.xtd += model.xtd(g);
     a.games.push(g);
@@ -68,6 +69,10 @@ function aggregate(data, games, { format = "ppr", tep = false } = {}) {
 // few red-zone looks in September don't dominate. Season and last-3 estimates are blended, scaled by
 // the team's implied points for the matchup, then P = 1 − e^(−λ) (Poisson).
 //
+// First-TD odds: the game's expected TDs Λ = both teams' implied points x TD_PER_POINT. If TDs arrive
+// as independent Poisson streams, the first one is this player's with chance λ/Λ, and there is a
+// first TD at all with chance 1 − e^(−Λ). So P(first) = λ/Λ · (1 − e^(−Λ)).
+//
 // Calibrated on 2026-10-05 against the first sportsbook snapshot (30 priced TEs, books de-vigged by
 // ~12%): RMSE went from 11.2 to 6.4 percentage points and the average matched the market. The model
 // still disagrees with the books on purpose (it only knows targets and field position).
@@ -81,6 +86,9 @@ const TD_ZONES = [
 const TD_PER_TARGET_PRIOR = 0.05;
 const SHRINK_GAMES = 8;
 const RECENT_WEIGHT = 0.3;
+// TDs per implied point: NFL teams average about 2.4 TDs on about 23 points. Not yet calibrated
+// against the first-TD market.
+const TD_PER_POINT = 0.105;
 
 function zoneCounts(g) {
   return {
@@ -152,7 +160,10 @@ function tdOdds(data) {
     const lambda = base * scale;
     const missedLast = (lastTeamWeek[team] ?? 0) > a.games.at(-1).week;
     const out = isOut(p);
-    rows.push({ ...a, team, up: u, xtdPg: xtdSeason, lambda, out, prob: out ? null : 1 - Math.exp(-lambda), missedLast });
+    const oppImplied = byTeam[u.opp]?.implied;
+    const gameLambda = u.implied != null && oppImplied != null ? (u.implied + oppImplied) * TD_PER_POINT : null;
+    const firstProb = out || !gameLambda ? null : (lambda / gameLambda) * (1 - Math.exp(-gameLambda));
+    rows.push({ ...a, team, up: u, xtdPg: xtdSeason, lambda, out, prob: out ? null : 1 - Math.exp(-lambda), firstProb, missedLast });
   }
   return rows.sort((x, y) => (y.prob ?? -1) - (x.prob ?? -1));
 }
@@ -212,6 +223,7 @@ const BET_CATEGORIES = [
   { key: "longshot", label: "Longshots", blurb: "Prices of +400 or longer where the model still sees positive expected value, for players with a red-zone role." },
   { key: "due", label: "Due for a TD", blurb: "Plenty of red-zone looks but fewer TDs than those targets usually produce. The usage suggests TDs are coming." },
   { key: "fade", label: "Fades", blurb: "Short prices (+250 or shorter) the model thinks are too short. Bets to avoid." },
+  { key: "first", label: "First TD value", blurb: "Bets on the player scoring the game's first touchdown (by either team). The model's chance beats the best price by the most. Priced by at least 2 books, red-zone role required." },
 ];
 const PICKS_PER_CATEGORY = 5;
 
@@ -223,7 +235,9 @@ function bestBets(data, now = Date.now()) {
   for (const r of tdOdds(data)) {
     if (r.out || new Date(r.up.date).getTime() <= now) continue;
     const home = r.up.home ? r.team : r.up.opp, away = r.up.home ? r.up.opp : r.team;
-    const book = playerOdds(data, r.id, home, away)?.td ?? null;
+    const odds = playerOdds(data, r.id, home, away);
+    const book = odds?.td ?? null;
+    const first = odds?.first ?? null;
     const price = book?.best ?? null;
     const d = def[r.up.opp];
     const why = [
@@ -241,6 +255,10 @@ function bestBets(data, now = Date.now()) {
       edge: book ? r.prob - book.marketProb : null,
       ev: price != null ? evPer100(r.prob, price) : null,
       tgt20: r.tgt20, tdDiff: r.tdDiff, why,
+      first: first && r.firstProb != null ? {
+        modelProb: r.firstProb, price: first.best, book: first.book, books: first.books,
+        marketProb: first.fairProb ?? null, ev: evPer100(r.firstProb, first.best),
+      } : null,
     });
   }
   const top = (rows, by) => rows.sort(by).slice(0, PICKS_PER_CATEGORY);
@@ -248,6 +266,9 @@ function bestBets(data, now = Date.now()) {
   // Each category: the strict rule (real picks, recorded and graded) and a looser pool that fills
   // the list to PICKS_PER_CATEGORY with labeled "close calls" (shown only, never recorded).
   const byEv = (a, b) => b.ev - a.ev;
+  // First-TD rows carry first-TD price, chances and EV in the usual fields, so the page and
+  // record-picks.mjs treat them like any other pick. marketProb is the de-vigged market chance.
+  const firstRows = cands.filter((c) => c.first).map((c) => ({ ...c, ...c.first, edge: c.first.marketProb == null ? null : c.first.modelProb - c.first.marketProb }));
   const rules = {
     likely: { pick: () => cands, near: () => [], by: (a, b) => b.modelProb - a.modelProb },
     value: {
@@ -265,6 +286,10 @@ function bestBets(data, now = Date.now()) {
     fade: {
       pick: () => priced.filter((c) => c.price <= 250 && c.edge <= -0.08),
       near: () => priced.filter((c) => c.price <= 300 && c.edge < 0), by: (a, b) => a.edge - b.edge,
+    },
+    first: {
+      pick: () => firstRows.filter((c) => c.ev > 0 && c.books >= 2 && c.tgt20 >= 1 && c.modelProb >= 0.04),
+      near: () => firstRows, by: byEv,
     },
   };
   const cats = {}, closeCalls = {};
@@ -289,7 +314,7 @@ function bestBets(data, now = Date.now()) {
 
 if (typeof module !== "undefined") {
   module.exports = {
-    SCORING, fantasyPoints, gamesFor, aggregate, TD_ZONES, zoneCounts, tdModel, shrunkXtdPg, tdOdds,
+    SCORING, fantasyPoints, gamesFor, aggregate, TD_ZONES, TD_PER_POINT, zoneCounts, tdModel, shrunkXtdPg, tdOdds,
     defenseVsTe, impliedProb, playerOdds, isOut, payout, evPer100, BET_CATEGORIES, bestBets,
   };
 }
