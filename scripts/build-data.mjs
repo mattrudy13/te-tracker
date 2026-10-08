@@ -2,6 +2,7 @@
 // Builds data/<season>.json: one row per tight end per completed regular-season game,
 // from ESPN's public site API. Run with `node scripts/build-data.mjs [season]`.
 // Already-processed games are reused from the existing file, so reruns only fetch new games.
+// `--backfill-first-td` refetches the processed games once to set the `firstTd` flags.
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -112,9 +113,22 @@ function redZoneSplits(summary, teamIdByAbbr, tesByTeam) {
   return out;
 }
 
+// The tight end (if any) who scored the game's first touchdown, by either team. Scoring plays come in
+// game order with text like "Eli Raridon 2 Yd pass from Drake Maye (...)". Defensive and return TDs
+// count too: they settle first-TD bets, they just never match a TE.
+function firstTdScorer(summary, tesByTeam) {
+  const play = (summary.scoringPlays ?? []).find((p) => p.type?.abbreviation === "TD");
+  const m = play && /^(.+?) \d+ Yd /.exec(play.text ?? "");
+  if (!m) return null;
+  const key = nameKey(m[1]);
+  return (tesByTeam[play.team?.abbreviation] ?? []).find((te) => te.key.first === key.first && te.key.last === key.last)?.id ?? null;
+}
+
 async function main() {
   const current = await getJson(`${API}/scoreboard`);
-  const season = Number(process.argv[2]) || current.season.year;
+  const args = process.argv.slice(2);
+  const backfillFirstTd = args.includes("--backfill-first-td");
+  const season = Number(args.find((a) => !a.startsWith("--"))) || current.season.year;
   const outFile = path.join(DATA_DIR, `${season}.json`);
   const positionsFile = path.join(DATA_DIR, `positions-${season}.json`);
 
@@ -328,9 +342,29 @@ async function main() {
       }
       const rz = redZoneSplits(s, teamIdByAbbr, tesByTeam);
       for (const r of rows) Object.assign(r, rz[r.playerId] ?? { tgt5: 0, tgt10: 0, tgt20: 0, td5: 0, td10: 0, td20: 0 });
+      const first = firstTdScorer(s, tesByTeam);
+      for (const r of rows) if (r.playerId === first) r.firstTd = true;
       return rows;
     })
   ).flat();
+
+  // One-off: games processed before first-TD tracking existed have no flags yet.
+  if (backfillFirstTd) {
+    const byGame = Map.groupBy(keep, (g) => g.gameId);
+    let found = 0;
+    await mapLimit([...byGame.keys()], 6, async (id) => {
+      const rows = byGame.get(id);
+      const tesByTeam = {};
+      for (const r of rows) {
+        delete r.firstTd;
+        const name = players[r.playerId]?.name;
+        if (name) (tesByTeam[r.team] ??= []).push({ id: r.playerId, key: nameKey(name) });
+      }
+      const first = firstTdScorer(await getJson(`${API}/summary?event=${id}`), tesByTeam);
+      for (const r of rows) if (r.playerId === first) (r.firstTd = true), found++;
+    });
+    console.log(`first-TD backfill: ${byGame.size} games, ${found} first TDs by a TE`);
+  }
 
   const games = [...keep, ...newRows].sort((a, b) => a.week - b.week || a.date.localeCompare(b.date));
   const usedIds = new Set(games.map((g) => g.playerId));
