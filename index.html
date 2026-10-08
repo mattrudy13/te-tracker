@@ -30,7 +30,7 @@
   <main class="wrap">
     <div class="page-head">
       <h1 id="title">Best bets</h1>
-      <p class="sub">Tight end anytime-touchdown picks from the model and this week's sportsbook prices. <span class="updated" id="asof"></span></p>
+      <p class="sub">Tight end touchdown picks (anytime and first TD) from the model and this week's sportsbook prices. <span class="updated" id="asof"></span></p>
     </div>
     <div id="status" hidden></div>
     <div class="banner" id="banner" hidden></div>
@@ -60,12 +60,15 @@
       Grading: a pick wins if the player scores a receiving or rushing TD. A player with no box-score line is voided, the way books handle
       inactive players (a TE who played but drew no targets also lands there). Fades win when the player doesn't score, and have no
       profit figure because the "No" price isn't tracked.
+      <b>First TD</b> bets win only if the player scores the game's first touchdown, by either team. They lose if someone else scores first
+      or nobody scores a TD. Books take a much bigger margin on this market, so its Market column has the margin removed. The model's chance
+      is the player's share of both teams' expected TDs.
     </p>
     <footer>Data from ESPN and The Odds API. Regular season only.</footer>
   </main>
 
-  <script src="model.js?v=a6ff0cdb"></script>
-  <script src="common.js?v=38d53430"></script>
+  <script src="model.js?v=1c841dd8"></script>
+  <script src="common.js?v=06504ab7"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let data, picksStore = null;
@@ -114,12 +117,14 @@
         const fill = pool.filter((p) => !ids.has(p.playerId)).slice(0, Math.max(0, PICKS_PER_CATEGORY - real.length));
         const rows = [...real, ...fill.map((p) => ({ ...p, cat: c.key, close: true }))];
         const anyResult = rows.some((p) => p.result);
+        const mkt = c.key === "first" ? "first-TD" : "anytime-TD";
+        const marketTitle = c.key === "first" ? "Median book's chance with the margin removed (first-TD margins run 25–40%)" : "Median book's implied chance (includes the margin)";
         return `<section class="card">
           <div class="cat-head"><div><h2>${esc(c.label)}</h2><p>${esc(c.blurb)}</p></div></div>
           ${rows.length
             ? `<div class="table-wrap tight" style="margin-top:.6rem"><table class="grid"><thead><tr>
-                <th class="rank">#</th><th class="l">Player</th><th title="Best anytime-TD price across books">Book</th><th title="Model anytime-TD chance">Model</th>
-                <th title="Median book's implied chance (includes the margin)">Market</th><th title="Model minus market, percentage points">Edge</th>
+                <th class="rank">#</th><th class="l">Player</th><th title="Best ${mkt} price across books">Book</th><th title="Model ${mkt} chance">Model</th>
+                <th title="${marketTitle}">Market</th><th title="Model minus market, percentage points">Edge</th>
                 <th title="Expected profit on $100 at the best price, if the model is right">EV / $100</th><th>${anyResult ? "Result" : ""}</th>
               </tr></thead><tbody>${rows.map(pickRow).join("")}</tbody></table></div>`
             : `<p class="muted" style="margin:.6rem 0 0">No player meets this rule ${source === "live" && !data.odds ? "until sportsbook lines are in" : "this week"}.</p>`}

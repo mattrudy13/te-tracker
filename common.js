@@ -62,10 +62,14 @@ function oddsAsOf(data) {
   const d = new Date(data.odds.takenAt);
   return `Sportsbook odds as of ${d.toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })}`;
 }
-function bookTdCell(o) {
-  if (!o?.td) return `<span class="muted">–</span>`;
-  const market = o.td.marketProb != null ? ` · market ${Math.round(o.td.marketProb * 100)}%` : "";
-  return `<span title="Best of ${o.td.books} book${o.td.books > 1 ? "s" : ""}: ${esc(o.td.book)}${market}">${americanText(o.td.best)}</span>`;
+// key: "td" (anytime) or "first" (first TD scorer, whose market % has the margin removed).
+function bookTdCell(o, key = "td") {
+  const m = o?.[key];
+  if (!m) return `<span class="muted">–</span>`;
+  const p = key === "first" ? m.fairProb : m.marketProb;
+  const market = p != null ? ` · market ${(p * 100).toFixed(key === "first" ? 1 : 0)}%${key === "first" ? " (no margin)" : ""}` : "";
+  const first = key === "td" && o.first ? ` · 1st TD ${americanText(o.first.best)} (${esc(o.first.book)})` : "";
+  return `<span title="Best of ${m.books} book${m.books > 1 ? "s" : ""}: ${esc(m.book)}${market}${first}">${americanText(m.best)}</span>`;
 }
 function recLineCell(o) {
   if (!o?.rec) return `<span class="muted">–</span>`;

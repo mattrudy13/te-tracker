@@ -62,8 +62,8 @@
     <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
   </main>
 
-  <script src="model.js?v=a6ff0cdb"></script>
-  <script src="common.js?v=38d53430"></script>
+  <script src="model.js?v=1c841dd8"></script>
+  <script src="common.js?v=06504ab7"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let data, id;
@@ -131,8 +131,17 @@
         ${tile("Market", td ? fmt.pct0(td.marketProb) : "–", td ? `median of ${td.books} book${td.books > 1 ? "s" : ""}` : "")}
         ${tile("Edge", td ? edgeCell(odds.prob, td.marketProb) : "–", td ? "model − market, pts" : "")}
       </div>`;
-      $("week").innerHTML = `<div><h3 style="margin-bottom:.5rem">Receptions</h3>${recHtml}</div><div><h3 style="margin-bottom:.5rem">Anytime touchdown</h3>${tdHtml}</div>`;
-      $("week-note").textContent = `${data.odds ? oddsAsOf(data) + ". " : ""}Market is the median book's implied chance and includes the books' margin, so a small positive edge is roughly break-even. Props usually post midweek.`;
+      const first = book?.first;
+      const firstHtml = `<div class="tiles">
+        ${tile("Model 1st TD", fmt.pct(odds.firstProb), odds.firstProb != null ? `fair ${fmt.odds(odds.firstProb)}` : "")}
+        ${tile("Book", first ? americanText(first.best) : "–", first ? esc(first.book) : "not posted yet")}
+        ${tile("Market", first ? fmt.pct(first.fairProb) : "–", first ? "margin removed" : "")}
+        ${tile("Edge", first ? edgeCell(odds.firstProb, first.fairProb) : "–", first ? "model − market, pts" : "")}
+        ${tile("1st TDs", a.firstTd, `in ${a.gp} game${a.gp > 1 ? "s" : ""}`)}
+      </div>`;
+      $("week").innerHTML = `<div><h3 style="margin-bottom:.5rem">Receptions</h3>${recHtml}</div><div><h3 style="margin-bottom:.5rem">Anytime touchdown</h3>${tdHtml}
+        <h3 style="margin:1rem 0 .5rem" title="Scores the game's first touchdown, by either team">First touchdown</h3>${firstHtml}</div>`;
+      $("week-note").textContent = `${data.odds ? oddsAsOf(data) + ". " : ""}Anytime Market is the median book's implied chance and includes the books' margin, so a small positive edge is roughly break-even. First-TD books take a much bigger margin, so that Market has it removed. Props usually post midweek.`;
     }
 
     function render() {

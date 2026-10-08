@@ -49,8 +49,8 @@
     <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
   </main>
 
-  <script src="model.js?v=a6ff0cdb"></script>
-  <script src="common.js?v=38d53430"></script>
+  <script src="model.js?v=1c841dd8"></script>
+  <script src="common.js?v=06504ab7"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let data;
@@ -70,7 +70,7 @@
         <th class="sep" title="Targets per game">Tgt/G</th><th title="Share of the team's targets">Share</th>
         <th class="sep" title="Receptions per game">Rec/G</th>${showOdds ? `<th title="Receptions over/under most books offer">Line</th><th title="Best over / under price (hover for the book)">O / U</th>` : ""}
         <th class="sep" title="Touchdowns this season">TD</th><th title="Targets inside the 20 this season">RZ Tgt</th>${showOdds ? `
-        <th title="Model anytime-TD estimate">Model</th><th title="Best anytime-TD price (hover for the book and market %)">Book</th><th title="Model minus market (median book's implied %, which includes the books' margin), in percentage points">Edge</th>` : ""}
+        <th title="Model anytime-TD estimate (hover for first TD)">Model</th><th title="Best anytime-TD price (hover for the book, market % and first-TD price)">Book</th><th title="Model minus market (median book's implied %, which includes the books' margin), in percentage points">Edge</th>` : ""}
         </tr></thead><tbody>${rows.map((r) => {
           const o = oddsById[r.id];
           const book = g ? playerOdds(data, r.id, g.home, g.away) : null;
@@ -82,7 +82,7 @@
             <td class="key">${book?.rec ? book.rec.line : `<span class="muted">–</span>`}</td>
             <td>${book?.rec ? `<span title="Over: ${esc(book.rec.overBook ?? "–")} · Under: ${esc(book.rec.underBook ?? "–")}">${americanText(book.rec.over)} / ${americanText(book.rec.under)}</span>` : `<span class="muted">–</span>`}</td>` : ""}
             <td class="sep">${r.td + r.rushTd}</td><td>${r.tgt20}</td>${showOdds ? `
-            <td>${o ? fmt.pct0(o.prob) : "–"}</td><td class="key">${bookTdCell(book)}</td><td class="key">${edgeCell(o?.prob, book?.td?.marketProb)}</td>` : ""}</tr>`;
+            <td${o?.firstProb != null ? ` title="1st TD: ${fmt.pct(o.firstProb)} (fair ${fmt.odds(o.firstProb)})"` : ""}>${o ? fmt.pct0(o.prob) : "–"}</td><td class="key">${bookTdCell(book)}</td><td class="key">${edgeCell(o?.prob, book?.td?.marketProb)}</td>` : ""}</tr>`;
         }).join("")}</tbody></table></div>`;
     }
 

@@ -34,6 +34,12 @@
       <div class="card-head">
         <h2 id="odds-title">Anytime TD odds</h2>
         <div class="controls">
+          <div class="field">Market
+            <div class="seg" id="mkt">
+              <button type="button" data-v="any" aria-pressed="true">Anytime</button>
+              <button type="button" data-v="first" aria-pressed="false">1st TD</button>
+            </div>
+          </div>
           <label class="field">Search<input type="search" id="q1" placeholder="Player name"></label>
           <label class="field">Min Tgt/G<input type="number" id="minTpg" min="0" step="0.5" value="2"></label>
           <label class="field inline"><input type="checkbox" id="watch1"> ★ Watchlist only</label>
@@ -46,6 +52,9 @@
         <b>Fair odds</b> is that probability as an American price with no vig, for comparing against a sportsbook's.
         <b>Book</b> is the best anytime-TD price across US sportsbooks; <b>Market</b> is the median book's implied chance, which includes
         the books' margin, so it runs a few points high. <b>Edge</b> is model minus market, in percentage points.
+        <b>1st TD</b> switches the table to first-touchdown-scorer bets: the chance the player scores the game's first TD, by either team.
+        The model takes the player's share of both teams' expected TDs, times the chance anyone scores one. First-TD books keep a 25–40% margin,
+        so in that view <b>Market</b> has the margin removed.
         <b>Rec line</b> is the receptions over/under most books offer, with the best over price. <span id="odds-asof"></span>
         These are model estimates and a snapshot of prices, not betting advice.
       </p>
@@ -77,8 +86,8 @@
     <footer>Data from ESPN, refreshed automatically during the season. Regular season only.</footer>
   </main>
 
-  <script src="model.js?v=a6ff0cdb"></script>
-  <script src="common.js?v=38d53430"></script>
+  <script src="model.js?v=1c841dd8"></script>
+  <script src="common.js?v=06504ab7"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     const oddsState = { sort: "edge", dir: "desc" };
@@ -87,7 +96,12 @@
 
     const who = (r) => `<div class="who">${headshot(r.player)}<div>${playerLink(r)}<small>${teamChip(data, r.team)}${r.missedLast && !r.player?.injury ? ` <span class="flag" title="Didn't play in the team's most recent game">missed last game</span>` : ""}</small></div></div>`;
 
-    const oddsCols = [
+    // Anytime or first-TD view. The probability, price and market columns keep their keys in both,
+    // so the chosen sort carries over when switching.
+    const mkt = () => (oddsState.mkt === "first" ? "first" : "td");
+    const pr = (r) => (mkt() === "first" ? r.firstProb : r.prob);
+    const mktProb = (r) => (mkt() === "first" ? r.book?.first?.fairProb : r.book?.td?.marketProb);
+    const oddsCols = () => [
       { key: "star", label: "", cls: "c", nosort: true, fmt: (r) => starButton(r.id, getWatchlist().has(r.id)) },
       { key: "name", label: "Player", cls: "l", asc: true, sort: (r) => r.player?.name ?? "", fmt: who },
       { key: "opp", label: "Game", cls: "l", asc: true, sort: (r) => r.up.opp, fmt: (r) => `${matchup(r.up)} <small class="muted">${new Date(r.up.date).toLocaleDateString(undefined, { weekday: "short" })}</small>` },
@@ -96,12 +110,22 @@
       { key: "rzPg", label: "RZ Tgt/G", fmt: (r) => fmt.d1(r.rzPg) },
       { key: "xtdPg", label: "xTD/G", fmt: (r) => fmt.d2(r.xtdPg) },
       { key: "td", label: "TD", fmt: (r) => r.td + r.rushTd },
-      { key: "prob", label: "TD %", cls: "sep key", fmt: (r) => fmt.pct0(r.prob) },
-      { key: "odds", label: "Fair odds", cls: "key", sort: (r) => r.prob, fmt: (r) => fmt.odds(r.prob) },
-      { key: "book", label: "Book", cls: "sep", title: "Best anytime-TD price across sportsbooks", sort: (r) => impliedProb(r.book?.td?.best), fmt: (r) => bookTdCell(r.book) },
-      { key: "market", label: "Market", title: "Median sportsbook implied probability (includes the books' margin)", sort: (r) => r.book?.td?.marketProb, fmt: (r) => fmt.pct0(r.book?.td?.marketProb) },
-      { key: "edge", label: "Edge", title: "Model TD % minus market %, in percentage points", sort: (r) => (r.book?.td ? r.prob - r.book.td.marketProb : null), fmt: (r) => edgeCell(r.prob, r.book?.td?.marketProb) },
-      { key: "rec", label: "Rec line", cls: "sep", title: "Receptions over/under: the most common line, with the best over price", sort: (r) => r.book?.rec?.line, fmt: (r) => recLineCell(r.book) },
+      ...(mkt() === "first"
+        ? [{ key: "firstTd", label: "1st TDs", title: "Games this season where the player scored the game's first TD", fmt: (r) => r.firstTd }]
+        : []),
+      { key: "prob", label: mkt() === "first" ? "1st TD %" : "TD %", cls: "sep key", sort: pr, fmt: (r) => (mkt() === "first" ? fmt.pct(r.firstProb) : fmt.pct0(r.prob)) },
+      { key: "odds", label: "Fair odds", cls: "key", sort: pr, fmt: (r) => fmt.odds(pr(r)) },
+      { key: "book", label: "Book", cls: "sep", title: `Best ${mkt() === "first" ? "first-TD" : "anytime-TD"} price across sportsbooks`, sort: (r) => impliedProb(r.book?.[mkt()]?.best), fmt: (r) => bookTdCell(r.book, mkt()) },
+      {
+        key: "market", label: "Market",
+        title: mkt() === "first" ? "Median sportsbook chance with the margin removed" : "Median sportsbook implied probability (includes the books' margin)",
+        sort: mktProb, fmt: (r) => (mkt() === "first" ? fmt.pct(mktProb(r)) : fmt.pct0(mktProb(r))),
+      },
+      { key: "edge", label: "Edge", title: "Model % minus market %, in percentage points", sort: (r) => (pr(r) != null && mktProb(r) != null ? pr(r) - mktProb(r) : null), fmt: (r) => edgeCell(pr(r), mktProb(r)) },
+      // The 1st TD view swaps the receptions line for the 1st TDs column so the table still fits at 1280px.
+      ...(mkt() === "first"
+        ? []
+        : [{ key: "rec", label: "Rec line", cls: "sep", title: "Receptions over/under: the most common line, with the best over price", sort: (r) => r.book?.rec?.line, fmt: (r) => recLineCell(r.book) }]),
     ];
 
     const rzCols = [
@@ -127,7 +151,8 @@
       const rows = tdOdds(data).map((r) => ({ ...r, book: playerOdds(data, r.id, r.up.home ? r.team : r.up.opp, r.up.home ? r.up.opp : r.team) })).filter(
         (r) => r.tgtPg >= min && (!$("watch1").checked || watch.has(r.id)) && (!q || (r.player?.name ?? "").toLowerCase().includes(q))
       );
-      renderTable($("odds"), rows, oddsCols, oddsState, renderOdds);
+      renderTable($("odds"), rows, oddsCols(), oddsState, renderOdds);
+      setParams({ mkt: oddsState.mkt === "first" ? "first" : "" });
     }
 
     function renderRz() {
@@ -153,7 +178,18 @@
         data = await loadData();
         $("updated").textContent = updatedText(data);
         const wk = data.upcoming?.[0]?.week;
-        $("odds-title").textContent = wk ? `Anytime TD odds · Week ${wk}` : "Anytime TD odds";
+        const setMkt = (v) => {
+          oddsState.mkt = v === "first" ? "first" : "any";
+          if (oddsState.sort === (oddsState.mkt === "first" ? "rec" : "firstTd")) oddsState.sort = "edge";
+          $("mkt").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === oddsState.mkt));
+          const name = oddsState.mkt === "first" ? "First TD odds" : "Anytime TD odds";
+          $("odds-title").textContent = wk ? `${name} · Week ${wk}` : name;
+        };
+        setMkt(getParams().mkt);
+        $("mkt").addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (b) { setMkt(b.dataset.v); if (data.upcoming?.length) renderOdds(); }
+        });
         $("odds-asof").textContent = data.odds ? `${oddsAsOf(data)}.` : "Sportsbook odds aren't loaded yet.";
         $("avg-implied").textContent = `${fmt.d1(tdModel(data).avgImplied)} pts`;
         if (!data.upcoming?.length) $("odds").innerHTML = `<p class="muted">No upcoming games with betting lines yet.</p>`;
