@@ -41,7 +41,7 @@
       <div class="cat-head">
         <div>
           <h2>Track record</h2>
-          <p>Every pick is saved at the odds snapshot and locks at kickoff, then gets graded after the game. Profit is per $100 at the listed price; <b>Units</b> is total profit in $100 units.</p>
+          <p>Every pick is saved at the odds snapshot and locks at kickoff, then gets graded after the game. Profit is per $100 at the listed price; <b>Units</b> is total profit in $100 units. <b>CLV</b> (closing-line value) is how many percentage points the market's chance moved toward the pick, on average, between the first odds snapshot that had it and the last one before kickoff. Steady positive CLV means the picks are finding prices before the books move, a faster sign of a real edge than wins and losses. Picks seen at only one snapshot (like Thursday games) aren't counted.</p>
         </div>
       </div>
       <div class="table-wrap tight" style="margin-top:.75rem"><div id="record"></div></div>
@@ -154,13 +154,24 @@
         const won = g.filter((p) => p.result === "won").length, lost = g.filter((p) => p.result === "lost").length, vd = g.filter((p) => p.result === "void").length;
         const staked = g.filter((p) => p.profit != null && p.result !== "void");
         const profit = staked.reduce((s, p) => s + p.profit, 0);
-        return { c, n: g.length, won, lost, vd, hit: won + lost ? won / (won + lost) : null, units: staked.length ? profit / 100 : null, roi: staked.length ? profit / (100 * staked.length) : null };
+        const moves = g.map(marketMove).filter((m) => m != null);
+        return { c, n: g.length, won, lost, vd, hit: won + lost ? won / (won + lost) : null, units: staked.length ? profit / 100 : null, roi: staked.length ? profit / (100 * staked.length) : null,
+          clv: moves.length ? moves.reduce((s, m) => s + m, 0) / moves.length : null };
       });
-      return `<h3 style="margin:.9rem 0 .3rem">${esc(title)}</h3><table class="grid"><thead><tr><th class="l">Category</th><th>Picks</th><th>W–L–Void</th><th>Hit rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>${rows
+      return `<h3 style="margin:.9rem 0 .3rem">${esc(title)}</h3><table class="grid"><thead><tr><th class="l">Category</th><th>Picks</th><th>W–L–Void</th><th>Hit rate</th><th>Units</th><th>ROI</th><th>CLV</th></tr></thead><tbody>${rows
         .map((r) => `<tr><td class="l">${esc(r.c.label)}</td><td>${r.n}</td><td>${r.won}–${r.lost}–${r.vd}</td><td>${fmt.pct0(r.hit)}</td>
           <td class="key">${r.units == null ? "–" : `<span class="${r.units > 0 ? "pos" : r.units < 0 ? "neg" : ""}">${r.units > 0 ? "+" : r.units < 0 ? "−" : ""}${Math.abs(r.units).toFixed(2)}</span>`}</td>
-          <td>${r.roi == null ? "–" : `<span class="${r.roi > 0 ? "pos" : r.roi < 0 ? "neg" : ""}">${r.roi > 0 ? "+" : r.roi < 0 ? "−" : ""}${Math.abs(r.roi * 100).toFixed(0)}%</span>`}</td></tr>`)
+          <td>${r.roi == null ? "–" : `<span class="${r.roi > 0 ? "pos" : r.roi < 0 ? "neg" : ""}">${r.roi > 0 ? "+" : r.roi < 0 ? "−" : ""}${Math.abs(r.roi * 100).toFixed(0)}%</span>`}</td>
+          <td>${r.clv == null ? "–" : `<span class="${r.clv > 0 ? "pos" : r.clv < 0 ? "neg" : ""}">${r.clv > 0 ? "+" : r.clv < 0 ? "−" : ""}${Math.abs(r.clv * 100).toFixed(1)}</span>`}</td></tr>`)
         .join("")}</tbody></table>`;
+    }
+
+    // Closing-line value: how far the market's chance moved from the first snapshot that had this pick to
+    // the last one before kickoff, in the pick's favor. Picks seen at only one snapshot have no move.
+    function marketMove(p) {
+      if (!p.openOddsAt || p.openOddsAt === p.oddsAt || p.openMarketProb == null || p.marketProb == null) return null;
+      const move = p.marketProb - p.openMarketProb;
+      return p.cat === "fade" ? -move : move;
     }
 
     function renderRecent(recent, lastWeek) {
