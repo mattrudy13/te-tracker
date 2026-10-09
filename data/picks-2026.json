@@ -38,7 +38,11 @@
      "ev": 14,
      "why": "9 RZ tgt (4 inside 5) · 2 TD vs 3.8 xTD · team 24.5 pts · DET allows 6 TE TD in 4 (1st-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 135,
+     "openBook": "DraftKings",
+     "openMarketProb": 0.4255,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "likely",
@@ -56,7 +60,11 @@
      "ev": 40.3,
      "why": "9 RZ tgt (2 inside 5) · 2 TD vs 3.1 xTD · team 30.0 pts · ARI allows 4 TE TD in 4 (5th-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 150,
+     "openBook": "DraftKings",
+     "openMarketProb": 0.4,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "likely",
@@ -74,7 +82,11 @@
      "ev": 14.6,
      "why": "4 RZ tgt (1 inside 5) · 2 TD vs 1.5 xTD · team 21.0 pts · NE allows 0 TE TD in 4 (26th-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 145,
+     "openBook": "FanDuel",
+     "openMarketProb": 0.4167,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "likely",
@@ -92,7 +104,11 @@
      "ev": 41.4,
      "why": "5 RZ tgt (2 inside 5) · 1 TD vs 1.6 xTD · team 24.3 pts · SF allows 0 TE TD in 4 (29th-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 275,
+     "openBook": "DraftKings",
+     "openMarketProb": 0.2703,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "likely",
@@ -110,7 +126,11 @@
      "ev": 18.7,
      "why": "2 RZ tgt (1 inside 5) · 1 TD vs 1.0 xTD · team 28.8 pts · BUF allows 1 TE TD in 4 (24th-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 190,
+     "openBook": "BetRivers",
+     "openMarketProb": 0.3448,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "value",
@@ -128,7 +148,11 @@
      "ev": 41.4,
      "why": "5 RZ tgt (2 inside 5) · 1 TD vs 1.6 xTD · team 24.3 pts · SF allows 0 TE TD in 4 (29th-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 275,
+     "openBook": "DraftKings",
+     "openMarketProb": 0.2703,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "value",
@@ -272,7 +296,11 @@
      "ev": 95.9,
      "why": "2 RZ tgt · 1 TD vs 0.3 xTD · team 24.3 pts · SF allows 0 TE TD in 4 (29th-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 2400,
+     "openBook": "BetRivers",
+     "openMarketProb": 0.04,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "longshot",
@@ -308,7 +336,11 @@
      "ev": 14,
      "why": "9 RZ tgt (4 inside 5) · 2 TD vs 3.8 xTD · team 24.5 pts · DET allows 6 TE TD in 4 (1st-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 135,
+     "openBook": "DraftKings",
+     "openMarketProb": 0.4255,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "due",
@@ -326,7 +358,11 @@
      "ev": 41.4,
      "why": "5 RZ tgt (2 inside 5) · 1 TD vs 1.6 xTD · team 24.3 pts · SF allows 0 TE TD in 4 (29th-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 275,
+     "openBook": "DraftKings",
+     "openMarketProb": 0.2703,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "due",
@@ -344,7 +380,11 @@
      "ev": -7.9,
      "why": "6 RZ tgt (1 inside 5) · 0 TD vs 1.5 xTD · team 24.0 pts · GB allows 2 TE TD in 4 (14th-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 220,
+     "openBook": "FanDuel",
+     "openMarketProb": 0.3175,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "due",
@@ -362,7 +402,11 @@
      "ev": 40.3,
      "why": "9 RZ tgt (2 inside 5) · 2 TD vs 3.1 xTD · team 30.0 pts · ARI allows 4 TE TD in 4 (5th-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 150,
+     "openBook": "DraftKings",
+     "openMarketProb": 0.4,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "fade",
@@ -380,7 +424,11 @@
      "ev": -33.4,
      "why": "1 RZ tgt · 1 TD vs 0.5 xTD · team 25.8 pts · LAR allows 1 TE TD in 4 (22nd-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 220,
+     "openBook": "DraftKings",
+     "openMarketProb": 0.3175,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "fade",
@@ -398,7 +446,11 @@
      "ev": -27.9,
      "why": "5 RZ tgt · 4 TD vs 1.5 xTD · team 21.3 pts · SEA allows 2 TE TD in 4 (16th-most)",
      "takenAt": "2026-10-09T01:02:04.710Z",
-     "oddsAt": "2026-10-09T01:02:04.659Z"
+     "oddsAt": "2026-10-09T01:02:04.659Z",
+     "openPrice": 175,
+     "openBook": "FanDuel",
+     "openMarketProb": 0.3774,
+     "openOddsAt": "2026-10-07T00:45:55.224Z"
     },
     {
      "cat": "first",
