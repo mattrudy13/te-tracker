@@ -29,8 +29,11 @@ Fantasy points are deliberately out of scope.
 - [ ] **Tracking by price band and book** (per-book prices are now saved in `td.prices`): break the record
       down by price range and sportsbook, to see
       whether the edge only exists at one book's stale lines.
-- [ ] **Closing-line value**: compare each Thursday pick's price with Sunday's price for the same player.
-      Beating the closing line is a faster, less noisy signal than W–L.
+- [x] **Closing-line value** (done 2026-10-08): picks keep their first-seen price (`open*`) when a later
+      snapshot replaces them, and the Track record shows the average market move toward each category's picks.
+      Still open: the Sunday 8 AM snapshot is ~5 h before kickoff, so it's an early "close"; the inactives
+      snapshot (below) would sharpen it. Picks dropped between snapshots aren't kept, so CLV only covers picks
+      that survived.
 - [ ] **(new) What changed since Thursday**: after the Sunday snapshot, mark picks that are new, dropped,
       or re-priced since Thursday (with the price move), so a Sunday-morning check is quick.
 - [ ] **(new) Units chart**: cumulative units by week for each category, under the record table.

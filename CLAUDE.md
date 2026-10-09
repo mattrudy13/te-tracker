@@ -23,7 +23,7 @@ Next steps: ENHANCEMENTS.md. Highest value now:
 - check the first graded results after week 5
 - the receptions projection vs the line (unlocks receptions picks)
 - scoring the model and books on every priced TE
-- closing-line value
+- closing-line value: shipped 2026-10-08 (CLV column); next is a later Sunday snapshot so the close is closer to kickoff
 - around week 9: tune the category rules from the official and shadow records, and retest the defense factor
 
 ## Before every commit that touches model.js, common.js or style.css
@@ -63,8 +63,11 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 - `scripts/record-picks.mjs` (snapshot-odds.yml: build → fetch-odds → record) and `scripts/grade-picks.mjs`
   (update-data.yml: build → grade) maintain `data/picks-<season>.json` `{ weeks: { N: { picks: [{ cat, playerId,
   gameId, kickoff, price, book, modelProb, marketProb, ev, why, takenAt, oddsAt, shadow?, result?, scored?,
-  profit? }] } } }`.
-  Picks lock at kickoff. Test with `NOW=<iso>` and a scratch copy of `data/`.
+  profit?, openPrice?, openBook?, openMarketProb?, openOddsAt? }] } } }`.
+  Picks lock at kickoff. A later snapshot replaces an unstarted pick but carries its first-seen price forward
+  as `open*` (the replaced `price`/`marketProb` act as the close). The Track record's CLV column is the
+  average move in `marketProb` toward the pick (flipped for fades), skipping picks with `openOddsAt === oddsAt`.
+  Week 5's opens were backfilled from git history (Tuesday's snapshot). Test with `NOW=<iso>` and a scratch copy of `data/`.
 - The "first" Best Bets category (first TD scorer) builds rows whose `price/book/modelProb/marketProb/ev` are the
   first-TD values, so record-picks needs no special case. grade-picks grades `cat === "first"` on the row's
   `firstTd` flag.
