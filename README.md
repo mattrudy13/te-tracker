@@ -6,7 +6,7 @@ Pages: https://mattrudy13.github.io/te-tracker/
 - **Best Bets** (`index.html`, the home page): this week's TD picks in six categories: most likely to
   score, best value, longshots, due for a TD, fades, and first-TD value. Each pick shows the best price, model %, market %, edge,
   expected profit per $100 and a one-line reason. Below that is a **track record** of every past pick, graded after
-  the games (W–L–void, hit rate, units, ROI). Players listed as Out, Doubtful or on IR are never picked.
+  the games (W–L–void, hit rate, units, ROI, and closing-line value). Players listed as Out, Doubtful or on IR are never picked.
 - **Matchups** (`matchups.html`): this week's games (next week's once Monday night is final) with
   kickoff, network, spread, total and implied team points. Expand a game to see both teams' tight ends:
   - **Usage:** targets per game and target share
@@ -77,7 +77,8 @@ Caesars, BetRivers, ESPN BET, Fanatics…). Offshore books (BetOnline.ag, Bovada
 dropped before the best price and market median are chosen, so every price on the site can be bet at a
 licensed book. It writes `data/odds-<season>.json`.
 `.github/workflows/snapshot-odds.yml` runs it Thursday at 5 PM ET (before TNF) and Sunday at 8 AM ET.
-Games that have already kicked off keep their earlier snapshot. Each snapshot costs 1 credit per market per
+Games that have already kicked off keep their earlier snapshot. GitHub can start scheduled runs hours
+late (the first Thursday run started at 9 PM ET, after TNF kickoff), so TNF picks may come from an earlier snapshot. Each snapshot costs 1 credit per market per
 game (3 markets, ~15 games), so about 30–45 credits, ~85 a week and ~375 a month. That leaves ~125 for
 manual runs on the free tier (500/month). Each run logs the credits left.
 
@@ -115,7 +116,12 @@ Action computes exactly what the page shows.
 
 - `scripts/record-picks.mjs` runs after each odds snapshot, following a fresh stats/injury build. It saves the
   picks to `data/picks-<season>.json`. Picks lock at kickoff: Sunday's snapshot only replaces picks for games
-  that haven't started.
+  that haven't started. A replaced pick keeps the price it was first picked at (`openPrice`, `openMarketProb`), so
+  the last snapshot before kickoff serves as the closing line.
+- **CLV** (closing-line value) in the track record is the average move in the market's chance toward the pick
+  (away from it for fades), in percentage points, from the first snapshot that had it to the last one before
+  kickoff. Beating the close is a faster, less noisy sign of an edge than W–L. Picks seen at only one snapshot
+  aren't counted, and picks dropped between snapshots aren't kept.
 - `scripts/grade-picks.mjs` runs after every stats build. It grades final games: a TD (receiving or rushing)
   wins, a box-score line without a TD loses, and no line is void. Profit is per $100 at the recorded price.
   Fades are graded right/wrong only. First-TD picks win only if the player scored the game's first TD

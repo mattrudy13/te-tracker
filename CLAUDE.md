@@ -4,7 +4,7 @@ NFL tight end stats/usage/TD-odds site on GitHub Pages: https://mattrudy13.githu
 See README.md for features, the TD model and how to run it. Same conventions as `../h2h`: plain HTML/CSS/JS,
 no build step, globals in `model.js` (data/model) and `common.js` (DOM), Barlow Condensed + Inter, dark top bar.
 
-## Status (2026-10-06, end of session)
+## Status (2026-10-08, end of session)
 
 Live and working end to end:
 - Pages: Best Bets (home), Matchups, Leaders, Touchdowns, Player. Watchlist, shareable URLs, dark mode,
@@ -12,10 +12,11 @@ Live and working end to end:
 - Workflows: `update-data.yml` (ESPN every 3 h Thu–Mon + Tue → grade picks), `snapshot-odds.yml`
   (Thu 21:00 / Sun 12:00 UTC: build → odds → record picks), `check-assets.yml` (stamp check on push).
   `ODDS_API_KEY` secret is set.
-- Odds: US-licensed books only. The latest snapshot (Tue night, manual) priced 61 TEs; **462 credits left**
-  this month. The first two snapshots used 17 and 21 credits.
-- Best Bets: week 5 picks recorded (21 official + 4 close calls) from that snapshot. Thursday's snapshot
-  replaces any that haven't kicked off. **Week 5 is the first graded week** (grading runs after games are final).
+- Odds: US-licensed books only. The first scheduled Thursday snapshot (Oct 8) priced 110 TEs; **420 credits left**
+  this month. It started at 01:02 UTC, four hours late and after TNF kickoff (GitHub cron delay). If that
+  repeats, move the cron earlier.
+- Best Bets: week 5 has 26 official picks + 5 close calls (one TNF close call locked from Tuesday's manual
+  snapshot). Picks now carry `open*` prices for CLV (see Layout). **Week 5 is the first graded week** (grading runs after games are final).
 - TD model calibrated against the first snapshot (RMSE 11.2 → 6.4 pts vs de-vigged market). Constants are at
   the top of the TD model section in `model.js`.
 
