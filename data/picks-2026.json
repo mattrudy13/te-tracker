@@ -20,7 +20,10 @@
      "ev": 17.1,
      "why": "2 RZ tgt · 0 TD vs 0.7 xTD · team 19.5 pts · DAL allows 3 TE TD in 4 (7th-most)",
      "takenAt": "2026-10-07T00:45:55.274Z",
-     "oddsAt": "2026-10-07T00:45:55.224Z"
+     "oddsAt": "2026-10-07T00:45:55.224Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "likely",
@@ -621,5 +624,6 @@
    ]
   }
  },
- "updated": "2026-10-09T01:02:04.710Z"
+ "updated": "2026-10-09T01:02:04.710Z",
+ "graded": "2026-10-09T09:49:37.569Z"
 }
