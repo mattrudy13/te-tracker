@@ -5,7 +5,7 @@ Pages: https://mattrudy13.github.io/te-tracker/
 
 - **Best Bets** (`index.html`, the home page): this week's TD picks in six categories: most likely to
   score, best value, longshots, due for a TD, fades, and first-TD value. Each pick shows the best price, model %, market %, edge,
-  expected profit per $100 and a one-line reason. Below that is a **track record** of every past pick, graded after
+  expected profit per $10 bet and a one-line reason. Below that is a **track record** of every past pick, graded after
   the games (W–L–void, hit rate, units, ROI, and closing-line value). Players listed as Out, Doubtful or on IR are never picked.
 - **Matchups** (`matchups.html`): this week's games (next week's once Monday night is final) with
   kickoff, network, spread, total and implied team points. Expand a game to see both teams' tight ends:
@@ -123,7 +123,7 @@ Action computes exactly what the page shows.
   kickoff. Beating the close is a faster, less noisy sign of an edge than W–L. Picks seen at only one snapshot
   aren't counted, and picks dropped between snapshots aren't kept.
 - `scripts/grade-picks.mjs` runs after every stats build. It grades final games: a TD (receiving or rushing)
-  wins, a box-score line without a TD loses, and no line is void. Profit is per $100 at the recorded price.
+  wins, a box-score line without a TD loses, and no line is void. Profit is stored per $100 at the recorded price; the page shows it per $10 bet.
   Fades are graded right/wrong only. First-TD picks win only if the player scored the game's first TD
   (`firstTd` on the game row) and lose otherwise, including games with no TD. Reruns don't change graded picks.
 - Until a snapshot records the week's picks, the page shows a live preview.

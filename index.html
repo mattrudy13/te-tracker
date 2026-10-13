@@ -41,7 +41,7 @@
       <div class="cat-head">
         <div>
           <h2>Track record</h2>
-          <p>Every pick is saved at the odds snapshot and locks at kickoff, then gets graded after the game. Profit is per $100 at the listed price; <b>Units</b> is total profit in $100 units. <b>CLV</b> (closing-line value) is how many percentage points the market's chance moved toward the pick, on average, between the first odds snapshot that had it and the last one before kickoff. Steady positive CLV means the picks are finding prices before the books move, a faster sign of a real edge than wins and losses. Picks seen at only one snapshot (like Thursday games) aren't counted.</p>
+          <p>Every pick is saved at the odds snapshot and locks at kickoff, then gets graded after the game. Each pick is a $10 bet at the listed price; <b>Units</b> is total profit in $10 units. <b>Total</b> adds up every category, so a player picked in three categories counts three times. <b>Unique bets</b> counts each player once per market (anytime TD, first TD, fade) each week, which is what you'd have bet at the book. <b>CLV</b> (closing-line value) is how many percentage points the market's chance moved toward the pick, on average, between the first odds snapshot that had it and the last one before kickoff. Steady positive CLV means the picks are finding prices before the books move, a faster sign of a real edge than wins and losses. Picks seen at only one snapshot (like Thursday games) aren't counted.</p>
         </div>
       </div>
       <div class="table-wrap tight" style="margin-top:.75rem"><div id="record"></div></div>
@@ -50,7 +50,7 @@
 
     <p class="note">
       <b>Book</b> is the best price across US sportsbooks, with the book under it. <b>Model</b> is our anytime-TD chance (first-TD chance in the First TD category); <b>Market</b> is the median sportsbook's implied chance, which includes the books' margin.
-      <b>Edge</b> is model minus market in percentage points. <b>EV / $100</b> is the expected profit on a $100 bet at the best price
+      <b>Edge</b> is model minus market in percentage points. <b>EV / $10</b> is the expected profit on a $10 bet at the best price
       <i>if</i> the model is right. A model that only knows targets, field position and team scoring will be wrong in ways the books
       aren't (injuries, game plans), so treat these as a starting point, not betting advice. Players listed as Out, Doubtful or on IR are
       never picked. A <span class="inj q">Q</span> tag means Questionable.
@@ -73,7 +73,13 @@
     const $ = (id) => document.getElementById(id);
     let data, picksStore = null;
 
-    const evText = (ev) => (ev == null ? "–" : `<span class="${ev > 0 ? "pos" : ev < 0 ? "neg" : ""}">${ev > 0 ? "+" : ev < 0 ? "−" : ""}$${Math.abs(Math.round(ev))}</span>`);
+    // Bet size shown on the page. Picks store ev and profit per $100, so they're scaled at display time.
+    const STAKE = 10;
+    const dollars = (per100) => {
+      const v = Math.abs(per100 * STAKE / 100);
+      return `$${Number.isInteger(Math.round(v * 100) / 100) ? Math.round(v) : v.toFixed(2)}`;
+    };
+    const evText = (ev) => (ev == null ? "–" : signed(ev, dollars(ev)));
     const resultText = (r) =>
       r === "won" ? `<span class="result pos">✓ Won</span>` : r === "lost" ? `<span class="result neg">✗ Lost</span>` : r === "void" ? `<span class="result muted">Void</span>` : "";
 
@@ -123,7 +129,7 @@
             ? `<div class="table-wrap tight" style="margin-top:.6rem"><table class="grid"><thead><tr>
                 <th class="rank">#</th><th class="l">Player</th><th>Book</th><th>Model</th>
                 <th>Market</th><th>Edge</th>
-                <th>EV / $100</th><th>${anyResult ? "Result" : ""}</th>
+                <th>EV / $${STAKE}</th><th>${anyResult ? "Result" : ""}</th>
               </tr></thead><tbody>${rows.map(pickRow).join("")}</tbody></table></div>`
             : `<p class="muted" style="margin:.6rem 0 0">No player meets this rule ${source === "live" && !data.odds ? "until sportsbook lines are in" : "this week"}.</p>`}
         </section>`;
@@ -152,8 +158,9 @@
       const rows = BET_CATEGORIES.map((c) => ({ label: c.label, ...recordStats(graded.filter((p) => p.cat === c.key)) }));
       // Totals pool every pick, so hit rate, ROI and CLV are weighted by pick count, not averaged across categories.
       const total = { label: "Total", ...recordStats(graded) };
+      const unique = { label: "Unique bets", ...recordStats(uniqueBets(graded)) };
       return `<h3 style="margin:.9rem 0 .3rem">${esc(title)}</h3><table class="grid"><thead><tr><th class="l">Category</th><th>Picks</th><th>W–L–Void</th><th>Hit rate</th><th>Units</th><th>ROI</th><th>CLV</th></tr></thead><tbody>${rows
-        .map(recordRow).join("")}</tbody><tfoot>${recordRow(total)}</tfoot></table>`;
+        .map(recordRow).join("")}</tbody><tfoot>${recordRow(total)}${recordRow(unique)}</tfoot></table>`;
     }
 
     function recordStats(g) {
@@ -173,6 +180,18 @@
     // Green/red with a real minus sign; `text` is the formatted value, sign included or not.
     const signed = (v, text) => `<span class="${v > 0 ? "pos" : v < 0 ? "neg" : ""}">${v > 0 ? "+" : v < 0 ? "−" : ""}${text.replace(/^-/, "")}</span>`;
 
+    // The same player often lands in several categories (e.g. Most likely and Best value), which is one bet
+    // at the book. Keep one pick per week, player and market so the total isn't counted twice.
+    function uniqueBets(picks) {
+      const seen = new Map();
+      for (const p of picks) {
+        const market = p.cat === "first" || p.cat === "fade" ? p.cat : "anytime";
+        const key = `${p.week}|${p.playerId}|${market}`;
+        if (!seen.has(key)) seen.set(key, p);
+      }
+      return [...seen.values()];
+    }
+
     // Closing-line value: how far the market's chance moved from the first snapshot that had this pick to
     // the last one before kickoff, in the pick's favor. Picks seen at only one snapshot have no move.
     function marketMove(p) {
@@ -182,15 +201,15 @@
     }
 
     function renderRecent(recent, lastWeek) {
-      const t = recordStats(recent);
+      const footRow = (label, r) => `<tr><td class="l" colspan="4">${label}${label === "Unique bets" ? ` (${r.n})` : ""}</td><td>${r.won}–${r.lost}–${r.vd}</td>
+        <td>${r.units == null ? "–" : signed(r.units, dollars(r.units * 100))}</td></tr>`;
       $("recent").innerHTML = `<h3 style="margin:1.2rem 0 .4rem">Week ${lastWeek} results</h3><div class="table-wrap tight"><table class="grid"><thead><tr>
         <th class="l">Category</th><th class="l">Player</th><th>Price</th><th>Model</th><th>Result</th><th>Profit</th></tr></thead><tbody>${recent
         .map((p) => `<tr><td class="l">${esc(BET_CATEGORIES.find((c) => c.key === p.cat)?.label ?? p.cat)}</td>
           <td class="l">${playerLink({ id: p.playerId, player: data.players[p.playerId] ?? { name: p.name } })}</td>
           <td>${p.price != null ? americanText(p.price) : "–"}</td><td>${fmt.pct0(p.modelProb)}</td><td>${resultText(p.result)}</td>
-          <td>${p.profit == null ? "–" : signed(p.profit, `$${Math.abs(Math.round(p.profit))}`)}</td></tr>`)
-        .join("")}</tbody><tfoot><tr><td class="l" colspan="4">Total</td><td>${t.won}–${t.lost}–${t.vd}</td>
-          <td>${t.units == null ? "–" : signed(t.units, `$${Math.abs(Math.round(t.units * 100))}`)}</td></tr></tfoot></table></div>`;
+          <td>${p.profit == null ? "–" : signed(p.profit, dollars(p.profit))}</td></tr>`)
+        .join("")}</tbody><tfoot>${footRow("Total", recordStats(recent))}${footRow("Unique bets", recordStats(uniqueBets(recent)))}</tfoot></table></div>`;
     }
 
     (async () => {
