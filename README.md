@@ -123,7 +123,7 @@ Action computes exactly what the page shows.
   kickoff. Beating the close is a faster, less noisy sign of an edge than W–L. Picks seen at only one snapshot
   aren't counted, and picks dropped between snapshots aren't kept.
 - `scripts/grade-picks.mjs` runs after every stats build. It grades final games: a TD (receiving or rushing)
-  wins, a box-score line without a TD loses, and no line is void. Profit is stored per $100 at the recorded price; the page shows it per $10 bet.
+  wins, a box-score line without a TD loses, and no line is checked against the player's ESPN game log: played (no catches) loses, didn't play is void. Profit is stored per $100 at the recorded price; the page shows it per $10 bet.
   Fades are graded right/wrong only. First-TD picks win only if the player scored the game's first TD
   (`firstTd` on the game row) and lose otherwise, including games with no TD. Reruns don't change graded picks.
 - Until a snapshot records the week's picks, the page shows a live preview.
@@ -177,7 +177,6 @@ python3 -m http.server 8000          # then open http://localhost:8000
   played but drew no targets.
 - The TD model is calibrated against one snapshot. The Best Bets track record (first graded week: week 5)
   is the first real test of it.
-- A grade of "void" can hide a real loss: a TE who played but drew no targets has no box-score line.
 - A defense-vs-TE matchup factor was tested and left out of the model: four weeks of data is mostly noise.
   Defense context still appears in each pick's reason.
 - Regular season only.

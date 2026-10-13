@@ -292,9 +292,9 @@
      "openBook": "DraftKings",
      "openMarketProb": 0.0855,
      "openOddsAt": "2026-10-09T01:02:04.659Z",
-     "result": "void",
-     "scored": null,
-     "profit": 0
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -342,9 +342,9 @@
      "openBook": "DraftKings",
      "openMarketProb": 0.0351,
      "openOddsAt": "2026-10-09T01:02:04.659Z",
-     "result": "void",
-     "scored": null,
-     "profit": 0
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -388,9 +388,9 @@
      "why": "2 RZ tgt (1 inside 5) · 1 TD vs 0.7 xTD · team 20.5 pts · CLE allows 3 TE TD in 4 (8th-most)",
      "takenAt": "2026-10-11T16:52:47.462Z",
      "oddsAt": "2026-10-11T16:52:47.412Z",
-     "result": "void",
-     "scored": null,
-     "profit": 0
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -588,9 +588,9 @@
      "openBook": "DraftKings",
      "openMarketProb": 0.017,
      "openOddsAt": "2026-10-09T01:02:04.659Z",
-     "result": "void",
-     "scored": null,
-     "profit": 0
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -770,5 +770,5 @@
   }
  },
  "updated": "2026-10-11T16:52:47.462Z",
- "graded": "2026-10-13T17:16:41.936Z"
+ "graded": "2026-10-13T23:20:30.362Z"
 }
