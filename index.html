@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=4ae3f8e0">
+  <link rel="stylesheet" href="style.css?v=151af41d">
   <script>
     // Matchups was the home page briefly; forward its old ?open= links.
     if (new URLSearchParams(location.search).has("open")) location.replace("matchups.html" + location.search);
@@ -149,22 +149,29 @@
     }
 
     function recordTable(graded, title) {
-      const rows = BET_CATEGORIES.map((c) => {
-        const g = graded.filter((p) => p.cat === c.key);
-        const won = g.filter((p) => p.result === "won").length, lost = g.filter((p) => p.result === "lost").length, vd = g.filter((p) => p.result === "void").length;
-        const staked = g.filter((p) => p.profit != null && p.result !== "void");
-        const profit = staked.reduce((s, p) => s + p.profit, 0);
-        const moves = g.map(marketMove).filter((m) => m != null);
-        return { c, n: g.length, won, lost, vd, hit: won + lost ? won / (won + lost) : null, units: staked.length ? profit / 100 : null, roi: staked.length ? profit / (100 * staked.length) : null,
-          clv: moves.length ? moves.reduce((s, m) => s + m, 0) / moves.length : null };
-      });
+      const rows = BET_CATEGORIES.map((c) => ({ label: c.label, ...recordStats(graded.filter((p) => p.cat === c.key)) }));
+      // Totals pool every pick, so hit rate, ROI and CLV are weighted by pick count, not averaged across categories.
+      const total = { label: "Total", ...recordStats(graded) };
       return `<h3 style="margin:.9rem 0 .3rem">${esc(title)}</h3><table class="grid"><thead><tr><th class="l">Category</th><th>Picks</th><th>W–L–Void</th><th>Hit rate</th><th>Units</th><th>ROI</th><th>CLV</th></tr></thead><tbody>${rows
-        .map((r) => `<tr><td class="l">${esc(r.c.label)}</td><td>${r.n}</td><td>${r.won}–${r.lost}–${r.vd}</td><td>${fmt.pct0(r.hit)}</td>
-          <td class="key">${r.units == null ? "–" : `<span class="${r.units > 0 ? "pos" : r.units < 0 ? "neg" : ""}">${r.units > 0 ? "+" : r.units < 0 ? "−" : ""}${Math.abs(r.units).toFixed(2)}</span>`}</td>
-          <td>${r.roi == null ? "–" : `<span class="${r.roi > 0 ? "pos" : r.roi < 0 ? "neg" : ""}">${r.roi > 0 ? "+" : r.roi < 0 ? "−" : ""}${Math.abs(r.roi * 100).toFixed(0)}%</span>`}</td>
-          <td>${r.clv == null ? "–" : `<span class="${r.clv > 0 ? "pos" : r.clv < 0 ? "neg" : ""}">${r.clv > 0 ? "+" : r.clv < 0 ? "−" : ""}${Math.abs(r.clv * 100).toFixed(1)}</span>`}</td></tr>`)
-        .join("")}</tbody></table>`;
+        .map(recordRow).join("")}</tbody><tfoot>${recordRow(total)}</tfoot></table>`;
     }
+
+    function recordStats(g) {
+      const won = g.filter((p) => p.result === "won").length, lost = g.filter((p) => p.result === "lost").length, vd = g.filter((p) => p.result === "void").length;
+      const staked = g.filter((p) => p.profit != null && p.result !== "void");
+      const profit = staked.reduce((s, p) => s + p.profit, 0);
+      const moves = g.map(marketMove).filter((m) => m != null);
+      return { n: g.length, won, lost, vd, hit: won + lost ? won / (won + lost) : null, units: staked.length ? profit / 100 : null, roi: staked.length ? profit / (100 * staked.length) : null,
+        clv: moves.length ? moves.reduce((s, m) => s + m, 0) / moves.length : null };
+    }
+
+    const recordRow = (r) => `<tr><td class="l">${esc(r.label)}</td><td>${r.n}</td><td>${r.won}–${r.lost}–${r.vd}</td><td>${fmt.pct0(r.hit)}</td>
+      <td class="key">${r.units == null ? "–" : signed(r.units, r.units.toFixed(2))}</td>
+      <td>${r.roi == null ? "–" : signed(r.roi, `${(r.roi * 100).toFixed(0)}%`)}</td>
+      <td>${r.clv == null ? "–" : signed(r.clv, (r.clv * 100).toFixed(1))}</td></tr>`;
+
+    // Green/red with a real minus sign; `text` is the formatted value, sign included or not.
+    const signed = (v, text) => `<span class="${v > 0 ? "pos" : v < 0 ? "neg" : ""}">${v > 0 ? "+" : v < 0 ? "−" : ""}${text.replace(/^-/, "")}</span>`;
 
     // Closing-line value: how far the market's chance moved from the first snapshot that had this pick to
     // the last one before kickoff, in the pick's favor. Picks seen at only one snapshot have no move.
@@ -175,13 +182,15 @@
     }
 
     function renderRecent(recent, lastWeek) {
+      const t = recordStats(recent);
       $("recent").innerHTML = `<h3 style="margin:1.2rem 0 .4rem">Week ${lastWeek} results</h3><div class="table-wrap tight"><table class="grid"><thead><tr>
         <th class="l">Category</th><th class="l">Player</th><th>Price</th><th>Model</th><th>Result</th><th>Profit</th></tr></thead><tbody>${recent
         .map((p) => `<tr><td class="l">${esc(BET_CATEGORIES.find((c) => c.key === p.cat)?.label ?? p.cat)}</td>
           <td class="l">${playerLink({ id: p.playerId, player: data.players[p.playerId] ?? { name: p.name } })}</td>
           <td>${p.price != null ? americanText(p.price) : "–"}</td><td>${fmt.pct0(p.modelProb)}</td><td>${resultText(p.result)}</td>
-          <td>${p.profit == null ? "–" : `<span class="${p.profit > 0 ? "pos" : p.profit < 0 ? "neg" : ""}">${p.profit > 0 ? "+" : p.profit < 0 ? "−" : ""}$${Math.abs(Math.round(p.profit))}</span>`}</td></tr>`)
-        .join("")}</tbody></table></div>`;
+          <td>${p.profit == null ? "–" : signed(p.profit, `$${Math.abs(Math.round(p.profit))}`)}</td></tr>`)
+        .join("")}</tbody><tfoot><tr><td class="l" colspan="4">Total</td><td>${t.won}–${t.lost}–${t.vd}</td>
+          <td>${t.units == null ? "–" : signed(t.units, `$${Math.abs(Math.round(t.units * 100))}`)}</td></tr></tfoot></table></div>`;
     }
 
     (async () => {
