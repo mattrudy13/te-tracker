@@ -3,6 +3,7 @@
 // from ESPN's public site API. Run with `node scripts/build-data.mjs [season]`.
 // Already-processed games are reused from the existing file, so reruns only fetch new games.
 // `--backfill-first-td` refetches the processed games once to set the `firstTd` flags.
+// `--reprocess` processes every completed game again (used once to add zero-stat appearances).
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -10,6 +11,8 @@ import path from "node:path";
 
 const API = "https://site.api.espn.com/apis/site/v2/sports/football/nfl";
 const ATHLETE_API = "https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes";
+const CORE_API = "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl";
+const CORE_TE = "/positions/7?"; // position $ref for tight ends on core API game rosters
 const DATA_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "data");
 const SEASON_TYPE = 2; // regular season
 
@@ -124,10 +127,42 @@ function firstTdScorer(summary, tesByTeam) {
   return (tesByTeam[play.team?.abbreviation] ?? []).find((te) => te.key.first === key.first && te.key.last === key.last)?.id ?? null;
 }
 
+// Tight ends on each team's game roster who weren't ruled inactive: { [teamAbbr]: [{ id, statsUrl }] }.
+// The box score lists only players with a stat, so a TE who only blocked or played special teams is
+// missing from it. Returns null while a roster is still empty, so the game is retried on the next run.
+async function gameRosterTes(eventId, competitors) {
+  const out = {};
+  for (const c of competitors) {
+    const r = await getJson(`${CORE_API}/events/${eventId}/competitions/${eventId}/competitors/${c.id}/roster`);
+    if (!r.entries?.length) return null;
+    out[c.team.abbreviation] = r.entries
+      .filter((e) => !e.didNotPlay && e.position?.$ref?.includes(CORE_TE))
+      .map((e) => ({ id: String(e.playerId), statsUrl: `${CORE_API}/events/${eventId}/competitions/${eventId}/competitors/${c.id}/roster/${e.playerId}/statistics/0` }));
+  }
+  return out;
+}
+
+// Did a TE without a box-score line take a snap? A dressed player who never got in has no per-game
+// stat record (404), and books void bets on players who don't take a snap. Checked against week 1–5:
+// 199 of 203 non-inactive TEs without a line had gamesPlayed = 1; the other 4 had no record.
+async function tookSnap(statsUrl) {
+  for (let i = 1; ; i++) {
+    const res = await fetch(statsUrl, { headers: { "user-agent": "te-tracker (github.com/mattrudy13/te-tracker)" } }).catch(() => null);
+    if (res?.status === 404) return false;
+    if (res?.ok) {
+      const general = (await res.json()).splits?.categories?.find((c) => c.name === "general");
+      return general?.stats?.find((s) => s.name === "gamesPlayed")?.value === 1;
+    }
+    if (i >= 4) throw new Error(`${statsUrl}: ${res ? `HTTP ${res.status}` : "network error"}`);
+    await new Promise((r) => setTimeout(r, 500 * 2 ** i));
+  }
+}
+
 async function main() {
   const current = await getJson(`${API}/scoreboard`);
   const args = process.argv.slice(2);
   const backfillFirstTd = args.includes("--backfill-first-td");
+  const reprocess = args.includes("--reprocess");
   const season = Number(args.find((a) => !a.startsWith("--"))) || current.season.year;
   const outFile = path.join(DATA_DIR, `${season}.json`);
   const positionsFile = path.join(DATA_DIR, `positions-${season}.json`);
@@ -256,8 +291,8 @@ async function main() {
     }
   }
 
-  const processed = new Set(prev.processedEvents);
-  const keep = prev.games.filter((g) => events.some((e) => e.id === g.gameId));
+  const processed = new Set(reprocess ? [] : prev.processedEvents);
+  const keep = prev.games.filter((g) => processed.has(g.gameId) && events.some((e) => e.id === g.gameId));
   const todo = events.filter((e) => !processed.has(e.id));
   console.log(`season ${season}: ${events.length} completed games, ${todo.length} new`);
 
@@ -287,10 +322,17 @@ async function main() {
     return positions[id] === "TE";
   };
 
+  const retry = new Set();
   const newRows = (
     await mapLimit(todo, 6, async ({ id, week }) => {
       const s = await getJson(`${API}/summary?event=${id}`);
       const comp = s.header.competitions[0];
+      const roster = await gameRosterTes(id, comp.competitors);
+      if (!roster) {
+        console.warn(`game roster not ready for ${id}; retrying next run`);
+        retry.add(id);
+        return [];
+      }
       const side = {};
       for (const c of comp.competitors) {
         side[c.team.abbreviation] = { homeAway: c.homeAway, score: Number(c.score) };
@@ -312,9 +354,11 @@ async function main() {
           teamTgt += l.receiving?.TGTS ?? 0;
           teamRecYds += l.receiving?.YDS ?? 0;
         }
+        // TEs who played without a box-score line get an all-zero row, so per-game rates count the game.
+        for (const te of roster[team] ?? []) if (!lines[te.id] && (await tookSnap(te.statsUrl))) lines[te.id] = { name: null, noLine: true };
         for (const [pid, l] of Object.entries(lines)) {
           if (!(await isTe(pid))) continue;
-          (tesByTeam[team] ??= []).push({ id: pid, key: nameKey(l.name) });
+          if (l.name) (tesByTeam[team] ??= []).push({ id: pid, key: nameKey(l.name) });
           const rec = l.receiving ?? {}, rush = l.rushing ?? {}, fum = l.fumbles ?? {};
           rows.push({
             gameId: id,
@@ -337,6 +381,7 @@ async function main() {
             fumLost: fum.LOST ?? 0,
             teamTgt,
             teamRecYds,
+            ...(l.noLine ? { noLine: true } : {}),
           });
         }
       }
@@ -381,7 +426,7 @@ async function main() {
         .filter(([id, p]) => p.onRoster || usedIds.has(id))
         .sort(([, a], [, b]) => a.name.localeCompare(b.name))
     ),
-    processedEvents: events.map((e) => e.id).filter((id) => processed.has(id) || todo.some((t) => t.id === id)),
+    processedEvents: events.map((e) => e.id).filter((id) => processed.has(id) || (todo.some((t) => t.id === id) && !retry.has(id))),
     games,
   };
 
