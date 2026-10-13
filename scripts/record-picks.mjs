@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Saves this week's Best Bets picks (and close calls, flagged `shadow`) to data/picks-<season>.json so
-// they can be graded later.
+// Saves this week's Best Bets picks (and close calls, flagged `shadow`, plus players the usage rule cut,
+// flagged `shadow` and `excluded: "usage"`) to data/picks-<season>.json so they can be graded later.
 // Runs after each odds snapshot. A pick locks at kickoff: later snapshots only replace picks whose
 // games haven't started, so Thursday's TNF picks survive the Sunday run.
 //
@@ -39,7 +39,7 @@ if (!bets.week) {
 const wk = (store.weeks[bets.week] ??= { picks: [] });
 const started = (p) => Date.parse(p.kickoff) <= now;
 const locked = wk.picks.filter(started);
-const key = (p) => `${p.cat}:${p.playerId}:${p.shadow ? 1 : 0}`;
+const key = (p) => `${p.cat}:${p.playerId}:${p.shadow ? 1 : 0}${p.excluded ? `:${p.excluded}` : ""}`;
 const lockedKeys = new Set(locked.map(key));
 // A later snapshot replaces an unstarted pick, which would lose the price it was first picked at.
 // Carry that first price forward as `open*` so the Sunday price can serve as the close (closing-line value).
@@ -48,14 +48,16 @@ const takenAt = new Date(now).toISOString();
 const fresh = [];
 // Official picks, plus close calls as a "shadow" record: graded the same way but never counted in the
 // official record. They show whether the category rules are too strict or too loose.
-const sets = [[bets.cats, false], [bets.closeCalls ?? {}, true]];
-for (const [cats, shadow] of sets) for (const [cat, rows] of Object.entries(cats)) {
+// Usage-rule exclusions are a second shadow set: the same player can also be a close call, and each
+// set is counted only in its own table.
+const sets = [[bets.cats, false, null], [bets.closeCalls ?? {}, true, null], [bets.excluded ?? {}, true, "usage"]];
+for (const [cats, shadow, excluded] of sets) for (const [cat, rows] of Object.entries(cats)) {
   for (const c of rows) {
-    const k = key({ cat, playerId: c.playerId, shadow });
+    const k = key({ cat, playerId: c.playerId, shadow, excluded });
     if (lockedKeys.has(k)) continue;
     const prev = earlier.get(k);
     fresh.push({
-      cat, ...(shadow ? { shadow: true } : {}), playerId: c.playerId, name: c.name, team: c.team, opp: c.opp, home: c.home,
+      cat, ...(shadow ? { shadow: true } : {}), ...(excluded ? { excluded } : {}), playerId: c.playerId, name: c.name, team: c.team, opp: c.opp, home: c.home,
       gameId: c.gameId, kickoff: c.kickoff, price: c.price, book: c.book,
       modelProb: round(c.modelProb), marketProb: c.marketProb == null ? null : round(c.marketProb),
       ev: c.ev == null ? null : Math.round(c.ev * 10) / 10, why: c.why, takenAt, oddsAt: data.odds?.takenAt ?? null,
@@ -66,9 +68,9 @@ for (const [cats, shadow] of sets) for (const [cat, rows] of Object.entries(cats
 wk.picks = [...locked, ...fresh];
 store.updated = takenAt;
 await writeFile(file, JSON.stringify(store, null, 1) + "\n");
-const n = (rows, sh) => rows.filter((p) => !!p.shadow === sh).length;
-console.log(`week ${bets.week}: kept ${n(locked, false)} locked picks + ${n(locked, true)} close calls; ` +
-  `recorded ${n(fresh, false)} picks + ${n(fresh, true)} close calls (${bets.priced} TEs priced)`);
+const n = (rows, sh, ex = false) => rows.filter((p) => !!p.shadow === sh && !!p.excluded === ex).length;
+console.log(`week ${bets.week}: kept ${n(locked, false)} locked picks + ${n(locked, true)} close calls + ${n(locked, true, true)} excluded; ` +
+  `recorded ${n(fresh, false)} picks + ${n(fresh, true)} close calls + ${n(fresh, true, true)} excluded (${bets.priced} TEs priced)`);
 
 // The pick as first recorded: its own open* fields if it already carried them, else its price then.
 function openFields(prev) {

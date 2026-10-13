@@ -23,9 +23,10 @@ Live and working end to end:
   results, not prices: fitting it to the market copies the books' longshot overpricing.
 - Week 5's four voids (Adkins ×2, Tonyan, Ruckert) were zero-target games, now graded as losses.
 - Longshots and First TD value official picks need 2+ targets in the team's last 2 games (`tgtLast2`,
-  2026-10-13, user's choice over "1+ last game", which would drop Adkins-type value). Close calls are exempt
-  on purpose so the shadow record shows what the rule costs, but they only fill empty spots, so an excluded
-  player is tracked only when the category has room. Review at the week 9 rule tuning.
+  2026-10-13, user's choice over "1+ last game", which would drop Adkins-type value). Close calls are exempt.
+  Players the rule cuts from the top 5 (`bestBets().excluded`) are recorded as `shadow: true, excluded: "usage"`
+  and graded in their own "Cut by the usage rule" table, so the record shows what the rule costs. Review at
+  the week 9 rule tuning.
 
 Next steps: ENHANCEMENTS.md. Highest value now:
 - check the first graded results after week 5
@@ -70,7 +71,7 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   helpers (`playerLink` includes `injuryTag`), odds cell helpers.
 - `scripts/record-picks.mjs` (snapshot-odds.yml: build → fetch-odds → record) and `scripts/grade-picks.mjs`
   (update-data.yml: build → grade) maintain `data/picks-<season>.json` `{ weeks: { N: { picks: [{ cat, playerId,
-  gameId, kickoff, price, book, modelProb, marketProb, ev, why, takenAt, oddsAt, shadow?, result?, scored?,
+  gameId, kickoff, price, book, modelProb, marketProb, ev, why, takenAt, oddsAt, shadow?, excluded?, result?, scored?,
   profit?, openPrice?, openBook?, openMarketProb?, openOddsAt? }] } } }`.
   Picks lock at kickoff. A later snapshot replaces an unstarted pick but carries its first-seen price forward
   as `open*` (the replaced `price`/`marketProb` act as the close). The Track record's CLV column is the
@@ -82,7 +83,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 - `bestBets()` returns `cats` (strict rules: official picks) and `closeCalls` (a looser pool that fills each
   category to 5, `tr.close` with a "CC" label). record-picks saves close calls with `shadow: true`; they're
   graded like picks but shown only in the separate "shadow record" table. **Never let shadow picks into the
-  official record.** Every consumer must filter on `!p.shadow`. The lock key includes the shadow flag.
+  official record.** Every consumer must filter on `!p.shadow`. The lock key includes the shadow flag and
+  `excluded`. Usage-rule exclusions are also `shadow`; close-call consumers filter `p.shadow && !p.excluded`.
 - Odds are US-licensed books only: `OFFSHORE_BOOKS` in fetch-odds.mjs (Odds API bookmaker keys) are dropped
   before best price / market median. The user chose "exclude everywhere, no toggle". `td.prices` keeps the
   per-book prices for future by-book tracking.

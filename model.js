@@ -295,8 +295,10 @@ function bestBets(data, now = Date.now()) {
       pick: () => priced.filter((c) => c.ev > 0 && c.price < 400 && c.modelProb >= 0.15 && c.books >= 2),
       near: () => priced.filter((c) => c.price < 400), by: byEv,
     },
+    // `usage`: the rule is applied on top of `pick`, so `excluded` can show who it cut.
     longshot: {
-      pick: () => priced.filter((c) => c.price >= 400 && c.ev > 0 && c.tgt20 >= 1 && recentLooks(c)),
+      usage: true,
+      pick: () => priced.filter((c) => c.price >= 400 && c.ev > 0 && c.tgt20 >= 1),
       near: () => priced.filter((c) => c.price >= 400), by: byEv,
     },
     due: {
@@ -308,12 +310,18 @@ function bestBets(data, now = Date.now()) {
       near: () => priced.filter((c) => c.price <= 300 && c.edge < 0), by: (a, b) => a.edge - b.edge,
     },
     first: {
-      pick: () => firstRows.filter((c) => c.ev > 0 && c.books >= 2 && c.tgt20 >= 1 && c.modelProb >= 0.04 && recentLooks(c)),
+      usage: true,
+      pick: () => firstRows.filter((c) => c.ev > 0 && c.books >= 2 && c.tgt20 >= 1 && c.modelProb >= 0.04),
       near: () => firstRows, by: byEv,
     },
   };
-  const cats = {}, closeCalls = {};
-  for (const [k, r] of Object.entries(rules)) cats[k] = top([...r.pick()], r.by);
+  const cats = {}, closeCalls = {}, excluded = {};
+  for (const [k, r] of Object.entries(rules)) cats[k] = top(r.pick().filter((c) => !r.usage || recentLooks(c)), r.by);
+  // Players the usage rule cut from the top 5: recorded as their own shadow entries, so the record
+  // shows what the rule costs (close calls only fill empty spots, so they'd miss most of these).
+  for (const [k, r] of Object.entries(rules)) {
+    if (r.usage) excluded[k] = top(r.pick(), r.by).filter((c) => !recentLooks(c));
+  }
   // A fade close call shouldn't contradict a real "due" pick (or vice versa).
   const avoid = { fade: new Set(cats.due.map((c) => c.playerId)), due: new Set(cats.fade.map((c) => c.playerId)) };
   for (const [k, r] of Object.entries(rules)) {
@@ -329,6 +337,7 @@ function bestBets(data, now = Date.now()) {
     priced: priced.length,
     cats,
     closeCalls,
+    excluded,
   };
 }
 

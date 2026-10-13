@@ -133,6 +133,9 @@ Action computes exactly what the page shows.
   players from a looser pool, in lighter text with a "CC" label. They're recorded and graded as a separate
   **shadow record** that never counts toward the official one, to show whether the rules are too strict or
   too loose. A fade close call never repeats a real "due" pick, and vice versa.
+- Players the Longshots / First TD value usage rule (2+ targets in the team's last 2 games) cuts from the top
+  five are recorded and graded in a third shadow table, **Cut by the usage rule**, to show whether the rule
+  is costing winners. They never appear in the pick lists.
 
 ## The touchdown model
 
