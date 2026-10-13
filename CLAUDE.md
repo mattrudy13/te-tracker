@@ -21,9 +21,11 @@ Live and working end to end:
   2026-10-13 after zero-target games started counting (`noLine` rows): `TD_PER_TARGET_PRIOR` 0.05 → 0.055 and
   `MIN_XTD_PG` 0.02 floor. Constants are at the top of the TD model section in `model.js`. The floor comes from
   results, not prices: fitting it to the market copies the books' longshot overpricing.
-- Week 5's four voids (Adkins ×2, Tonyan, Ruckert) were zero-target games, now graded as losses. A
-  "1+ target in the team's last 2 games" usage floor for Longshots / First TD value is pending the user's
-  decision (it wouldn't have caught week 5's picks; each had week-3 targets).
+- Week 5's four voids (Adkins ×2, Tonyan, Ruckert) were zero-target games, now graded as losses.
+- Longshots and First TD value official picks need 2+ targets in the team's last 2 games (`tgtLast2`,
+  2026-10-13, user's choice over "1+ last game", which would drop Adkins-type value). Close calls are exempt
+  on purpose so the shadow record shows what the rule costs, but they only fill empty spots, so an excluded
+  player is tracked only when the category has room. Review at the week 9 rule tuning.
 
 Next steps: ENHANCEMENTS.md. Highest value now:
 - check the first graded results after week 5

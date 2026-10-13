@@ -152,6 +152,10 @@ function tdOdds(data) {
   const byTeam = Object.fromEntries((data.upcoming ?? []).map((u) => [u.team, u]));
   const lastTeamWeek = {};
   for (const g of data.games) lastTeamWeek[g.team] = Math.max(lastTeamWeek[g.team] ?? 0, g.week);
+  // Each team's last two games (byes skipped), for the recent-usage rule in bestBets.
+  const teamWeeks = {};
+  for (const g of data.games) (teamWeeks[g.team] ??= new Set()).add(g.week);
+  const last2 = Object.fromEntries(Object.entries(teamWeeks).map(([t, w]) => [t, new Set([...w].sort((a, b) => a - b).slice(-2))]));
   const rows = [];
   for (const a of aggregate(data, data.games)) {
     const p = a.player;
@@ -168,11 +172,13 @@ function tdOdds(data) {
     const scale = u.implied ? u.implied / model.avgImplied : 1;
     const lambda = base * scale;
     const missedLast = (lastTeamWeek[team] ?? 0) > a.games.at(-1).week;
+    // A game the player missed counts as zero targets.
+    const tgtLast2 = a.games.filter((g) => last2[team]?.has(g.week)).reduce((s, g) => s + g.tgt, 0);
     const out = isOut(p);
     const oppImplied = byTeam[u.opp]?.implied;
     const gameLambda = u.implied != null && oppImplied != null ? (u.implied + oppImplied) * TD_PER_POINT : null;
     const firstProb = out || !gameLambda ? null : (lambda / gameLambda) * (1 - Math.exp(-gameLambda));
-    rows.push({ ...a, team, up: u, xtdPg: xtdSeason, lambda, out, prob: out ? null : 1 - Math.exp(-lambda), firstProb, missedLast });
+    rows.push({ ...a, team, up: u, xtdPg: xtdSeason, lambda, out, prob: out ? null : 1 - Math.exp(-lambda), firstProb, missedLast, tgtLast2 });
   }
   return rows.sort((x, y) => (y.prob ?? -1) - (x.prob ?? -1));
 }
@@ -228,11 +234,11 @@ function ordinalShort(n) {
 
 const BET_CATEGORIES = [
   { key: "likely", label: "Most likely to score", blurb: "Highest model chance of an anytime TD this week, given usage and the team's implied points." },
-  { key: "value", label: "Best value", blurb: "The model's chance beats the best available price by the most (expected profit per $100). Prices under +400, priced by at least 2 books." },
-  { key: "longshot", label: "Longshots", blurb: "Prices of +400 or longer where the model still sees positive expected value, for players with a red-zone role." },
+  { key: "value", label: "Best value", blurb: "The model's chance beats the best available price by the most (expected profit). Prices under +400, priced by at least 2 books." },
+  { key: "longshot", label: "Longshots", blurb: "Prices of +400 or longer where the model still sees positive expected value, for players with a red-zone role and at least 2 targets in the team's last 2 games." },
   { key: "due", label: "Due for a TD", blurb: "Plenty of red-zone looks but fewer TDs than those targets usually produce. The usage suggests TDs are coming." },
   { key: "fade", label: "Fades", blurb: "Short prices (+250 or shorter) the model thinks are too short. Bets to avoid." },
-  { key: "first", label: "First TD value", blurb: "Bets on the player scoring the game's first touchdown (by either team). The model's chance beats the best price by the most. Priced by at least 2 books, red-zone role required." },
+  { key: "first", label: "First TD value", blurb: "Bets on the player scoring the game's first touchdown (by either team). The model's chance beats the best price by the most. Priced by at least 2 books. Requires a red-zone role and at least 2 targets in the team's last 2 games." },
 ];
 const PICKS_PER_CATEGORY = 5;
 
@@ -263,7 +269,7 @@ function bestBets(data, now = Date.now()) {
       marketProb: book?.marketProb ?? null,
       edge: book ? r.prob - book.marketProb : null,
       ev: price != null ? evPer100(r.prob, price) : null,
-      tgt20: r.tgt20, tdDiff: r.tdDiff, why,
+      tgt20: r.tgt20, tdDiff: r.tdDiff, tgtLast2: r.tgtLast2, why,
       first: first && r.firstProb != null ? {
         modelProb: r.firstProb, price: first.best, book: first.book, books: first.books,
         marketProb: first.fairProb ?? null, ev: evPer100(r.firstProb, first.best),
@@ -275,6 +281,11 @@ function bestBets(data, now = Date.now()) {
   // Each category: the strict rule (real picks, recorded and graded) and a looser pool that fills
   // the list to PICKS_PER_CATEGORY with labeled "close calls" (shown only, never recorded).
   const byEv = (a, b) => b.ev - a.ev;
+  // Long prices on TEs who are barely targeted look like value to the model. In weeks 3–5, backup TEs
+  // (0.5–2.5 tgt/g) with 2+ targets in the team's last two games scored 11% of the time (9 of 80);
+  // with 0–1, 4% (2 of 45). A single quiet week didn't matter (7% vs 9%), so the rule spans two games.
+  // Official picks only: close calls skip it, so the shadow record shows what the rule throws away.
+  const recentLooks = (c) => c.tgtLast2 >= 2;
   // First-TD rows carry first-TD price, chances and EV in the usual fields, so the page and
   // record-picks.mjs treat them like any other pick. marketProb is the de-vigged market chance.
   const firstRows = cands.filter((c) => c.first).map((c) => ({ ...c, ...c.first, edge: c.first.marketProb == null ? null : c.first.modelProb - c.first.marketProb }));
@@ -285,7 +296,7 @@ function bestBets(data, now = Date.now()) {
       near: () => priced.filter((c) => c.price < 400), by: byEv,
     },
     longshot: {
-      pick: () => priced.filter((c) => c.price >= 400 && c.ev > 0 && c.tgt20 >= 1),
+      pick: () => priced.filter((c) => c.price >= 400 && c.ev > 0 && c.tgt20 >= 1 && recentLooks(c)),
       near: () => priced.filter((c) => c.price >= 400), by: byEv,
     },
     due: {
@@ -297,7 +308,7 @@ function bestBets(data, now = Date.now()) {
       near: () => priced.filter((c) => c.price <= 300 && c.edge < 0), by: (a, b) => a.edge - b.edge,
     },
     first: {
-      pick: () => firstRows.filter((c) => c.ev > 0 && c.books >= 2 && c.tgt20 >= 1 && c.modelProb >= 0.04),
+      pick: () => firstRows.filter((c) => c.ev > 0 && c.books >= 2 && c.tgt20 >= 1 && c.modelProb >= 0.04 && recentLooks(c)),
       near: () => firstRows, by: byEv,
     },
   };

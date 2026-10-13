@@ -111,10 +111,10 @@ Action computes exactly what the page shows.
 |---|---|
 | Most likely to score | Highest model TD % |
 | Best value | Expected profit > 0 at the best price, price under +400, model ≥ 15%, ≥ 2 books |
-| Longshots | Price +400 or longer, expected profit > 0, at least 1 red-zone target |
+| Longshots | Price +400 or longer, expected profit > 0, at least 1 red-zone target, at least 2 targets in the team's last 2 games |
 | Due for a TD | TD − xTD ≤ −0.8 with ≥ 3 red-zone targets |
 | Fades | Price +250 or shorter and model at least 8 points below the market |
-| First TD value | First-TD bet: expected profit > 0 at the best price, model ≥ 4%, ≥ 2 books, ≥ 1 red-zone target |
+| First TD value | First-TD bet: expected profit > 0 at the best price, model ≥ 4%, ≥ 2 books, ≥ 1 red-zone target, ≥ 2 targets in the team's last 2 games |
 
 - `scripts/record-picks.mjs` runs after each odds snapshot, following a fresh stats/injury build. It saves the
   picks to `data/picks-<season>.json`. Picks lock at kickoff: Sunday's snapshot only replaces picks for games
