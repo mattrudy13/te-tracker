@@ -58,7 +58,9 @@ check-assets.yml   on push                   stamp-assets.mjs --check
 2. Finds tight ends from the 32 team rosters, plus ESPN athlete lookups for players no longer
    on a roster (cached in `data/positions-<season>.json`).
 3. Takes each game's box score (receiving, rushing, fumbles, and team totals for share stats) and
-   parses play-by-play for red-zone targets and TDs.
+   parses play-by-play for red-zone targets and TDs. The box score only lists players with a stat, so
+   each team's game roster (ESPN's core API) adds an all-zero row for every TE who played without one
+   (about 40 a week, mostly blockers). Without them, part-time TEs' per-game rates ran high.
 4. Saves the current week's schedule (state, score, network, lines) for the Matchups page, and the
    unplayed games' implied team points for the TD odds.
 5. Saves each TE's injury status from the rosters (Questionable / Doubtful / Out / IR).
@@ -123,7 +125,7 @@ Action computes exactly what the page shows.
   kickoff. Beating the close is a faster, less noisy sign of an edge than W–L. Picks seen at only one snapshot
   aren't counted, and picks dropped between snapshots aren't kept.
 - `scripts/grade-picks.mjs` runs after every stats build. It grades final games: a TD (receiving or rushing)
-  wins, a box-score line without a TD loses, and no line is checked against the player's ESPN game log: played (no catches) loses, didn't play is void. Profit is stored per $100 at the recorded price; the page shows it per $10 bet.
+  wins, a box-score line without a TD loses, and no game row (inactive, or dressed but never took a snap) is void. Profit is stored per $100 at the recorded price; the page shows it per $10 bet.
   Fades are graded right/wrong only. First-TD picks win only if the player scored the game's first TD
   (`firstTd` on the game row) and lose otherwise, including games with no TD. Reruns don't change graded picks.
 - Until a snapshot records the week's picks, the page shows a live preview.
@@ -138,12 +140,16 @@ Action computes exactly what the page shows.
   inside the 5, 6–10, 11–20, or outside the red zone. Rates are this season's results blended with
   long-run priors, so the early weeks aren't driven by a few plays.
 - **Anytime TD %**: expected TDs per game, shrunk toward a volume-only baseline (targets per game ×
-  a long-run 5% TE TD-per-target rate, weighted like 8 games of data), blended 70/30 with the last 3
-  games, plus a small rushing-TD term. That's scaled by the team's implied points against the week's average
+  a long-run 5.5% TE TD-per-target rate, weighted like 8 games of data), blended 70/30 with the last 3
+  games, plus a small rushing-TD term, with a floor of 0.02 expected TDs per game (so a TE who plays is
+  never at 0%). That's scaled by the team's implied points against the week's average
   and run through a Poisson: P = 1 − e^(−λ). It's shown as a probability and as fair American odds.
 - **Calibration** (Oct 5, 2026, first odds snapshot): with books de-vigged by ~12%, the error against the
   market fell from 11.2 to 6.4 percentage points (RMSE over 30 TEs) and the model's average matched the
-  market's. Constants live at the top of the TD model section in `model.js`.
+  market's. Rechecked Oct 13 once zero-target games counted: the baseline went from 5% to 5.5% and the
+  floor was added (from results: TEs with no prior targets scored in 2 of 100 games). Week 5 Sunday
+  snapshot: RMSE 5.0 points, model average 0.8 points under the market. Constants live at the top of the
+  TD model section in `model.js`.
 - **First TD %**: the game's expected TDs are Λ = both teams' implied points × `TD_PER_POINT` (0.105, about
   2.4 TDs on 23 points). If TDs arrive independently, the first one is the player's with chance λ/Λ, and
   there is one at all with chance 1 − e^(−Λ): P = λ/Λ · (1 − e^(−Λ)). `TD_PER_POINT` isn't calibrated against
@@ -173,8 +179,8 @@ python3 -m http.server 8000          # then open http://localhost:8000
 - Red-zone splits come from play-by-play text and match box-score targets in ~95% of games
   (sometimes off by one).
 - Injury status comes from ESPN rosters (refreshed every 3 hours and before each odds snapshot). "Missed last game"
-  appears only for players without an injury tag, and means no box-score line, so it also catches a TE who
-  played but drew no targets.
+  appears only for players without an injury tag, and means the player didn't play (or never took a snap)
+  in the team's latest game.
 - The TD model is calibrated against one snapshot. The Best Bets track record (first graded week: week 5)
   is the first real test of it.
 - A defense-vs-TE matchup factor was tested and left out of the model: four weeks of data is mostly noise.

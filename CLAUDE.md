@@ -17,8 +17,13 @@ Live and working end to end:
   repeats, move the cron earlier.
 - Best Bets: week 5 has 26 official picks + 5 close calls (one TNF close call locked from Tuesday's manual
   snapshot). Picks now carry `open*` prices for CLV (see Layout). **Week 5 is the first graded week** (grading runs after games are final).
-- TD model calibrated against the first snapshot (RMSE 11.2 → 6.4 pts vs de-vigged market). Constants are at
-  the top of the TD model section in `model.js`.
+- TD model calibrated against the first snapshot (RMSE 11.2 → 6.4 pts vs de-vigged market), then rechecked
+  2026-10-13 after zero-target games started counting (`noLine` rows): `TD_PER_TARGET_PRIOR` 0.05 → 0.055 and
+  `MIN_XTD_PG` 0.02 floor. Constants are at the top of the TD model section in `model.js`. The floor comes from
+  results, not prices: fitting it to the market copies the books' longshot overpricing.
+- Week 5's four voids (Adkins ×2, Tonyan, Ruckert) were zero-target games, now graded as losses. A
+  "1+ target in the team's last 2 games" usage floor for Longshots / First TD value is pending the user's
+  decision (it wouldn't have caught week 5's picks; each had week-3 targets).
 
 Next steps: ENHANCEMENTS.md. Highest value now:
 - check the first graded results after week 5
@@ -103,8 +108,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 - Wide tables: the matchup and Touchdowns odds tables use tighter cell padding (`.g-side .grid`,
   `.table-wrap.tight`) so they fit at 1280px without sideways scrolling. Check `scrollWidth <= clientWidth`
   on the table wrapper when adding columns.
-- "Missed last game" (tdOdds `missedLast`) means no box-score row in the team's latest game, which also
-  catches a TE who played but drew no targets. It's hidden when an injury tag already explains the absence.
+- "Missed last game" (tdOdds `missedLast`) means no game row in the team's latest game: inactive or no snap
+  (zero-target appearances have a `noLine` row). It's hidden when an injury tag already explains the absence.
 - The user cares about TD and receptions betting angles more than fantasy points. Keep new features
   pointed that way. Fantasy points survive only in `fantasyPoints()` / `aggregate` in model.js (no page
   shows them). The player page is odds-first too: a "This week" card (rec line, O/U, over-the-line
@@ -127,7 +132,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 `players{}`: `name, short, team, headshot, jersey, age, exp, onRoster, injury: {status, date} | null`.
 `games[]` has one row per TE per completed game: box score `rec,tgt,yds,td,long,rushAtt,rushYds,rushTd,
 fumLost`, `firstTd` (true if this TE scored the game's first TD), team totals `teamTgt,teamRecYds` (share denominators), and play-by-play red-zone splits
-`tgt5,tgt10,tgt20,td5,td10,td20` (cumulative: inside the 5 ⊂ 10 ⊂ 20). `upcoming[]` has one row per team for
+`tgt5,tgt10,tgt20,td5,td10,td20` (cumulative: inside the 5 ⊂ 10 ⊂ 20). `noLine: true` marks an all-zero row for a TE
+who played without a box-score line (~40/week); every per-game rate and `gp` counts it. No row = didn't play. `upcoming[]` has one row per team for
 the next week, with `implied` points (from `total` and `spread`). `spread` is from that team's side.
 `schedule` = `{ week, games[] }` for the matchups page: the first not-yet-ended calendar week that still has
 an unfinished game, so it rolls over once Monday night is final. Each game has `state` (pre/in/post),
@@ -149,8 +155,15 @@ finished games, so those are null. `upcoming` can be a week ahead of `schedule` 
 - First TD scorer: the first `scoringPlays[]` entry with `type.abbreviation === "TD"`, name parsed from
   "X 2 Yd pass from Y" and matched to that team's TEs. The TE's game row gets `firstTd: true` (absent otherwise).
   `--backfill-first-td` refetches processed games to reset the flags (it was run once on 2026-10-07 for weeks 1–4).
+- The box score omits players with no stat. Zero-stat TEs come from the core API game roster
+  (`sports.core.api.espn.com/v2/.../events/{id}/competitions/{id}/competitors/{teamId}/roster`, `didNotPlay`,
+  position `$ref` `/positions/7` = TE), confirmed by the per-player `.../roster/{athleteId}/statistics/0`
+  (`general.gamesPlayed === 1`; a 404 means dressed but no snap, which books void). The athlete **gamelog** is
+  not reliable for this: it shows "–" for a game with only a special-teams tackle. An empty game roster leaves
+  the game unprocessed so it's retried next run.
 - Games are only processed once `status.type.completed`, and `processedEvents` stops
-  them from being fetched again. To force a full rebuild, delete `data/<season>.json`.
+  them from being fetched again. To force a full rebuild, run `build-data.mjs --reprocess` (used 2026-10-13 to
+  add the zero-stat rows; every existing row came back identical).
 - Around Monday night the current week has no unplayed games left, so `upcoming` looks at the next
   calendar week as well (`openWeeks` in build-data.mjs holds both).
 
