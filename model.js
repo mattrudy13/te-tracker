@@ -65,7 +65,7 @@ function aggregate(data, games, { format = "ppr", tep = false } = {}) {
 // actual TE results blended with long-run priors; the priors carry most of the weight early on.
 //
 // Anytime-TD odds: a player's expected TDs per game is shrunk toward a volume-only baseline
-// (targets per game x a long-run 5% TE TD-per-target rate), worth SHRINK_GAMES games of data, so a
+// (targets per game x a long-run 5.5% TE TD-per-target rate, never below MIN_XTD_PG), worth SHRINK_GAMES games of data, so a
 // few red-zone looks in September don't dominate. Season and last-3 estimates are blended, scaled by
 // the team's implied points for the matchup, then P = 1 − e^(−λ) (Poisson).
 //
@@ -76,6 +76,14 @@ function aggregate(data, games, { format = "ppr", tep = false } = {}) {
 // Calibrated on 2026-10-05 against the first sportsbook snapshot (30 priced TEs, books de-vigged by
 // ~12%): RMSE went from 11.2 to 6.4 percentage points and the average matched the market. The model
 // still disagrees with the books on purpose (it only knows targets and field position).
+//
+// Rechecked on 2026-10-13 after games played without a target started counting (data rows with
+// `noLine`; before, they were missing, which inflated part-time TEs' per-game rates). That lowered
+// the average chance ~2 pts, and TEs with no targets yet got exactly 0%. Fixes: a floor on expected
+// TDs per game (MIN_XTD_PG; TEs with no prior targets scored in 2 of 100 games in weeks 2–5) and a
+// 5.5% per-target baseline. Week 5 Sunday snapshot, 87 priced TEs: RMSE 5.15 -> 5.01 pts, bias
+// -1.8 -> -0.8 pts, Brier 0.0916 -> 0.0907 (market 0.0928). The floor comes from results, not prices, on purpose:
+// books overprice longshots, so fitting it to the market would invent longshot value.
 
 const TD_ZONES = [
   { key: "i5", label: "Inside 5", prior: 0.45, weight: 400 },
@@ -83,9 +91,10 @@ const TD_ZONES = [
   { key: "i20", label: "11–20", prior: 0.12, weight: 600 },
   { key: "out", label: "Outside 20", prior: 0.025, weight: 3000 },
 ];
-const TD_PER_TARGET_PRIOR = 0.05;
+const TD_PER_TARGET_PRIOR = 0.055;
 const SHRINK_GAMES = 8;
 const RECENT_WEIGHT = 0.3;
+const MIN_XTD_PG = 0.02;
 // TDs per implied point: NFL teams average about 2.4 TDs on about 23 points. Not yet calibrated
 // against the first-TD market.
 const TD_PER_POINT = 0.105;
@@ -155,7 +164,7 @@ function tdOdds(data) {
     const recentPg = shrunkXtdPg(model, recent, a.tgtPg);
     // Small rushing-TD bump for the few TEs who get carries near the goal line.
     const rush = a.rushTd / a.gp;
-    const base = (a.gp >= 3 ? (1 - RECENT_WEIGHT) * season + RECENT_WEIGHT * recentPg : season) + 0.5 * rush;
+    const base = Math.max(MIN_XTD_PG, (a.gp >= 3 ? (1 - RECENT_WEIGHT) * season + RECENT_WEIGHT * recentPg : season) + 0.5 * rush);
     const scale = u.implied ? u.implied / model.avgImplied : 1;
     const lambda = base * scale;
     const missedLast = (lastTeamWeek[team] ?? 0) > a.games.at(-1).week;
