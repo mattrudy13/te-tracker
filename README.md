@@ -133,6 +133,9 @@ Action computes exactly what the page shows.
   players from a looser pool, in lighter text with a "CC" label. They're recorded and graded as a separate
   **shadow record** that never counts toward the official one, to show whether the rules are too strict or
   too loose. A fade close call never repeats a real "due" pick, and vice versa.
+- Fades aren't bets, so they're kept out of every Total / Unique bets row. Each fade shows ✓ No TD or ✗ Scored,
+  and a line under each table compares how many faded players scored with how many the market and the model
+  expected (a fade "wins" ~65% of the time with no skill, so wins and losses say little).
 - Players the Longshots / First TD value usage rule (2+ targets in the team's last 2 games) cuts from the top
   five are recorded and graded in a third shadow table, **Cut by the usage rule**, to show whether the rule
   is costing winners. They never appear in the pick lists.

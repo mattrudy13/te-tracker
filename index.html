@@ -41,7 +41,7 @@
       <div class="cat-head">
         <div>
           <h2>Track record</h2>
-          <p>Every pick is saved at the odds snapshot and locks at kickoff, then gets graded after the game. Each pick is a $10 bet at the listed price; <b>Units</b> is total profit in $10 units. <b>Total</b> adds up every category, so a player picked in three categories counts three times. <b>Unique bets</b> counts each player once per market (anytime TD, first TD, fade) each week, which is what you'd have bet at the book. <b>CLV</b> (closing-line value) is how many percentage points the market's chance moved toward the pick, on average, between the first odds snapshot that had it and the last one before kickoff. Steady positive CLV means the picks are finding prices before the books move, a faster sign of a real edge than wins and losses. Picks seen at only one snapshot (like Thursday games) aren't counted.</p>
+          <p>Every pick is saved at the odds snapshot and locks at kickoff, then gets graded after the game. Each pick is a $10 bet at the listed price; <b>Units</b> is total profit in $10 units. <b>Total</b> adds up every category, so a player picked in three categories counts three times. <b>Unique bets</b> counts each player once per market (anytime TD, first TD) each week, which is what you'd have bet at the book. <b>CLV</b> (closing-line value) is how many percentage points the market's chance moved toward the pick, on average, between the first odds snapshot that had it and the last one before kickoff. Steady positive CLV means the picks are finding prices before the books move, a faster sign of a real edge than wins and losses. Picks seen at only one snapshot (like Thursday games) aren't counted.</p>
         </div>
       </div>
       <div class="table-wrap tight" style="margin-top:.75rem"><div id="record"></div></div>
@@ -60,8 +60,11 @@
       Longshots and First TD value also require at least 2 targets in the team's last 2 games. Players that rule cuts from the
       top five are graded in their own shadow table, <b>Cut by the usage rule</b>, which shows whether the rule is costing winners.
       Grading: a pick wins if the player scores a receiving or rushing TD. A player who didn't play is voided, the way books handle
-      inactive players. A player who played but never caught a pass counts as a loss. Fades win when the player doesn't score, and have no
-      profit figure because the "No" price isn't tracked.
+      inactive players. A player who played but never caught a pass counts as a loss.
+      <b>Fades</b> aren't bets (the "No" price isn't tracked), so they're kept out of the totals. Each fade shows <b>✓ No TD</b> or
+      <b>✗ Scored</b>, and the line under each table compares how many faded players scored with how many the market and the model
+      expected. Fewer scorers than the market expected means the fades were right. The market figure includes the books' margin, so
+      it runs a little high.
       <b>First TD</b> bets win only if the player scores the game's first touchdown, by either team. They lose if someone else scores first
       or nobody scores a TD. Books take a much bigger margin on this market, so its Market column has the margin removed. The model's chance
       is the player's share of both teams' expected TDs.
@@ -82,8 +85,9 @@
       return `$${Number.isInteger(Math.round(v * 100) / 100) ? Math.round(v) : v.toFixed(2)}`;
     };
     const evText = (ev) => (ev == null ? "–" : signed(ev, dollars(ev)));
-    const resultText = (r) =>
-      r === "won" ? `<span class="result pos">✓ Won</span>` : r === "lost" ? `<span class="result neg">✗ Lost</span>` : r === "void" ? `<span class="result muted">Void</span>` : "";
+    // Fades aren't bets, so they read as what happened to the player rather than Won / Lost.
+    const resultText = (r, cat) =>
+      r === "won" ? `<span class="result pos">✓ ${cat === "fade" ? "No TD" : "Won"}</span>` : r === "lost" ? `<span class="result neg">✗ ${cat === "fade" ? "Scored" : "Lost"}</span>` : r === "void" ? `<span class="result muted">Void</span>` : "";
 
     function pickRow(p, i) {
       if (p.close) return closeRow(p);
@@ -98,7 +102,7 @@
         <td>${fmt.pct0(p.marketProb)}</td>
         <td>${p.marketProb != null ? edgeCell(p.modelProb, p.marketProb) : `<span class="muted">–</span>`}</td>
         <td class="key">${evText(p.ev)}</td>
-        <td>${resultText(p.result)}</td>
+        <td>${resultText(p.result, p.cat)}</td>
       </tr>`;
     }
 
@@ -112,7 +116,7 @@
         <td class="l"><div class="who">${headshot(player, 36)}<div>${playerLink(a)} <small>${teamChip(data, p.team)} ${p.home ? "vs" : "@"} ${esc(p.opp)} · ${esc(when)}</small><span class="why">Close call · ${esc(p.why ?? "")}</span></div></div></td>
         <td class="key">${p.price != null ? americanText(p.price) : "–"}${p.book ? `<small class="why" style="max-width:none">${esc(p.book)}</small>` : ""}</td>
         <td>${fmt.pct0(p.modelProb)}</td><td>${fmt.pct0(p.marketProb)}</td>
-        <td>${p.marketProb != null ? edgeCell(p.modelProb, p.marketProb) : "–"}</td><td>${evText(p.ev)}</td><td>${resultText(p.result)}</td>
+        <td>${p.marketProb != null ? edgeCell(p.modelProb, p.marketProb) : "–"}</td><td>${evText(p.ev)}</td><td>${resultText(p.result, p.cat)}</td>
       </tr>`;
     }
 
@@ -159,12 +163,28 @@
     }
 
     function recordTable(graded, title, only = null) {
-      const rows = BET_CATEGORIES.filter((c) => !only || only.includes(c.key)).map((c) => ({ label: c.label, ...recordStats(graded.filter((p) => p.cat === c.key)) }));
+      // Fades get their own line under the table: a fade "wins" about 65% of the time with no skill at all,
+      // so counting them in the totals would pad the hit rate.
+      const bets = graded.filter((p) => p.cat !== "fade");
+      const rows = BET_CATEGORIES.filter((c) => c.key !== "fade" && (!only || only.includes(c.key))).map((c) => ({ label: c.label, ...recordStats(bets.filter((p) => p.cat === c.key)) }));
       // Totals pool every pick, so hit rate, ROI and CLV are weighted by pick count, not averaged across categories.
-      const total = { label: "Total", ...recordStats(graded) };
-      const unique = { label: "Unique bets", ...recordStats(uniqueBets(graded)) };
+      const total = { label: "Total", ...recordStats(bets) };
+      const unique = { label: "Unique bets", ...recordStats(uniqueBets(bets)) };
       return `<h3 style="margin:.9rem 0 .3rem">${esc(title)}</h3><table class="grid"><thead><tr><th class="l">Category</th><th>Picks</th><th>W–L–Void</th><th>Hit rate</th><th>Units</th><th>ROI</th><th>CLV</th></tr></thead><tbody>${rows
-        .map(recordRow).join("")}</tbody><tfoot>${recordRow(total)}${recordRow(unique)}</tfoot></table>`;
+        .map(recordRow).join("")}</tbody><tfoot>${recordRow(total)}${recordRow(unique)}</tfoot></table>${fadeLine(graded.filter((p) => p.cat === "fade"))}`;
+    }
+
+    // A fade claims the market overrates the player, so it's judged by how many faded players scored
+    // against how many the market and the model expected, not by wins and losses.
+    function fadeLine(fades) {
+      const played = fades.filter((p) => p.result !== "void");
+      if (!played.length) return "";
+      const scored = played.filter((p) => p.scored).length;
+      const expect = (k) => played.reduce((s, p) => s + (p[k] ?? 0), 0).toFixed(1);
+      const moves = played.map(marketMove).filter((m) => m != null);
+      const clv = moves.length ? moves.reduce((s, m) => s + m, 0) / moves.length : null;
+      return `<p class="note"><b>Fades</b> (not bets, so outside the totals): <b>${scored} of ${played.length}</b> scored · market expected ${expect("marketProb")} · model expected ${expect("modelProb")}${
+        clv == null ? "" : ` · CLV ${signed(clv, (clv * 100).toFixed(1))}`}</p>`;
     }
 
     function recordStats(g) {
@@ -205,15 +225,16 @@
     }
 
     function renderRecent(recent, lastWeek) {
+      const bets = recent.filter((p) => p.cat !== "fade");
       const footRow = (label, r) => `<tr><td class="l" colspan="4">${label}${label === "Unique bets" ? ` (${r.n})` : ""}</td><td>${r.won}–${r.lost}–${r.vd}</td>
         <td>${r.units == null ? "–" : signed(r.units, dollars(r.units * 100))}</td></tr>`;
       $("recent").innerHTML = `<h3 style="margin:1.2rem 0 .4rem">Week ${lastWeek} results</h3><div class="table-wrap tight"><table class="grid"><thead><tr>
         <th class="l">Category</th><th class="l">Player</th><th>Price</th><th>Model</th><th>Result</th><th>Profit</th></tr></thead><tbody>${recent
         .map((p) => `<tr><td class="l">${esc(BET_CATEGORIES.find((c) => c.key === p.cat)?.label ?? p.cat)}</td>
           <td class="l">${playerLink({ id: p.playerId, player: data.players[p.playerId] ?? { name: p.name } })}</td>
-          <td>${p.price != null ? americanText(p.price) : "–"}</td><td>${fmt.pct0(p.modelProb)}</td><td>${resultText(p.result)}</td>
+          <td>${p.price != null ? americanText(p.price) : "–"}</td><td>${fmt.pct0(p.modelProb)}</td><td>${resultText(p.result, p.cat)}</td>
           <td>${p.profit == null ? "–" : signed(p.profit, dollars(p.profit))}</td></tr>`)
-        .join("")}</tbody><tfoot>${footRow("Total", recordStats(recent))}${footRow("Unique bets", recordStats(uniqueBets(recent)))}</tfoot></table></div>`;
+        .join("")}</tbody><tfoot>${footRow("Total", recordStats(bets))}${footRow("Unique bets", recordStats(uniqueBets(bets)))}</tfoot></table></div>${fadeLine(recent.filter((p) => p.cat === "fade"))}`;
     }
 
     (async () => {

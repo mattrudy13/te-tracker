@@ -85,6 +85,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   graded like picks but shown only in the separate "shadow record" table. **Never let shadow picks into the
   official record.** Every consumer must filter on `!p.shadow`. The lock key includes the shadow flag and
   `excluded`. Usage-rule exclusions are also `shadow`; close-call consumers filter `p.shadow && !p.excluded`.
+- Fades stay graded won/lost in the data, but the page keeps them out of Total / Unique bets (by request) and
+  shows them as ✓ No TD / ✗ Scored plus a `fadeLine()`: faded players who scored vs market and model expected.
 - Odds are US-licensed books only: `OFFSHORE_BOOKS` in fetch-odds.mjs (Odds API bookmaker keys) are dropped
   before best price / market median. The user chose "exclude everywhere, no toggle". `td.prices` keeps the
   per-book prices for future by-book tracking.
