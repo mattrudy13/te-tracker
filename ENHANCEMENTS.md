@@ -35,7 +35,7 @@ Fantasy points are deliberately out of scope.
       whether the edge only exists at one book's stale lines.
 - [x] **Closing-line value** (done 2026-10-08): picks keep their first-seen price (`open*`) when a later
       snapshot replaces them, and the Track record shows the average market move toward each category's picks.
-      Still open: the Sunday 8 AM snapshot is ~5 h before kickoff, so it's an early "close"; the inactives
+      Still open: the Sunday snapshot (4 AM ET since 2026-10-13) is ~9 h before kickoff, so it's an early "close"; the inactives
       snapshot (below) would sharpen it. Picks dropped between snapshots aren't kept, so CLV only covers picks
       that survived.
 - [ ] **(new) What changed since Thursday**: after the Sunday snapshot, mark picks that are new, dropped,
@@ -67,7 +67,7 @@ Fantasy points are deliberately out of scope.
       week-5 snapshots after zero-target games started counting (per-target baseline 5% → 5.5%, 0.02 xTD/game
       floor). Next: around week 9 with 4+ weeks of snapshots, using the scoring script above.
 - [ ] **(new) Sunday inactives snapshot**: inactives come out about 90 minutes before kickoff (~11:30 AM ET
-      for 1 PM games), after the 8 AM snapshot. A third snapshot then would catch late scratches and line
+      for 1 PM games), after the early-morning snapshot. A third snapshot then would catch late scratches and line
       moves. It costs ~26 credits, ~370/month for three a week, which is tight but under 500. Pair it with
       the quota guard below.
 - [ ] **Red-zone target share**: count every receiver's red-zone targets from play-by-play (not just
@@ -117,11 +117,10 @@ Fantasy points are deliberately out of scope.
 - [ ] **Sort Matchups games** by kickoff (current), by biggest TE edge, or by implied total.
 
 ## Code and reliability
-- [ ] **(10-13) Late snapshot cron (high priority)**: GitHub started both scheduled snapshots 4–5 h late
-      (Thu Oct 8 at 01:02 UTC, after TNF kickoff; Sun Oct 11 at 16:52 UTC, 8 minutes before the 1 PM games).
-      Scheduled workflows are best-effort and run late at busy times. Options: schedule much earlier
-      (Thu ~15:00 UTC, Sun ~08:00 UTC), schedule two tries with the second skipping if the first ran, or
-      trigger `workflow_dispatch` from an outside scheduler (e.g. a Claude routine or cron-job.org).
+- [x] **(10-13) Late snapshot cron**: GitHub started both scheduled snapshots 4–5 h late (Thu Oct 8 at
+      01:02 UTC, after TNF kickoff; Sun Oct 11 at 16:52 UTC, 8 minutes before the 1 PM games). Moved to
+      Thu 15:00 / Sun 08:00 UTC on 2026-10-13. If runs still slip too far, trigger `workflow_dispatch` from
+      an outside scheduler (e.g. a Claude routine or cron-job.org) instead.
 - [ ] **(10-13) Zero-stat rows right after a game**: `tookSnap()` in build-data reads ESPN's per-player game
       stat record and treats a 404 as "no snap". If that record lags the final whistle, a TE who played gets no
       row and a pick on him is voided. Check after the first TNF run; if it lags, only process games that

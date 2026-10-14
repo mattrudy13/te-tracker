@@ -37,7 +37,7 @@ that JSON.
 
 ```
 update-data.yml    every 3 h Thu–Mon + Tue   build-data.mjs (ESPN) → grade-picks.mjs
-snapshot-odds.yml  Thu 5 PM + Sun 8 AM ET    build-data.mjs → fetch-odds.mjs (The Odds API) → record-picks.mjs
+snapshot-odds.yml  Thu 11 AM + Sun 4 AM ET   build-data.mjs → fetch-odds.mjs (The Odds API) → record-picks.mjs
 check-assets.yml   on push                   stamp-assets.mjs --check
                                     ↓
           data/2026.json · odds-2026.json · picks-2026.json → GitHub Pages
@@ -78,7 +78,8 @@ anytime-TD and first-TD-scorer prices and the receptions over/under, from **US-l
 Caesars, BetRivers, ESPN BET, Fanatics…). Offshore books (BetOnline.ag, Bovada, BetUS, MyBookie, LowVig) are
 dropped before the best price and market median are chosen, so every price on the site can be bet at a
 licensed book. It writes `data/odds-<season>.json`.
-`.github/workflows/snapshot-odds.yml` runs it Thursday at 5 PM ET (before TNF) and Sunday at 8 AM ET.
+`.github/workflows/snapshot-odds.yml` runs it Thursday at 11 AM ET (before TNF) and Sunday at 4 AM ET. Both are early on purpose: GitHub often
+starts scheduled runs hours late.
 Games that have already kicked off keep their earlier snapshot. GitHub can start scheduled runs hours
 late (the first Thursday run started at 9 PM ET, after TNF kickoff), so TNF picks may come from an earlier snapshot. Each snapshot costs 1 credit per market per
 game (3 markets, ~15 games), so about 30–45 credits, ~85 a week and ~375 a month. That leaves ~125 for

@@ -2,10 +2,12 @@ name: Snapshot odds
 
 on:
   schedule:
-    # Times are UTC. Thursday 21:00 (5 PM ET, before TNF) and Sunday 12:00 (8 AM ET, before
-    # London games and after Saturday injury news), September through February.
-    - cron: "0 21 * 9-12,1-2 4"
-    - cron: "0 12 * 9-12,1-2 0"
+    # Times are UTC: Thursday 15:00 (11 AM EDT / 10 AM EST) and Sunday 08:00 (4 AM EDT / 3 AM EST),
+    # September through February. GitHub starts scheduled runs late at busy times (4-5 h in October
+    # 2026: 21:00 ran at 01:02, after TNF kickoff; 12:00 ran at 16:52, 8 minutes before the 1 PM games),
+    # so these leave room for that before TNF and the Sunday London games (13:30 UTC).
+    - cron: "0 15 * 9-12,1-2 4"
+    - cron: "0 8 * 9-12,1-2 0"
   workflow_dispatch:
 
 permissions:

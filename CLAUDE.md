@@ -10,10 +10,11 @@ Live and working end to end:
 - Pages: Best Bets (home), Matchups, Leaders, Touchdowns, Player. Watchlist, shareable URLs, dark mode,
   phone layout, injury tags. Compare was removed on request.
 - Workflows: `update-data.yml` (ESPN every 3 h Thu–Mon + Tue → grade picks), `snapshot-odds.yml`
-  (Thu 21:00 / Sun 12:00 UTC: build → odds → record picks), `check-assets.yml` (stamp check on push).
+  (Thu 15:00 / Sun 08:00 UTC: build → odds → record picks), `check-assets.yml` (stamp check on push).
   `ODDS_API_KEY` secret is set. **339 credits left** after the Oct 11 snapshot (~45 per snapshot; enough for October).
-- **Snapshot cron runs 4–5 h late**: Thu Oct 8 started 01:02 UTC (after TNF kickoff), Sun Oct 11 started
-  16:52 UTC (8 minutes before the 1 PM ET games). Not fixed yet; see ENHANCEMENTS.md (Code and reliability).
+- Snapshot cron moved earlier on 2026-10-13 (was Thu 21:00 / Sun 12:00 UTC) because GitHub started both runs
+  4–5 h late (Thu Oct 8 at 01:02 UTC, after TNF kickoff; Sun Oct 11 at 16:52 UTC, 8 minutes before 1 PM).
+  Check the start times of the Oct 15 and Oct 18 runs (`gh run list --workflow snapshot-odds.yml`).
 - Week 5 is graded (first graded week). Official bets 7–17, −4.80 units (−20% ROI), CLV −0.4; unique bets
   4–14, −6.40 units. Longshots and First TD value both 0–5. Fades: 1 of 3 scored (market expected 1.1, model 0.6).
   One week is noise; don't tune anything on it.
@@ -41,10 +42,9 @@ Next steps (details in ENHANCEMENTS.md):
 1. After Thursday's snapshot: check the record-picks log line (`+ N excluded`) and the Best Bets page. After TNF is
    processed, check it got `noLine` rows (~2–4 per game). If a TE who played has no row, ESPN's per-game stat
    record wasn't posted yet when the build ran (`tookSnap()` treats 404 as no snap); delay processing if so.
-2. Fix the late snapshot cron before it misses a Sunday.
-3. Score the model and books on every priced TE, each week, with the method above.
-4. Receptions projection vs the line (unlocks receptions picks).
-5. Around week 9: tune the category rules from the official, close-call and usage-cut records, judge fades by
+2. Score the model and books on every priced TE, each week, with the method above.
+3. Receptions projection vs the line (unlocks receptions picks).
+4. Around week 9: tune the category rules from the official, close-call and usage-cut records, judge fades by
    the scored-vs-expected line, recheck the model constants, and retest the defense factor.
 
 ## Before every commit that touches model.js, common.js or style.css
@@ -58,8 +58,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
 - `scripts/build-data.mjs`: the only thing that talks to ESPN. Writes `data/<season>.json`,
   `data/positions-<season>.json` (athlete position cache) and `data/seasons.json` (`{current}`, read
   by the site to pick the file).
-- `scripts/fetch-odds.mjs` + `.github/workflows/snapshot-odds.yml`: The Odds API snapshot (Thu 21:00 /
-  Sun 12:00 UTC) → `data/odds-<season>.json` `{ takenAt, games: {oddsEventId: {home, away, commence}},
+- `scripts/fetch-odds.mjs` + `.github/workflows/snapshot-odds.yml`: The Odds API snapshot (Thu 15:00 /
+  Sun 08:00 UTC) → `data/odds-<season>.json` `{ takenAt, games: {oddsEventId: {home, away, commence}},
   players: {espnId: {oddsGameId, td: {best, book, books, marketProb, prices: {book: price}}, first: {best, book,
   books, marketProb, fairProb, prices}, rec: {line, over, under, overBook, underBook, books}}}, excluded: [offshore keys] }`.
   `first` is the first-TD-scorer market (`player_1st_td`); `fairProb` is the median de-vigged chance (each book's
