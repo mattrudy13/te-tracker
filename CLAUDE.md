@@ -4,36 +4,48 @@ NFL tight end stats/usage/TD-odds site on GitHub Pages: https://mattrudy13.githu
 See README.md for features, the TD model and how to run it. Same conventions as `../h2h`: plain HTML/CSS/JS,
 no build step, globals in `model.js` (data/model) and `common.js` (DOM), Barlow Condensed + Inter, dark top bar.
 
-## Status (2026-10-08, end of session)
+## Status (2026-10-13, end of session)
 
 Live and working end to end:
 - Pages: Best Bets (home), Matchups, Leaders, Touchdowns, Player. Watchlist, shareable URLs, dark mode,
   phone layout, injury tags. Compare was removed on request.
 - Workflows: `update-data.yml` (ESPN every 3 h Thu–Mon + Tue → grade picks), `snapshot-odds.yml`
   (Thu 21:00 / Sun 12:00 UTC: build → odds → record picks), `check-assets.yml` (stamp check on push).
-  `ODDS_API_KEY` secret is set.
-- Odds: US-licensed books only. The first scheduled Thursday snapshot (Oct 8) priced 110 TEs; **420 credits left**
-  this month. It started at 01:02 UTC, four hours late and after TNF kickoff (GitHub cron delay). If that
-  repeats, move the cron earlier.
-- Best Bets: week 5 has 26 official picks + 5 close calls (one TNF close call locked from Tuesday's manual
-  snapshot). Picks now carry `open*` prices for CLV (see Layout). **Week 5 is the first graded week** (grading runs after games are final).
-- TD model calibrated against the first snapshot (RMSE 11.2 → 6.4 pts vs de-vigged market), then rechecked
-  2026-10-13 after zero-target games started counting (`noLine` rows): `TD_PER_TARGET_PRIOR` 0.05 → 0.055 and
-  `MIN_XTD_PG` 0.02 floor. Constants are at the top of the TD model section in `model.js`. The floor comes from
-  results, not prices: fitting it to the market copies the books' longshot overpricing.
-- Week 5's four voids (Adkins ×2, Tonyan, Ruckert) were zero-target games, now graded as losses.
-- Longshots and First TD value official picks need 2+ targets in the team's last 2 games (`tgtLast2`,
-  2026-10-13, user's choice over "1+ last game", which would drop Adkins-type value). Close calls are exempt.
-  Players the rule cuts from the top 5 (`bestBets().excluded`) are recorded as `shadow: true, excluded: "usage"`
-  and graded in their own "Cut by the usage rule" table, so the record shows what the rule costs. Review at
-  the week 9 rule tuning.
+  `ODDS_API_KEY` secret is set. **339 credits left** after the Oct 11 snapshot (~45 per snapshot; enough for October).
+- **Snapshot cron runs 4–5 h late**: Thu Oct 8 started 01:02 UTC (after TNF kickoff), Sun Oct 11 started
+  16:52 UTC (8 minutes before the 1 PM ET games). Not fixed yet; see ENHANCEMENTS.md (Code and reliability).
+- Week 5 is graded (first graded week). Official bets 7–17, −4.80 units (−20% ROI), CLV −0.4; unique bets
+  4–14, −6.40 units. Longshots and First TD value both 0–5. Fades: 1 of 3 scored (market expected 1.1, model 0.6).
+  One week is noise; don't tune anything on it.
 
-Next steps: ENHANCEMENTS.md. Highest value now:
-- check the first graded results after week 5
-- the receptions projection vs the line (unlocks receptions picks)
-- scoring the model and books on every priced TE
-- closing-line value: shipped 2026-10-08 (CLV column); next is a later Sunday snapshot so the close is closer to kickoff
-- around week 9: tune the category rules from the official and shadow records, and retest the defense factor
+Changed 2026-10-13 (all pushed; Thursday Oct 15's snapshot is the first live run of everything below):
+- Track record: Total and Unique bets rows (unique = one per week, player and market), $10 bets / $10 units
+  (stored values stay per $100; `STAKE` in index.html scales them), fades kept out of the totals with a
+  `fadeLine()` under each table (faded players who scored vs market and model expected), fade rows read
+  ✓ No TD / ✗ Scored.
+- Zero-target games: ESPN's box score omits TEs with no stat, which voided picks on TEs who played without a
+  target and inflated part-time TEs' per-game rates. build-data now adds `noLine` zero rows from the core API
+  game roster (see ESPN API quirks). Weeks 1–5 reprocessed (199 rows). Week 5's four voids (Adkins ×2,
+  Tonyan, Ruckert) are now losses. No row = inactive or no snap = void.
+- TD model rechecked against both week-5 snapshots: `TD_PER_TARGET_PRIOR` 0.05 → 0.055 and a `MIN_XTD_PG` 0.02
+  floor (Sunday snapshot: RMSE 5.0 pts, bias −0.8 pts vs de-vigged market). The floor comes from results, not
+  prices: fitting it to the market copies the books' longshot overpricing. Comparison method: model from games
+  before the snapshot (`date < takenAt`) + `upcoming`/`players` from the snapshot commit's `data/2026.json` vs
+  that commit's `odds-2026.json` (`marketProb / 1.12`), plus Brier / log loss vs results. Snapshots are in git.
+- Longshots and First TD value official picks need 2+ targets in the team's last 2 games (`tgtLast2`; user's
+  choice over "1+ last game", which would drop Adkins-type value). Close calls are exempt. Players the rule cuts
+  from the top 5 (`bestBets().excluded`) are recorded as `shadow: true, excluded: "usage"` and graded in their
+  own "Cut by the usage rule" table, so the record shows what the rule costs. Review at the week 9 rule tuning.
+
+Next steps (details in ENHANCEMENTS.md):
+1. After Thursday's snapshot: check the record-picks log line (`+ N excluded`) and the Best Bets page. After TNF is
+   processed, check it got `noLine` rows (~2–4 per game). If a TE who played has no row, ESPN's per-game stat
+   record wasn't posted yet when the build ran (`tookSnap()` treats 404 as no snap); delay processing if so.
+2. Fix the late snapshot cron before it misses a Sunday.
+3. Score the model and books on every priced TE, each week, with the method above.
+4. Receptions projection vs the line (unlocks receptions picks).
+5. Around week 9: tune the category rules from the official, close-call and usage-cut records, judge fades by
+   the scored-vs-expected line, recheck the model constants, and retest the defense factor.
 
 ## Before every commit that touches model.js, common.js or style.css
 
