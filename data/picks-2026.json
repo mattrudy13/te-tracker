@@ -912,7 +912,10 @@
      "ev": 25.4,
      "why": "5 RZ tgt (2 inside 5) · 1 TD vs 1.7 xTD · team 21.5 pts · DEN allows 3 TE TD in 5 (12th-most)",
      "takenAt": "2026-10-15T18:52:38.648Z",
-     "oddsAt": "2026-10-15T18:52:38.603Z"
+     "oddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -1056,7 +1059,10 @@
      "ev": 25.4,
      "why": "5 RZ tgt (2 inside 5) · 1 TD vs 1.7 xTD · team 21.5 pts · DEN allows 3 TE TD in 5 (12th-most)",
      "takenAt": "2026-10-15T18:52:38.648Z",
-     "oddsAt": "2026-10-15T18:52:38.603Z"
+     "oddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -1272,7 +1278,10 @@
      "ev": 31.6,
      "why": "5 RZ tgt (2 inside 5) · 1 TD vs 1.7 xTD · team 21.5 pts · DEN allows 3 TE TD in 5 (12th-most)",
      "takenAt": "2026-10-15T18:52:38.648Z",
-     "oddsAt": "2026-10-15T18:52:38.603Z"
+     "oddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -1348,7 +1357,10 @@
      "ev": 34.4,
      "why": "3 RZ tgt (1 inside 5) · 2 TD vs 1.1 xTD · team 19.0 pts · SEA allows 2 TE TD in 5 (19th-most)",
      "takenAt": "2026-10-15T18:52:38.648Z",
-     "oddsAt": "2026-10-15T18:52:38.603Z"
+     "oddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -1374,5 +1386,5 @@
   }
  },
  "updated": "2026-10-15T18:52:38.648Z",
- "graded": "2026-10-13T23:20:30.362Z"
+ "graded": "2026-10-16T13:38:12.305Z"
 }
