@@ -325,71 +325,79 @@ async function main() {
   const retry = new Set();
   const newRows = (
     await mapLimit(todo, 6, async ({ id, week }) => {
-      const s = await getJson(`${API}/summary?event=${id}`);
-      const comp = s.header.competitions[0];
-      const roster = await gameRosterTes(id, comp.competitors);
-      if (!roster) {
-        console.warn(`game roster not ready for ${id}; retrying next run`);
+      // One game failing (ESPN 5xx that outlasts the retries) shouldn't sink the whole build:
+      // leave it unprocessed and pick it up next run, like a roster that isn't posted yet.
+      try {
+        const s = await getJson(`${API}/summary?event=${id}`);
+        const comp = s.header.competitions[0];
+        const roster = await gameRosterTes(id, comp.competitors);
+        if (!roster) {
+          console.warn(`game roster not ready for ${id}; retrying next run`);
+          retry.add(id);
+          return [];
+        }
+        const side = {};
+        for (const c of comp.competitors) {
+          side[c.team.abbreviation] = { homeAway: c.homeAway, score: Number(c.score) };
+        }
+        const rows = [];
+        const tesByTeam = {};
+        for (const teamBox of s.boxscore?.players ?? []) {
+          const team = teamBox.team.abbreviation;
+          const opp = Object.keys(side).find((t) => t !== team);
+          const cat = Object.fromEntries(teamBox.statistics.map((c) => [c.name, c]));
+          const lines = {}; // athlete id -> { receiving, rushing, fumbles }
+          for (const name of ["receiving", "rushing", "fumbles"]) {
+            for (const a of cat[name]?.athletes ?? []) {
+              (lines[a.athlete.id] ??= { name: a.athlete.displayName })[name] = statMap(cat[name], a);
+            }
+          }
+          let teamTgt = 0, teamRecYds = 0;
+          for (const l of Object.values(lines)) {
+            teamTgt += l.receiving?.TGTS ?? 0;
+            teamRecYds += l.receiving?.YDS ?? 0;
+          }
+          // TEs who played without a box-score line get an all-zero row, so per-game rates count the game.
+          for (const te of roster[team] ?? []) if (!lines[te.id] && (await tookSnap(te.statsUrl))) lines[te.id] = { name: null, noLine: true };
+          for (const [pid, l] of Object.entries(lines)) {
+            if (!(await isTe(pid))) continue;
+            if (l.name) (tesByTeam[team] ??= []).push({ id: pid, key: nameKey(l.name) });
+            const rec = l.receiving ?? {}, rush = l.rushing ?? {}, fum = l.fumbles ?? {};
+            rows.push({
+              gameId: id,
+              week,
+              date: comp.date,
+              playerId: pid,
+              team,
+              opp,
+              home: side[team].homeAway === "home",
+              score: side[team].score,
+              oppScore: side[opp].score,
+              rec: rec.REC ?? 0,
+              tgt: rec.TGTS ?? 0,
+              yds: rec.YDS ?? 0,
+              td: rec.TD ?? 0,
+              long: rec.LONG ?? 0,
+              rushAtt: rush.CAR ?? 0,
+              rushYds: rush.YDS ?? 0,
+              rushTd: rush.TD ?? 0,
+              fumLost: fum.LOST ?? 0,
+              teamTgt,
+              teamRecYds,
+              ...(l.noLine ? { noLine: true } : {}),
+            });
+          }
+        }
+        const rz = redZoneSplits(s, teamIdByAbbr, tesByTeam);
+        for (const r of rows) Object.assign(r, rz[r.playerId] ?? { tgt5: 0, tgt10: 0, tgt20: 0, td5: 0, td10: 0, td20: 0 });
+        const first = firstTdScorer(s, tesByTeam);
+        for (const r of rows) if (r.playerId === first) r.firstTd = true;
+        return rows;
+      } catch (err) {
+        console.warn(`game ${id} failed: ${err.message}; retrying next run`);
         retry.add(id);
         return [];
       }
-      const side = {};
-      for (const c of comp.competitors) {
-        side[c.team.abbreviation] = { homeAway: c.homeAway, score: Number(c.score) };
-      }
-      const rows = [];
-      const tesByTeam = {};
-      for (const teamBox of s.boxscore?.players ?? []) {
-        const team = teamBox.team.abbreviation;
-        const opp = Object.keys(side).find((t) => t !== team);
-        const cat = Object.fromEntries(teamBox.statistics.map((c) => [c.name, c]));
-        const lines = {}; // athlete id -> { receiving, rushing, fumbles }
-        for (const name of ["receiving", "rushing", "fumbles"]) {
-          for (const a of cat[name]?.athletes ?? []) {
-            (lines[a.athlete.id] ??= { name: a.athlete.displayName })[name] = statMap(cat[name], a);
-          }
-        }
-        let teamTgt = 0, teamRecYds = 0;
-        for (const l of Object.values(lines)) {
-          teamTgt += l.receiving?.TGTS ?? 0;
-          teamRecYds += l.receiving?.YDS ?? 0;
-        }
-        // TEs who played without a box-score line get an all-zero row, so per-game rates count the game.
-        for (const te of roster[team] ?? []) if (!lines[te.id] && (await tookSnap(te.statsUrl))) lines[te.id] = { name: null, noLine: true };
-        for (const [pid, l] of Object.entries(lines)) {
-          if (!(await isTe(pid))) continue;
-          if (l.name) (tesByTeam[team] ??= []).push({ id: pid, key: nameKey(l.name) });
-          const rec = l.receiving ?? {}, rush = l.rushing ?? {}, fum = l.fumbles ?? {};
-          rows.push({
-            gameId: id,
-            week,
-            date: comp.date,
-            playerId: pid,
-            team,
-            opp,
-            home: side[team].homeAway === "home",
-            score: side[team].score,
-            oppScore: side[opp].score,
-            rec: rec.REC ?? 0,
-            tgt: rec.TGTS ?? 0,
-            yds: rec.YDS ?? 0,
-            td: rec.TD ?? 0,
-            long: rec.LONG ?? 0,
-            rushAtt: rush.CAR ?? 0,
-            rushYds: rush.YDS ?? 0,
-            rushTd: rush.TD ?? 0,
-            fumLost: fum.LOST ?? 0,
-            teamTgt,
-            teamRecYds,
-            ...(l.noLine ? { noLine: true } : {}),
-          });
-        }
-      }
-      const rz = redZoneSplits(s, teamIdByAbbr, tesByTeam);
-      for (const r of rows) Object.assign(r, rz[r.playerId] ?? { tgt5: 0, tgt10: 0, tgt20: 0, td5: 0, td10: 0, td20: 0 });
-      const first = firstTdScorer(s, tesByTeam);
-      for (const r of rows) if (r.playerId === first) r.firstTd = true;
-      return rows;
     })
   ).flat();
 
