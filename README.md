@@ -65,11 +65,14 @@ check-assets.yml   on push                   stamp-assets.mjs --check
    unplayed games' implied team points for the TD odds.
 5. Saves each TE's injury status from the rosters (Questionable / Doubtful / Out / IR).
 
-Games already in the file are reused, so a rerun only fetches new games.
+Games already in the file are reused, so a rerun only fetches new games. A game that can't be read
+(an ESPN error, or a game roster that isn't posted yet) is skipped and tried again on the next run.
+Picks on it aren't graded until it goes through.
 
 `.github/workflows/update-data.yml` runs every 3 hours Thursday–Monday plus Tuesday morning
 (UTC) from September through February. It commits only when the data changed. You can also run it
-by hand from the Actions tab ("Run workflow").
+by hand from the Actions tab ("Run workflow"). Both data workflows build from the latest `main`, so
+re-running an old failed run works, though the next scheduled run catches up on its own.
 
 ## Sportsbook odds
 

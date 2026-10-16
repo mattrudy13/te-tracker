@@ -50,7 +50,8 @@ Fixed 2026-10-16 (pushed, `7e4a967` + `35cc8d2`; a manual Update data run passed
 
 Next steps (details in ENHANCEMENTS.md):
 1. Check the record-picks log line (`+ N excluded`) from Thursday's snapshot and the Best Bets page. TNF (DEN/SEA)
-   got 4 `noLine` rows, as expected. If a TE who played ever has no row, ESPN's per-game stat record wasn't
+   got 4 `noLine` rows, as expected, but it was processed ~10 h after the final, so the stat-record lag is
+   still untested; check a Sunday game picked up by the first run after it ends. If a TE who played has no row, ESPN's per-game stat record wasn't
    posted yet when the build ran (`tookSnap()` treats 404 as no snap); delay processing if so.
 2. Score the model and books on every priced TE, each week, with the method above.
 3. Receptions projection vs the line (unlocks receptions picks).

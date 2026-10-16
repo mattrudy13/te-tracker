@@ -123,8 +123,16 @@ Fantasy points are deliberately out of scope.
       an outside scheduler (e.g. a Claude routine or cron-job.org) instead.
 - [ ] **(10-13) Zero-stat rows right after a game**: `tookSnap()` in build-data reads ESPN's per-player game
       stat record and treats a 404 as "no snap". If that record lags the final whistle, a TE who played gets no
-      row and a pick on him is voided. Check after the first TNF run; if it lags, only process games that
-      ended an hour or more ago.
+      row and a pick on him is voided. If it lags, only process games that ended an hour or more ago. Not
+      tested yet: TNF Oct 15 (DEN/SEA, 4 `noLine` rows) was first processed about 10 h after the final because
+      the 07:42 UTC run failed. Check it on a Sunday game picked up by the first run after it ends.
+- [x] **(10-16) One bad game failed the whole build**: an ESPN 503 on the TNF game roster outlasted the
+      retries and the Update data run failed. A failed game is now skipped and retried next run (grading waits
+      for it). Re-running the failed run then hit a rebase conflict, because re-runs and queued runs checked out
+      the triggering commit. Both data workflows now check out the branch tip.
+- [ ] **(new) Flag games stuck unprocessed**: since 10-16 a game that fails is retried quietly, so one that
+      keeps failing (e.g. an ESPN schema change) would just stay missing. Warn (or open an issue) when a game
+      that ended more than 12 h ago still isn't in `processedEvents`.
 - [ ] **Odds quota guard**: skip a snapshot and open a GitHub issue if `x-requests-remaining` is low or the
       key fails, instead of silently writing an empty file.
 - [ ] **(new) Tests for picks and grading**: the fixtures used during development (pick locking with
@@ -137,11 +145,14 @@ Fantasy points are deliberately out of scope.
       missing. Render it from `common.js`, or check in CI that every page has every tab.
 - [ ] **Smoke test in CI**: load each page with Playwright after a deploy, and fail on console errors or an
       empty table.
-- [ ] **ESPN schema watch**: the build depends on an unofficial API. Have it fail loudly (it does today) and
+- [ ] **ESPN schema watch**: the build depends on an unofficial API. Have it fail loudly (it does for the
+      scoreboard and team rosters; per-game errors are retried quietly, see "Flag games stuck unprocessed") and
       validate the output shape (rows per game, players with no team), so a quiet change doesn't publish
       bad numbers.
 
 ## Shipped
+- [x] Update data survives one bad game (skipped and retried next run), and the data workflows check out the
+      branch tip so re-runs and queued runs don't conflict on push (2026-10-16)
 - [x] Zero-target games counted (`noLine` rows from ESPN's core API game rosters, weeks 1–5 reprocessed), week 5's
       zero-target "voids" regraded as losses, TD model rechecked (5.5% per-target baseline, 0.02 xTD/game floor),
       usage rule for Longshots / First TD value with a shadow table for the players it cuts (2026-10-13)
