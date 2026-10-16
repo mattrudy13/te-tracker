@@ -38,10 +38,20 @@ Changed 2026-10-13 (all pushed; Thursday Oct 15's snapshot is the first live run
   from the top 5 (`bestBets().excluded`) are recorded as `shadow: true, excluded: "usage"` and graded in their
   own "Cut by the usage rule" table, so the record shows what the rule costs. Review at the week 9 rule tuning.
 
+Fixed 2026-10-16 (pushed, `7e4a967` + `35cc8d2`; a manual Update data run passed afterwards):
+- The 07:42 UTC Update data run failed: ESPN's core API sent a 503 for the TNF game roster (401872995) that
+  outlasted `getJson`'s ~7 s of retries, and any error in one game killed the whole build. A failed game is now
+  skipped and retried next run (`retry` set), like a roster that isn't posted yet. No data was lost: the
+  13:38 run processed the game.
+- Re-running that failed run failed again with a rebase conflict on `data/2026.json`: re-runs (and runs queued
+  in the concurrency group) checked out the triggering commit, which was behind main. Both data workflows now
+  check out `ref: ${{ github.ref }}` (the branch tip). Don't re-run old failed data runs anyway; the next
+  scheduled run catches up.
+
 Next steps (details in ENHANCEMENTS.md):
-1. After Thursday's snapshot: check the record-picks log line (`+ N excluded`) and the Best Bets page. After TNF is
-   processed, check it got `noLine` rows (~2–4 per game). If a TE who played has no row, ESPN's per-game stat
-   record wasn't posted yet when the build ran (`tookSnap()` treats 404 as no snap); delay processing if so.
+1. Check the record-picks log line (`+ N excluded`) from Thursday's snapshot and the Best Bets page. TNF (DEN/SEA)
+   got 4 `noLine` rows, as expected. If a TE who played ever has no row, ESPN's per-game stat record wasn't
+   posted yet when the build ran (`tookSnap()` treats 404 as no snap); delay processing if so.
 2. Score the model and books on every priced TE, each week, with the method above.
 3. Receptions projection vs the line (unlocks receptions picks).
 4. Around week 9: tune the category rules from the official, close-call and usage-cut records, judge fades by
@@ -71,7 +81,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   by normalized name, then last name + first initial, among the two teams' TEs. The site shows odds only
   when the snapshot game's home/away match (`playerOdds()`), so stale weeks never leak. Test offline with
   `--fixture`.
-- Both workflows share the `update-data` concurrency group and `git pull --rebase` before pushing.
+- Both workflows share the `update-data` concurrency group, check out the branch tip (`ref: ${{ github.ref }}`,
+  so re-runs and queued runs don't build on a stale commit) and `git pull --rebase` before pushing.
 - `.github/workflows/update-data.yml`: scheduled build + grading; commits `data/` only if something other
   than `updated` changed.
 - `.github/workflows/check-assets.yml`: runs `stamp-assets.mjs --check` on pushes that touch pages or shared assets.
@@ -178,7 +189,8 @@ finished games, so those are null. `upcoming` can be a week ahead of `schedule` 
   position `$ref` `/positions/7` = TE), confirmed by the per-player `.../roster/{athleteId}/statistics/0`
   (`general.gamesPlayed === 1`; a 404 means dressed but no snap, which books void). The athlete **gamelog** is
   not reliable for this: it shows "–" for a game with only a special-teams tackle. An empty game roster leaves
-  the game unprocessed so it's retried next run.
+  the game unprocessed so it's retried next run. So does any other error while processing a game (e.g. an
+  ESPN 5xx that outlasts the retries); grading waits on `processedEvents`, so its picks aren't voided meanwhile.
 - Games are only processed once `status.type.completed`, and `processedEvents` stops
   them from being fetched again. To force a full rebuild, run `build-data.mjs --reprocess` (used 2026-10-13 to
   add the zero-stat rows; every existing row came back identical).
