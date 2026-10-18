@@ -920,7 +920,10 @@
      "openPrice": 160,
      "openBook": "DraftKings",
      "openMarketProb": 0.4,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "void",
+     "scored": null,
+     "profit": 0
     },
     {
      "cat": "likely",
@@ -942,7 +945,10 @@
      "openPrice": 225,
      "openBook": "BetMGM",
      "openMarketProb": 0.3479,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "won",
+     "scored": true,
+     "profit": 170
     },
     {
      "cat": "likely",
@@ -982,7 +988,10 @@
      "openPrice": 270,
      "openBook": "DraftKings",
      "openMarketProb": 0.2857,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -1000,7 +1009,10 @@
      "ev": 20.9,
      "why": "5 RZ tgt (2 inside 5) · 4 TD vs 1.9 xTD · team 20.5 pts · TB allows 3 TE TD in 5 (12th-most)",
      "takenAt": "2026-10-18T12:25:11.962Z",
-     "oddsAt": "2026-10-18T12:25:11.921Z"
+     "oddsAt": "2026-10-18T12:25:11.921Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -1018,7 +1030,10 @@
      "ev": 17.9,
      "why": "5 RZ tgt (2 inside 5) · 1 TD vs 2.0 xTD · team 21.3 pts · CLE allows 3 TE TD in 5 (14th-most)",
      "takenAt": "2026-10-18T12:25:11.962Z",
-     "oddsAt": "2026-10-18T12:25:11.921Z"
+     "oddsAt": "2026-10-18T12:25:11.921Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -1058,7 +1073,10 @@
      "ev": 12.4,
      "why": "4 RZ tgt (1 inside 5) · 3 TD vs 1.8 xTD · team 25.5 pts · TEN allows 2 TE TD in 5 (18th-most)",
      "takenAt": "2026-10-18T12:25:11.962Z",
-     "oddsAt": "2026-10-18T12:25:11.921Z"
+     "oddsAt": "2026-10-18T12:25:11.921Z",
+     "result": "void",
+     "scored": null,
+     "profit": 0
     },
     {
      "cat": "longshot",
@@ -1149,7 +1167,10 @@
      "openPrice": 1300,
      "openBook": "DraftKings",
      "openMarketProb": 0.0857,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -1167,7 +1188,10 @@
      "ev": 14.6,
      "why": "3 RZ tgt (2 inside 5) · 1 TD vs 1.2 xTD · team 25.5 pts · NYJ allows 0 TE TD in 5 (28th-most)",
      "takenAt": "2026-10-18T12:25:11.962Z",
-     "oddsAt": "2026-10-18T12:25:11.921Z"
+     "oddsAt": "2026-10-18T12:25:11.921Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -1189,7 +1213,10 @@
      "openPrice": 200,
      "openBook": "BetMGM",
      "openMarketProb": 0.3481,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "won",
+     "scored": true,
+     "profit": 200
     },
     {
      "cat": "due",
@@ -1233,7 +1260,10 @@
      "openPrice": 265,
      "openBook": "DraftKings",
      "openMarketProb": 0.2857,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -1364,7 +1394,10 @@
      "openPrice": 195,
      "openBook": "BetRivers",
      "openMarketProb": 0.3479,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": true,
+     "profit": null
     },
     {
      "cat": "first",
@@ -1408,7 +1441,10 @@
      "openPrice": 1400,
      "openBook": "FanDuel",
      "openMarketProb": 0.0499,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -1470,7 +1506,10 @@
      "openPrice": 1100,
      "openBook": "FanDuel",
      "openMarketProb": 0.0624,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "fade",
@@ -1489,7 +1528,10 @@
      "ev": -24.6,
      "why": "3 RZ tgt (2 inside 5) · 3 TD vs 1.6 xTD · team 18.3 pts · BAL allows 3 TE TD in 5 (9th-most)",
      "takenAt": "2026-10-18T12:25:11.962Z",
-     "oddsAt": "2026-10-18T12:25:11.921Z"
+     "oddsAt": "2026-10-18T12:25:11.921Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "longshot",
@@ -1509,7 +1551,10 @@
      "ev": 92.4,
      "why": "2 RZ tgt (1 inside 5) · 1 TD vs 0.7 xTD · team 18.0 pts · NE allows 1 TE TD in 5 (24th-most)",
      "takenAt": "2026-10-18T12:25:11.962Z",
-     "oddsAt": "2026-10-18T12:25:11.921Z"
+     "oddsAt": "2026-10-18T12:25:11.921Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -1533,7 +1578,10 @@
      "openPrice": 750,
      "openBook": "BetRivers",
      "openMarketProb": 0.125,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -1557,11 +1605,14 @@
      "openPrice": 3500,
      "openBook": "DraftKings",
      "openMarketProb": 0.021,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     }
    ]
   }
  },
  "updated": "2026-10-18T12:25:11.962Z",
- "graded": "2026-10-18T17:40:46.427Z"
+ "graded": "2026-10-18T22:40:54.909Z"
 }
