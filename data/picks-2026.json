@@ -1102,7 +1102,10 @@
      "openPrice": 1100,
      "openBook": "FanDuel",
      "openMarketProb": 0.0955,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "won",
+     "scored": true,
+     "profit": 1100
     },
     {
      "cat": "longshot",
@@ -1252,7 +1255,10 @@
      "openPrice": 330,
      "openBook": "BetRivers",
      "openMarketProb": 0.241,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -1557,5 +1563,5 @@
   }
  },
  "updated": "2026-10-18T12:25:11.962Z",
- "graded": "2026-10-16T13:38:12.305Z"
+ "graded": "2026-10-18T17:40:46.427Z"
 }
