@@ -1324,7 +1324,10 @@
      "ev": -5.5,
      "why": "5 RZ tgt (2 inside 5) · 1 TD vs 1.9 xTD · team 27.5 pts · DAL allows 3 TE TD in 5 (11th-most)",
      "takenAt": "2026-10-18T12:25:11.962Z",
-     "oddsAt": "2026-10-18T12:25:11.921Z"
+     "oddsAt": "2026-10-18T12:25:11.921Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "fade",
@@ -1647,5 +1650,5 @@
   }
  },
  "updated": "2026-10-18T12:25:11.962Z",
- "graded": "2026-10-19T02:30:14.111Z"
+ "graded": "2026-10-19T08:17:51.357Z"
 }
