@@ -972,7 +972,10 @@
      "ev": -27.5,
      "why": "6 RZ tgt · 4 TD vs 1.8 xTD · team 30.0 pts · WSH allows 7 TE TD in 5 (2nd-most)",
      "takenAt": "2026-10-18T12:25:11.962Z",
-     "oddsAt": "2026-10-18T12:25:11.921Z"
+     "oddsAt": "2026-10-18T12:25:11.921Z",
+     "result": "won",
+     "scored": true,
+     "profit": 110
     },
     {
      "cat": "value",
@@ -1399,7 +1402,10 @@
      "openPrice": 105,
      "openBook": "BetMGM",
      "openMarketProb": 0.4878,
-     "openOddsAt": "2026-10-15T18:52:38.603Z"
+     "openOddsAt": "2026-10-15T18:52:38.603Z",
+     "result": "lost",
+     "scored": true,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -1650,5 +1656,5 @@
   }
  },
  "updated": "2026-10-18T12:25:11.962Z",
- "graded": "2026-10-19T08:17:51.357Z"
+ "graded": "2026-10-20T14:35:41.937Z"
 }
