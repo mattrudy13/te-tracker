@@ -11,13 +11,16 @@ Live and working end to end:
   phone layout, injury tags. Compare was removed on request.
 - Workflows: `update-data.yml` (ESPN every 3 h Thu–Mon + Tue → grade picks), `snapshot-odds.yml`
   (Thu 15:00 / Sun 08:00 UTC: build → odds → record picks), `check-assets.yml` (stamp check on push).
-  `ODDS_API_KEY` secret is set. **339 credits left** after the Oct 11 snapshot (~45 per snapshot; enough for October).
+  `ODDS_API_KEY` secret is set. **297 credits left** after the Oct 15 snapshot (~45 per snapshot; enough for October).
 - Snapshot cron moved earlier on 2026-10-13 (was Thu 21:00 / Sun 12:00 UTC) because GitHub started both runs
   4–5 h late (Thu Oct 8 at 01:02 UTC, after TNF kickoff; Sun Oct 11 at 16:52 UTC, 8 minutes before 1 PM).
-  Check the start times of the Oct 15 and Oct 18 runs (`gh run list --workflow snapshot-odds.yml`).
+  Still late after the move: Thu Oct 15 started 18:52 UTC (3 h 52 m late), Sun Oct 18 at 12:25 UTC
+  (4 h 25 m late, still before the 1 PM games). Both succeeded.
 - Week 5 is graded (first graded week). Official bets 7–17, −4.80 units (−20% ROI), CLV −0.4; unique bets
   4–14, −6.40 units. Longshots and First TD value both 0–5. Fades: 1 of 3 scored (market expected 1.1, model 0.6).
   One week is noise; don't tune anything on it.
+- Week 6 graded 2026-10-20: official bets (fades excluded) 4–22 with 2 ungraded, −6.20 units. Season so far
+  11–39, −11.0 units (−22% ROI). Still too few to tune on; the rule review stays at week 9.
 
 Changed 2026-10-13 (all pushed; Thursday Oct 15's snapshot is the first live run of everything below):
 - Track record: Total and Unique bets rows (unique = one per week, player and market), $10 bets / $10 units
