@@ -1,7 +1,24 @@
-# te-tracker
+# NFL tight end touchdown forecasts
 
-NFL tight end usage, touchdown odds and betting picks through the season. A static site on GitHub
-Pages: https://mattrudy13.github.io/te-tracker/
+Estimates each NFL tight end's chance to score a touchdown from usage data, compares it with sportsbook
+prices, and grades the picks after the games.
+
+**Site:** https://mattrudy13.github.io/te-tracker/
+
+## At a glance
+
+- **What it does:** reads every game's box score and play-by-play, measures each tight end's usage
+  (targets, target share, red-zone targets by distance), and turns that into an anytime and first-TD
+  chance. Picks in six categories are recorded from live odds before kickoff and graded afterward.
+- **How it's checked:** the model was calibrated against de-vigged market prices (the error fell from
+  11.2 to 6.4 percentage points on the first snapshot). Rules that leave players out are tracked in
+  separate "shadow" records, so what each rule costs is measured rather than assumed.
+- **Live record (as of Oct 21, 2026):** 11–39 on 50 official picks over weeks 5–6, −11.0 units (−22% ROI).
+  Most picks are long odds, so two weeks says little; the rules are reviewed after week 9.
+- **Built with:** JavaScript (Node), GitHub Actions on a schedule, GitHub Pages, ESPN's public API and
+  The Odds API.
+
+## Details
 
 - **Best Bets** (`index.html`, the home page): this week's TD picks in six categories: most likely to
   score, best value, longshots, due for a TD, fades, and first-TD value. Each pick shows the best price, model %, market %, edge,
