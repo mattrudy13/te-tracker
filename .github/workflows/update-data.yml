@@ -32,8 +32,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+      # The season input goes through env, not ${{ }} in the script, so it can't inject shell commands.
+      # Unquoted on purpose: a blank input passes no argument (current season).
       - name: Build data
-        run: node scripts/build-data.mjs ${{ inputs.season }}
+        env:
+          SEASON: ${{ inputs.season }}
+        run: node scripts/build-data.mjs $SEASON
       - name: Grade best-bets picks
         run: node scripts/grade-picks.mjs
       - name: Commit if changed
