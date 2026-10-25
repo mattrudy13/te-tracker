@@ -1908,7 +1908,10 @@
      "ev": 10.5,
      "why": "7 RZ tgt (2 inside 5) · 3 TD vs 2.6 xTD · team 20.3 pts · PIT allows 3 TE TD in 6 (14th-most)",
      "takenAt": "2026-10-25T12:55:54.934Z",
-     "oddsAt": "2026-10-25T12:55:54.829Z"
+     "oddsAt": "2026-10-25T12:55:54.829Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -1992,7 +1995,10 @@
      "openPrice": 800,
      "openBook": "DraftKings",
      "openMarketProb": 0.1292,
-     "openOddsAt": "2026-10-22T19:02:54.785Z"
+     "openOddsAt": "2026-10-22T19:02:54.785Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -2354,5 +2360,5 @@
   }
  },
  "updated": "2026-10-25T12:55:54.934Z",
- "graded": "2026-10-23T08:06:26.395Z"
+ "graded": "2026-10-25T17:59:29.107Z"
 }
