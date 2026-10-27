@@ -2202,7 +2202,10 @@
      "openPrice": 210,
      "openBook": "DraftKings",
      "openMarketProb": 0.3391,
-     "openOddsAt": "2026-10-22T19:02:54.785Z"
+     "openOddsAt": "2026-10-22T19:02:54.785Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -2444,5 +2447,5 @@
   }
  },
  "updated": "2026-10-25T12:55:54.934Z",
- "graded": "2026-10-26T08:18:03.477Z"
+ "graded": "2026-10-27T15:38:25.135Z"
 }
