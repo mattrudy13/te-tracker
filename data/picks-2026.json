@@ -2517,7 +2517,10 @@
      "ev": -2.8,
      "why": "8 RZ tgt (3 inside 5) · 2 TD vs 2.9 xTD · team 25.0 pts · CAR allows 4 TE TD in 6 (10th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": true,
+     "profit": 195
     },
     {
      "cat": "likely",
@@ -3053,5 +3056,5 @@
   }
  },
  "updated": "2026-10-29T20:03:42.347Z",
- "graded": "2026-10-27T15:38:25.135Z"
+ "graded": "2026-10-30T09:18:52.031Z"
 }
