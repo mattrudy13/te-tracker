@@ -2877,7 +2877,10 @@
      "ev": -35.6,
      "why": "5 RZ tgt · 2 TD vs 1.6 xTD · team 25.3 pts · MIA allows 6 TE TD in 6 (4th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -2895,7 +2898,10 @@
      "ev": -24.7,
      "why": "3 RZ tgt · 2 TD vs 1.1 xTD · team 21.0 pts · DEN allows 4 TE TD in 7 (13th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -3062,7 +3068,10 @@
      "ev": -28.2,
      "why": "3 RZ tgt · 2 TD vs 1.0 xTD · team 17.3 pts · WSH allows 8 TE TD in 6 (2nd-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "longshot",
@@ -3082,7 +3091,10 @@
      "ev": 38,
      "why": "3 RZ tgt (1 inside 5) · 2 TD vs 1.1 xTD · team 19.5 pts · KC allows 4 TE TD in 6 (11th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": true,
+     "profit": 2200
     },
     {
      "cat": "longshot",
@@ -3134,5 +3146,5 @@
   }
  },
  "updated": "2026-10-29T20:03:42.347Z",
- "graded": "2026-11-02T00:03:42.055Z"
+ "graded": "2026-11-02T10:18:56.774Z"
 }
