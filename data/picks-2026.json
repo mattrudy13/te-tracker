@@ -2463,7 +2463,10 @@
      "ev": 0.4,
      "why": "17 RZ tgt (4 inside 5) · 4 TD vs 5.9 xTD · team 23.8 pts · DAL allows 3 TE TD in 7 (19th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": true,
+     "profit": 95.24
     },
     {
      "cat": "likely",
@@ -2481,7 +2484,10 @@
      "ev": -15.1,
      "why": "7 RZ tgt (1 inside 5) · 3 TD vs 2.4 xTD · team 22.0 pts · NYJ allows 1 TE TD in 7 (28th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": true,
+     "profit": 115
     },
     {
      "cat": "likely",
@@ -2499,7 +2505,10 @@
      "ev": 27.6,
      "why": "10 RZ tgt (2 inside 5) · 3 TD vs 3.4 xTD · team 24.8 pts · MIN allows 0 TE TD in 6 (31st-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "likely",
@@ -2538,7 +2547,10 @@
      "ev": 26,
      "why": "4 RZ tgt (1 inside 5) · 3 TD vs 1.8 xTD · team 18.3 pts · JAX allows 4 TE TD in 6 (9th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -2556,7 +2568,10 @@
      "ev": 27.6,
      "why": "10 RZ tgt (2 inside 5) · 3 TD vs 3.4 xTD · team 24.8 pts · MIN allows 0 TE TD in 6 (31st-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -2574,7 +2589,10 @@
      "ev": 26,
      "why": "4 RZ tgt (1 inside 5) · 3 TD vs 1.8 xTD · team 18.3 pts · JAX allows 4 TE TD in 6 (9th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -2592,7 +2610,10 @@
      "ev": 3.5,
      "why": "7 RZ tgt (1 inside 5) · 2 TD vs 2.1 xTD · team 21.8 pts · DET allows 10 TE TD in 6 (1st-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": true,
+     "profit": 285
     },
     {
      "cat": "value",
@@ -2610,7 +2631,10 @@
      "ev": 2.8,
      "why": "5 RZ tgt (3 inside 5) · 5 TD vs 2.1 xTD · team 29.0 pts · TEN allows 3 TE TD in 7 (17th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": true,
+     "profit": 300
     },
     {
      "cat": "value",
@@ -2628,7 +2652,10 @@
      "ev": 1.9,
      "why": "5 RZ tgt (2 inside 5) · 4 TD vs 2.1 xTD · team 21.5 pts · CLE allows 4 TE TD in 7 (12th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": true,
+     "profit": 350
     },
     {
      "cat": "longshot",
@@ -2646,7 +2673,10 @@
      "ev": 39.8,
      "why": "2 RZ tgt (1 inside 5) · 1 TD vs 0.8 xTD · team 25.8 pts · BUF allows 1 TE TD in 6 (27th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -2664,7 +2694,10 @@
      "ev": 20.5,
      "why": "1 RZ tgt (1 inside 5) · 1 TD vs 0.5 xTD · team 21.0 pts · TB allows 5 TE TD in 7 (8th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -2682,7 +2715,10 @@
      "ev": 18.7,
      "why": "4 RZ tgt (2 inside 5) · 2 TD vs 1.6 xTD · team 26.0 pts · LAC allows 1 TE TD in 6 (26th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -2700,7 +2736,10 @@
      "ev": 16.7,
      "why": "1 RZ tgt · 0 TD vs 0.3 xTD · team 18.3 pts · JAX allows 4 TE TD in 6 (9th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -2718,7 +2757,10 @@
      "ev": 12.8,
      "why": "6 RZ tgt · 1 TD vs 1.5 xTD · team 19.5 pts · LAR allows 1 TE TD in 7 (30th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -2754,7 +2796,10 @@
      "ev": 0.4,
      "why": "17 RZ tgt (4 inside 5) · 4 TD vs 5.9 xTD · team 23.8 pts · DAL allows 3 TE TD in 7 (19th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": true,
+     "profit": 95.24
     },
     {
      "cat": "due",
@@ -2772,7 +2817,10 @@
      "ev": 0,
      "why": "5 RZ tgt (2 inside 5) · 1 TD vs 2.2 xTD · team 25.8 pts · BUF allows 1 TE TD in 6 (27th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -2790,7 +2838,10 @@
      "ev": -18,
      "why": "3 RZ tgt · 0 TD vs 1.1 xTD · team 23.5 pts · ATL allows 4 TE TD in 7 (15th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -2862,7 +2913,10 @@
      "ev": -15.1,
      "why": "7 RZ tgt (1 inside 5) · 3 TD vs 2.4 xTD · team 22.0 pts · NYJ allows 1 TE TD in 7 (28th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": true,
+     "profit": null
     },
     {
      "cat": "first",
@@ -2880,7 +2934,10 @@
      "ev": 63.3,
      "why": "17 RZ tgt (4 inside 5) · 4 TD vs 5.9 xTD · team 23.8 pts · DAL allows 3 TE TD in 7 (19th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -2898,7 +2955,10 @@
      "ev": 28.9,
      "why": "10 RZ tgt (2 inside 5) · 3 TD vs 3.4 xTD · team 24.8 pts · MIN allows 0 TE TD in 6 (31st-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -2916,7 +2976,10 @@
      "ev": 22.9,
      "why": "5 RZ tgt (2 inside 5) · 1 TD vs 2.2 xTD · team 25.8 pts · BUF allows 1 TE TD in 6 (27th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -2934,7 +2997,10 @@
      "ev": 21.3,
      "why": "4 RZ tgt (2 inside 5) · 2 TD vs 1.6 xTD · team 26.0 pts · LAC allows 1 TE TD in 6 (26th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -2952,7 +3018,10 @@
      "ev": 14.4,
      "why": "7 RZ tgt (1 inside 5) · 2 TD vs 2.1 xTD · team 21.8 pts · DET allows 10 TE TD in 6 (1st-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "fade",
@@ -2971,7 +3040,10 @@
      "ev": -22.8,
      "why": "2 RZ tgt (1 inside 5) · 1 TD vs 1.2 xTD · team 26.0 pts · LAC allows 1 TE TD in 6 (26th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -3030,7 +3102,10 @@
      "ev": 35,
      "why": "2 RZ tgt (1 inside 5) · 1 TD vs 0.7 xTD · team 23.5 pts · LV allows 8 TE TD in 7 (3rd-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -3050,11 +3125,14 @@
      "ev": 76.5,
      "why": "4 RZ tgt (1 inside 5) · 3 TD vs 1.8 xTD · team 18.3 pts · JAX allows 4 TE TD in 6 (9th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     }
    ]
   }
  },
  "updated": "2026-10-29T20:03:42.347Z",
- "graded": "2026-10-30T09:18:52.031Z"
+ "graded": "2026-11-02T00:03:42.055Z"
 }
