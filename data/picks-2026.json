@@ -2778,7 +2778,10 @@
      "ev": 0.3,
      "why": "7 RZ tgt (2 inside 5) · 1 TD vs 2.2 xTD · team 24.8 pts · CHI allows 3 TE TD in 7 (18th-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -2859,7 +2862,10 @@
      "ev": -1.1,
      "why": "10 RZ tgt (2 inside 5) · 2 TD vs 3.0 xTD · team 21.8 pts · SEA allows 2 TE TD in 7 (22nd-most)",
      "takenAt": "2026-10-29T20:03:42.347Z",
-     "oddsAt": "2026-10-29T20:03:42.314Z"
+     "oddsAt": "2026-10-29T20:03:42.314Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "fade",
@@ -3146,5 +3152,5 @@
   }
  },
  "updated": "2026-10-29T20:03:42.347Z",
- "graded": "2026-11-02T10:18:56.774Z"
+ "graded": "2026-11-03T17:27:12.085Z"
 }
