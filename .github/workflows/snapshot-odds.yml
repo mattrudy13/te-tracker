@@ -8,7 +8,14 @@ on:
     # so these leave room for that before TNF and the Sunday London games (13:30 UTC).
     - cron: "0 15 * 9-12,1-2 4"
     - cron: "0 8 * 9-12,1-2 0"
+  # hub's cron Worker (hub/worker) also starts this at Thu 10:20 AM and Sun 3:20 AM ET, with
+  # source=worker, because GitHub's schedule runs hours late. Run it by hand with source left blank.
   workflow_dispatch:
+    inputs:
+      source:
+        description: "Leave blank. The cron Worker sets 'worker' so a doubled run is skipped."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -30,15 +37,35 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+      # The Worker and GitHub's cron both start this job. Each snapshot costs ~45 credits (500 a month),
+      # so whichever comes second skips if the last snapshot is under 12 h old. Manual runs always go.
+      - name: Skip if a snapshot was just taken
+        id: guard
+        if: github.event_name == 'schedule' || inputs.source == 'worker'
+        run: |
+          node -e '
+            const fs = require("fs");
+            const { current } = JSON.parse(fs.readFileSync("data/seasons.json", "utf8"));
+            let takenAt = null;
+            try { takenAt = JSON.parse(fs.readFileSync(`data/odds-${current}.json`, "utf8")).takenAt; } catch {}
+            const hours = takenAt ? (Date.now() - Date.parse(takenAt)) / 36e5 : Infinity;
+            const skip = hours < 12;
+            console.log(skip ? `Last snapshot ${hours.toFixed(1)} h ago (${takenAt}): skipping.` : `Last snapshot ${takenAt ?? "none"}: taking one.`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `skip=${skip}\n`);
+          '
       - name: Refresh stats and injuries
+        if: steps.guard.outputs.skip != 'true'
         run: node scripts/build-data.mjs
       - name: Fetch odds
+        if: steps.guard.outputs.skip != 'true'
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: node scripts/fetch-odds.mjs
       - name: Record best-bets picks
+        if: steps.guard.outputs.skip != 'true'
         run: node scripts/record-picks.mjs
       - name: Commit
+        if: steps.guard.outputs.skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

@@ -84,7 +84,9 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   schedule it more often without checking the quota (`x-requests-remaining` is logged). Players are matched
   by normalized name, then last name + first initial, among the two teams' TEs. The site shows odds only
   when the snapshot game's home/away match (`playerOdds()`), so stale weeks never leak. Test offline with
-  `--fixture`. Calls are spaced 1 s apart and a 429 (`EXCEEDED_FREQ_LIMIT`, not charged) is retried 4 times
+  `--fixture`. hub's cron Worker (`hub/worker`) also starts the snapshot on time (Thu 10:20 AM, Sun 3:20 AM ET,
+  `source=worker`); a scheduled or Worker run skips itself if the last snapshot is under 12 h old, manual runs
+  never do. Calls are spaced 1 s apart and a 429 (`EXCEEDED_FREQ_LIMIT`, not charged) is retried 4 times
   with backoff (2/5/10/20 s): one 429 killed the whole Nov 1, 2026 snapshot. To test retries, stub
   `globalThis.fetch` with `node --import` in a scratch copy.
 - Both workflows share the `update-data` concurrency group, check out the branch tip (`ref: ${{ github.ref }}`,
