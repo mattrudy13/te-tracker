@@ -35,14 +35,31 @@ if (!key && !fixture) {
   process.exit(1);
 }
 
+// The Odds API answers 429 EXCEEDED_FREQ_LIMIT when calls come too close together (it killed the
+// Nov 1, 2026 snapshot partway through). A 429 isn't charged, so pause between games and retry
+// with backoff instead of losing the whole snapshot.
+const GAP_MS = 1000;
+const RETRY_WAITS_MS = [2000, 5000, 10000, 20000];
+const sleep = (ms) => new Promise((r) => setTimeout(r, fixture ? 0 : ms));
+
 let remaining = null;
 async function api(pathAndQuery) {
   if (fixture) return fixture[pathAndQuery.startsWith("/events?") ? "events" : pathAndQuery.split("/")[2]];
   const url = `${API}${pathAndQuery}${pathAndQuery.includes("?") ? "&" : "?"}apiKey=${key}`;
-  const res = await fetch(url);
-  remaining = res.headers.get("x-requests-remaining") ?? remaining;
-  if (!res.ok) throw new Error(`${pathAndQuery}: HTTP ${res.status} ${await res.text()}`);
-  return res.json();
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url);
+    remaining = res.headers.get("x-requests-remaining") ?? remaining;
+    if (res.status === 429 && attempt < RETRY_WAITS_MS.length) {
+      const retryAfter = Number(res.headers.get("retry-after")) * 1000;
+      const wait = Math.max(retryAfter || 0, RETRY_WAITS_MS[attempt]);
+      console.warn(`${pathAndQuery.split("?")[0]}: HTTP 429, retrying in ${wait / 1000}s`);
+      await res.body?.cancel();
+      await sleep(wait);
+      continue;
+    }
+    if (!res.ok) throw new Error(`${pathAndQuery}: HTTP ${res.status} ${await res.text()}`);
+    return res.json();
+  }
 }
 
 const SUFFIX = /\s+(jr|sr|ii|iii|iv|v)\.?$/i;
@@ -106,6 +123,7 @@ async function main() {
       console.warn(`unknown team in ${ev.away_team} @ ${ev.home_team}`);
       continue;
     }
+    await sleep(GAP_MS);
     const odds = await api(`/events/${ev.id}/odds?regions=us&markets=${MARKETS.join(",")}&oddsFormat=american`);
     games[ev.id] = { home, away, commence: ev.commence_time, takenAt: new Date().toISOString() };
 
