@@ -3366,7 +3366,10 @@
      "ev": 43,
      "why": "2 RZ tgt (1 inside 5) · 1 TD vs 0.8 xTD · team 14.8 pts · JAX allows 4 TE TD in 7 (14th-most)",
      "takenAt": "2026-11-05T15:21:07.340Z",
-     "oddsAt": "2026-11-05T15:21:07.300Z"
+     "oddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "void",
+     "scored": null,
+     "profit": 0
     },
     {
      "cat": "longshot",
@@ -3474,7 +3477,10 @@
      "ev": 8.1,
      "why": "7 RZ tgt (2 inside 5) · 1 TD vs 2.5 xTD · team 14.8 pts · JAX allows 4 TE TD in 7 (14th-most)",
      "takenAt": "2026-11-05T15:21:07.340Z",
-     "oddsAt": "2026-11-05T15:21:07.300Z"
+     "oddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -3636,7 +3642,10 @@
      "ev": 33.5,
      "why": "7 RZ tgt (2 inside 5) · 1 TD vs 2.5 xTD · team 14.8 pts · JAX allows 4 TE TD in 7 (14th-most)",
      "takenAt": "2026-11-05T15:21:07.340Z",
-     "oddsAt": "2026-11-05T15:21:07.300Z"
+     "oddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -3697,5 +3706,5 @@
   }
  },
  "updated": "2026-11-05T15:21:07.340Z",
- "graded": "2026-11-03T17:27:12.085Z"
+ "graded": "2026-11-06T04:20:04.829Z"
 }
