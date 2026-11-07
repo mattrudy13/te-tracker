@@ -56,10 +56,25 @@ Next steps (details in ENHANCEMENTS.md):
    got 4 `noLine` rows, as expected, but it was processed ~10 h after the final, so the stat-record lag is
    still untested; check a Sunday game picked up by the first run after it ends. If a TE who played has no row, ESPN's per-game stat record wasn't
    posted yet when the build ran (`tookSnap()` treats 404 as no snap); delay processing if so.
-2. Score the model and books on every priced TE, each week, with the method above.
+2. Score the model and books on every priced TE, each week: `node scripts/score-model.mjs` (added 2026-11-07;
+   the method above, as a script). Still open: a calibration table on the site.
 3. Receptions projection vs the line (unlocks receptions picks).
-4. Around week 9: tune the category rules from the official, close-call and usage-cut records, judge fades by
-   the scored-vs-expected line, recheck the model constants, and retest the defense factor.
+4. **Rule tuning, reviewed 2026-11-07 on weeks 5–8; ship Tue Nov 10** (after week 9 is graded, before Thursday's
+   snapshot; changing it mid-week would switch rules under Sunday's re-picks). Rerun `score-model.mjs` and the
+   record with week 9 first, and recheck nothing flipped. Rudy approved all four:
+   - **First TD value → shadow-only** (0–22, −22 units; market expected ~1.1 wins, model 1.8). Still recorded and
+     graded, never official. Re-add after the first-TD model is calibrated (ENHANCEMENTS).
+   - **Longshots → shadow-only** (1–19, −8 units). Across all priced TEs at +400 and up, 16 of 263 scored vs 20.7
+     market and 18.1 model expected: books and model both overrate them (favorite–longshot bias). Under +200,
+     11 of 23 scored vs 8.6 expected, which is why Most likely is the only winner (10–9, +5.5 units).
+   - **Defense factor in the model**: λ × (opponent's TE TDs allowed per game, shrunk with 16 games of league
+     average) ÷ league average (`defK 16` in score-model.mjs). Brier 0.0963 → 0.0944 vs books 0.0959; better in
+     3 of 4 weeks. The Oct 6 test rejected it on fit to market prices, the wrong yardstick (it copies the books).
+     k16 over k8 (0.0939) on purpose: picked after seeing the data, so take the gentler one. Update the model.js note.
+   - **Constants unchanged**: prior rate, shrinkage, recent weight and floor variations all moved Brier ≤ 0.0007.
+   - Unchanged: Value (5–15, −0.6 units, about break-even), Due (7–15, −4 units, exactly what the market expected:
+     no edge, revisit), Fades (4 of 16 scored vs 5.9 market expected: working), usage rule (only 8 cut picks).
+   - Model edges don't pay yet: every TE with model − market > 3 pts went 8 for 53.
 
 ## Before every commit that touches model.js, common.js or style.css
 

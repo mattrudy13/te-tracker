@@ -21,7 +21,8 @@ Fantasy points are deliberately out of scope.
       official record, and show their results separately. After a few weeks this shows whether the
       category rules are too strict or too loose. It's the data needed to tune them (next item).
       Since 2026-10-13 players cut by the usage rule are a second shadow set with their own table.
-- [ ] **(new) Tune the category rules from results** (around week 9): thresholds like "+400 for
+- [~] **(new) Tune the category rules from results** (reviewed 2026-11-07, ships Tue Nov 10: First TD value and
+      Longshots go shadow-only, defense factor added; details in CLAUDE.md next steps). Original note: thresholds like "+400 for
       longshots", "TD − xTD ≤ −0.8" and "edge ≤ −8" were set by judgment. Check them against the
       official and shadow records. Also review the usage rule (2+ targets in the last 2 games) against the
       "Cut by the usage rule" table, and judge fades by faded players who scored vs market expected, not W–L.
@@ -57,7 +58,8 @@ Fantasy points are deliberately out of scope.
 - [ ] **Receptions picks**: over/under categories, once the receptions projection exists (see Receptions).
 
 ## Touchdown model
-- [~] **Score the model and the books against results**: Best Bets grades its own picks. Still open is the
+- [~] **Score the model and the books against results**: `scripts/score-model.mjs` (2026-11-07) does the
+      Brier / log loss / price-range part from git history; a page for it is still open. Best Bets grades its own picks. Still open is the
       full version: the model's TD % and book prices for *every* priced TE at each snapshot. After the games,
       show a calibration table (predicted vs actual), Brier score / log loss for model vs market, and ROI from
       betting every positive-edge TE. That's the honest test of whether Edge means anything. Nothing new has
@@ -73,7 +75,8 @@ Fantasy points are deliberately out of scope.
 - [ ] **Red-zone target share**: count every receiver's red-zone targets from play-by-play (not just
       TEs), so a TE's share of the team's red-zone looks can feed the model. That's a better signal than raw
       counts when teams differ in red-zone trips.
-- [~] **Defense vs TE touchdowns**: shown in each Best Bets reason. A model multiplier was tested and left
+- [~] **Defense vs TE touchdowns**: retested 2026-11-07 against results (not market fit): it helps (Brier
+      0.0963 → 0.0944), so it goes in on Tue Nov 10 with 16 games of shrinkage. Earlier: shown in each Best Bets reason. A model multiplier was tested and left
       out because it worsened the market fit after 4 weeks. Retest around week 9 with more data.
 - [ ] **Goal-line role**: flag TEs with targets or carries inside the 5 over the last few games. The sample
       is small, but those are the plays books seem to price hardest.
