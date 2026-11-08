@@ -3473,7 +3473,10 @@
      "openPrice": 2500,
      "openBook": "BetMGM",
      "openMarketProb": 0.041,
-     "openOddsAt": "2026-11-05T15:21:07.300Z"
+     "openOddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -3864,5 +3867,5 @@
   }
  },
  "updated": "2026-11-08T08:21:06.343Z",
- "graded": "2026-11-06T04:20:04.829Z"
+ "graded": "2026-11-08T19:14:39.747Z"
 }
