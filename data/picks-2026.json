@@ -3335,7 +3335,10 @@
      "openPrice": 230,
      "openBook": "BetRivers",
      "openMarketProb": 0.328,
-     "openOddsAt": "2026-11-05T15:21:07.300Z"
+     "openOddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -3407,7 +3410,10 @@
      "openPrice": 230,
      "openBook": "BetRivers",
      "openMarketProb": 0.328,
-     "openOddsAt": "2026-11-05T15:21:07.300Z"
+     "openOddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -3450,7 +3456,10 @@
      "ev": 6.4,
      "why": "8 RZ tgt (2 inside 5) · 1 TD vs 2.5 xTD · team 24.0 pts · ARI allows 6 TE TD in 8 (6th-most)",
      "takenAt": "2026-11-08T08:21:06.343Z",
-     "oddsAt": "2026-11-08T08:21:06.295Z"
+     "oddsAt": "2026-11-08T08:21:06.295Z",
+     "result": "won",
+     "scored": true,
+     "profit": 270
     },
     {
      "cat": "longshot",
@@ -3586,7 +3595,10 @@
      "openPrice": 275,
      "openBook": "DraftKings",
      "openMarketProb": 0.2822,
-     "openOddsAt": "2026-11-05T15:21:07.300Z"
+     "openOddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "won",
+     "scored": true,
+     "profit": 270
     },
     {
      "cat": "due",
@@ -3608,7 +3620,10 @@
      "openPrice": 250,
      "openBook": "BetMGM",
      "openMarketProb": 0.2899,
-     "openOddsAt": "2026-11-05T15:21:07.300Z"
+     "openOddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -3630,7 +3645,10 @@
      "openPrice": 230,
      "openBook": "BetRivers",
      "openMarketProb": 0.328,
-     "openOddsAt": "2026-11-05T15:21:07.300Z"
+     "openOddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -3652,7 +3670,10 @@
      "openPrice": 165,
      "openBook": "BetMGM",
      "openMarketProb": 0.3884,
-     "openOddsAt": "2026-11-05T15:21:07.300Z"
+     "openOddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -3670,7 +3691,10 @@
      "ev": -33.1,
      "why": "3 RZ tgt · 0 TD vs 1.1 xTD · team 20.8 pts · CHI allows 3 TE TD in 8 (18th-most)",
      "takenAt": "2026-11-08T08:21:06.343Z",
-     "oddsAt": "2026-11-08T08:21:06.295Z"
+     "oddsAt": "2026-11-08T08:21:06.295Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "fade",
@@ -3742,7 +3766,10 @@
      "openPrice": 195,
      "openBook": "FanDuel",
      "openMarketProb": 0.3448,
-     "openOddsAt": "2026-11-05T15:21:07.300Z"
+     "openOddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -3807,7 +3834,10 @@
      "openPrice": 1200,
      "openBook": "BetMGM",
      "openMarketProb": 0.0588,
-     "openOddsAt": "2026-11-05T15:21:07.300Z"
+     "openOddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -3867,7 +3897,10 @@
      "ev": 22.9,
      "why": "9 RZ tgt (3 inside 5) · 3 TD vs 3.1 xTD · team 20.5 pts · NE allows 2 TE TD in 8 (26th-most)",
      "takenAt": "2026-11-08T08:21:06.343Z",
-     "oddsAt": "2026-11-08T08:21:06.295Z"
+     "oddsAt": "2026-11-08T08:21:06.295Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "fade",
@@ -3886,7 +3919,10 @@
      "ev": -32.1,
      "why": "5 RZ tgt (2 inside 5) · 2 TD vs 1.8 xTD · team 24.0 pts · GB allows 2 TE TD in 8 (23rd-most)",
      "takenAt": "2026-11-08T08:21:06.343Z",
-     "oddsAt": "2026-11-08T08:21:06.295Z"
+     "oddsAt": "2026-11-08T08:21:06.295Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "longshot",
@@ -3915,5 +3951,5 @@
   }
  },
  "updated": "2026-11-08T08:21:06.343Z",
- "graded": "2026-11-09T00:21:23.487Z"
+ "graded": "2026-11-09T10:39:26.387Z"
 }
