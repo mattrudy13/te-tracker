@@ -3531,7 +3531,10 @@
      "openPrice": 750,
      "openBook": "DraftKings",
      "openMarketProb": 0.1333,
-     "openOddsAt": "2026-11-05T15:21:07.300Z"
+     "openOddsAt": "2026-11-05T15:21:07.300Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -3787,7 +3790,10 @@
      "ev": -16.7,
      "why": "8 RZ tgt (1 inside 5) · 3 TD vs 2.4 xTD · team 20.3 pts · BUF allows 1 TE TD in 7 (29th-most)",
      "takenAt": "2026-11-08T08:21:06.343Z",
-     "oddsAt": "2026-11-08T08:21:06.295Z"
+     "oddsAt": "2026-11-08T08:21:06.295Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "first",
@@ -3951,5 +3957,5 @@
   }
  },
  "updated": "2026-11-08T08:21:06.343Z",
- "graded": "2026-11-09T10:39:26.387Z"
+ "graded": "2026-11-10T17:24:38.849Z"
 }
