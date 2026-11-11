@@ -41,7 +41,7 @@
       <div class="cat-head">
         <div>
           <h2>Track record</h2>
-          <p>Every pick is saved at the odds snapshot and locks at kickoff, then gets graded after the game. Each pick is a $10 bet at the listed price; <b>Units</b> is total profit in $10 units. <b>Total</b> adds up every category, so a player picked in three categories counts three times. <b>Unique bets</b> counts each player once per market (anytime TD, first TD) each week, which is what you'd have bet at the book. <b>CLV</b> (closing-line value) is how many percentage points the market's chance moved toward the pick, on average, between the first odds snapshot that had it and the last one before kickoff. Steady positive CLV means the picks are finding prices before the books move, a faster sign of a real edge than wins and losses. Picks seen at only one snapshot (like Thursday games) aren't counted.</p>
+          <p>Every pick is saved at the odds snapshot and locks at kickoff, then gets graded after the game. Each pick is a $10 bet at the listed price; <b>Units</b> is total profit in $10 units. <b>Total</b> adds up every category, so a player picked in three categories counts three times. <b>Unique bets</b> counts each player once per week, which is what you'd have bet at the book. <b>CLV</b> (closing-line value) is how many percentage points the market's chance moved toward the pick, on average, between the first odds snapshot that had it and the last one before kickoff. Steady positive CLV means the picks are finding prices before the books move, a faster sign of a real edge than wins and losses. Picks seen at only one snapshot (like Thursday games) aren't counted.</p>
         </div>
       </div>
       <div class="table-wrap tight" style="margin-top:.75rem"><div id="record"></div></div>
@@ -57,7 +57,10 @@
       <span class="cc">CC</span> rows are <b>close calls</b>: the next-best players, shown in lighter text to fill a category to five when
       fewer meet its rule. They aren't official picks. They're graded in a separate shadow record, which shows whether
       the rules are too strict or too loose, and never count toward the official record.
-      Longshots and First TD value also require at least 2 targets in the team's last 2 games. Players that rule cuts from the
+      <b>Longshots</b> and <b>First TD value</b> are <b>tracking only</b> since week 10: in weeks 5–9 they went 1–24 and 0–27, so they
+      are no longer official picks. Their rules still run every week and the results go in their own <b>Tracking only</b> table
+      (which also holds their week 5–9 picks), so the record shows when they start working again.
+      Both also require at least 2 targets in the team's last 2 games. Players that rule cuts from the
       top five are graded in their own shadow table, <b>Cut by the usage rule</b>, which shows whether the rule is costing winners.
       Grading: a pick wins if the player scores a receiving or rushing TD. A player who didn't play is voided, the way books handle
       inactive players. A player who played but never caught a pass counts as a loss.
@@ -72,7 +75,7 @@
     <footer>Data from ESPN and The Odds API. Regular season only.</footer>
   </main>
 
-  <script src="model.js?v=721cd5c8"></script>
+  <script src="model.js?v=3830f7f6"></script>
   <script src="common.js?v=7c817432"></script>
   <script>
     const $ = (id) => document.getElementById(id);
@@ -91,10 +94,11 @@
 
     function pickRow(p, i) {
       if (p.close) return closeRow(p);
+      // Tracking-only picks keep their rank but read lighter, like close calls: they aren't official.
       const player = data.players[p.playerId];
       const a = { id: p.playerId, player: player ?? { name: p.name } };
       const when = new Date(p.kickoff).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
-      return `<tr>
+      return `<tr${p.tracking ? ` class="close"` : ""}>
         <td class="rank">${i + 1}</td>
         <td class="l"><div class="who">${headshot(player, 36)}<div>${playerLink(a)} <small>${teamChip(data, p.team)} ${p.home ? "vs" : "@"} ${esc(p.opp)} · ${esc(when)}</small><span class="why">${esc(p.why ?? "")}</span></div></div></td>
         <td class="key">${p.price != null ? americanText(p.price) : `<span class="muted">no line</span>`}${p.book ? `<small class="why" style="max-width:none">${esc(p.book)}</small>` : ""}</td>
@@ -127,10 +131,13 @@
         const savedClose = picks.filter((p) => p.cat === c.key && p.shadow && !p.excluded);
         const pool = source === "saved" ? savedClose : close[c.key] ?? [];
         const fill = pool.filter((p) => !ids.has(p.playerId)).slice(0, Math.max(0, PICKS_PER_CATEGORY - real.length));
-        const rows = [...real, ...fill.map((p) => ({ ...p, cat: c.key, close: true }))];
+        // A paused category shows the picks its rule would make, marked tracking only, with no close calls.
+        const tracked = picks.filter((p) => p.cat === c.key && p.excluded === "paused").map((p) => ({ ...p, tracking: true }));
+        const rows = c.paused ? tracked : [...real, ...fill.map((p) => ({ ...p, cat: c.key, close: true }))];
         const anyResult = rows.some((p) => p.result);
         return `<section class="card">
-          <div class="cat-head"><div><h2>${esc(c.label)}</h2><p>${esc(c.blurb)}</p></div></div>
+          <div class="cat-head"><div><h2>${esc(c.label)}${c.paused ? ` <span class="cc">Tracking only</span>` : ""}</h2><p>${esc(c.blurb)}</p>${
+            c.paused ? `<p><b>Not official picks.</b> ${esc(c.paused)}</p>` : ""}</div></div>
           ${rows.length
             ? `<div class="table-wrap tight" style="margin-top:.6rem"><table class="grid"><thead><tr>
                 <th class="rank">#</th><th class="l">Player</th><th>Book</th><th>Model</th>
@@ -147,12 +154,16 @@
       const graded = all.filter((p) => p.result && !p.shadow);
       const shadow = all.filter((p) => p.result && p.shadow && !p.excluded);
       const excluded = all.filter((p) => p.result && p.excluded === "usage");
-      if (!graded.length && !shadow.length && !excluded.length) {
+      const paused = all.filter((p) => p.result && p.excluded === "paused");
+      const pausedKeys = BET_CATEGORIES.filter((c) => c.paused).map((c) => c.key);
+      const officialKeys = BET_CATEGORIES.filter((c) => !c.paused).map((c) => c.key);
+      if (!graded.length && !shadow.length && !excluded.length && !paused.length) {
         $("record").innerHTML = `<p class="muted">No graded picks yet. Results appear after this week's games are final.</p>`;
         $("recent").innerHTML = "";
         return;
       }
-      $("record").innerHTML = recordTable(graded, "Official picks") + (shadow.length ? recordTable(shadow, "Close calls (shadow record, not official)") : "") +
+      $("record").innerHTML = recordTable(graded, "Official picks", officialKeys) + (shadow.length ? recordTable(shadow, "Close calls (shadow record, not official)", officialKeys) : "") +
+        (paused.length ? recordTable(paused, "Tracking only: Longshots and First TD value (not official)", pausedKeys) : "") +
         (excluded.length ? recordTable(excluded, "Cut by the usage rule (shadow record, not official)", ["longshot", "first"]) : "");
       if (!graded.length) {
         $("recent").innerHTML = "";
@@ -257,13 +268,16 @@
           const at = saved.map((p) => p.oddsAt ?? p.takenAt).filter(Boolean).sort().at(-1);
           $("asof").textContent = at ? `Odds as of ${new Date(at).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })}.` : "";
         } else {
-          picks = Object.entries(live.cats).flatMap(([cat, rows]) => rows.map((p) => ({ ...p, cat })));
+          picks = [
+            ...Object.entries(live.cats).flatMap(([cat, rows]) => rows.map((p) => ({ ...p, cat }))),
+            ...Object.entries(live.paused).flatMap(([cat, rows]) => rows.map((p) => ({ ...p, cat, shadow: true, excluded: "paused" }))),
+          ];
           source = "live";
           $("asof").textContent = data.odds ? `${oddsAsOf(data)}.` : "";
           $("banner").hidden = false;
           $("banner").innerHTML = live.priced
             ? `<b>Preview.</b> These picks become official (and get graded) at the next odds snapshot: Thursday late morning and early Sunday morning (ET).`
-            : `<b>Lines aren't up yet.</b> Sportsbooks post most TE props midweek, so the price-based picks fill in after Thursday's 5 PM ET snapshot. "Most likely to score" below uses the model alone.`;
+            : `<b>Lines aren't up yet.</b> Sportsbooks post most TE props midweek, so the price-based picks fill in after Thursday's late-morning (ET) snapshot. "Most likely to score" below uses the model alone.`;
         }
         renderCats(week, picks, source, live.closeCalls);
         renderRecord();

@@ -273,6 +273,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4383440",
      "name": "Nate Adkins",
      "team": "DEN",
@@ -298,6 +300,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4036131",
      "name": "Noah Fant",
      "team": "NO",
@@ -323,6 +327,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "2975674",
      "name": "Robert Tonyan",
      "team": "PIT",
@@ -348,6 +354,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "2975863",
      "name": "Eric Saubert",
      "team": "SEA",
@@ -373,6 +381,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4361372",
      "name": "Jeremy Ruckert",
      "team": "NYJ",
@@ -569,6 +579,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4383440",
      "name": "Nate Adkins",
      "team": "DEN",
@@ -594,6 +606,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4036131",
      "name": "Noah Fant",
      "team": "NO",
@@ -619,6 +633,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4430027",
      "name": "Sam LaPorta",
      "team": "DET",
@@ -644,6 +660,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "2573401",
      "name": "Tyler Higbee",
      "team": "LAR",
@@ -669,6 +687,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4576297",
      "name": "AJ Barner",
      "team": "SEA",
@@ -814,6 +834,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4576297",
      "name": "AJ Barner",
      "team": "SEA",
@@ -1092,6 +1114,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4374045",
      "name": "Teagan Quitoriano",
      "team": "ARI",
@@ -1117,6 +1141,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "3843945",
      "name": "Foster Moreau",
      "team": "HOU",
@@ -1142,6 +1168,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "3930086",
      "name": "Dawson Knox",
      "team": "BUF",
@@ -1167,6 +1195,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4683243",
      "name": "Mitchell Evans",
      "team": "CAR",
@@ -1192,6 +1222,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4831959",
      "name": "Eli Raridon",
      "team": "NE",
@@ -1434,6 +1466,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4361307",
      "name": "Trey McBride",
      "team": "ARI",
@@ -1459,6 +1493,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "3929645",
      "name": "Juwan Johnson",
      "team": "NO",
@@ -1484,6 +1520,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4432665",
      "name": "Brock Bowers",
      "team": "LV",
@@ -1509,6 +1547,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4429086",
      "name": "Michael Mayer",
      "team": "LV",
@@ -1530,6 +1570,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4361050",
      "name": "Isaiah Likely",
      "team": "NYG",
@@ -1942,6 +1984,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4374045",
      "name": "Teagan Quitoriano",
      "team": "ARI",
@@ -1967,6 +2011,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4362523",
      "name": "Will Mallory",
      "team": "IND",
@@ -1992,6 +2038,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "3843945",
      "name": "Foster Moreau",
      "team": "HOU",
@@ -2013,6 +2061,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4036131",
      "name": "Noah Fant",
      "team": "NO",
@@ -2038,6 +2088,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4876132",
      "name": "Josh Cuevas",
      "team": "BAL",
@@ -2301,6 +2353,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4362523",
      "name": "Will Mallory",
      "team": "IND",
@@ -2326,6 +2380,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4361050",
      "name": "Isaiah Likely",
      "team": "NYG",
@@ -2351,6 +2407,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4430027",
      "name": "Sam LaPorta",
      "team": "DET",
@@ -2376,6 +2434,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4361307",
      "name": "Trey McBride",
      "team": "ARI",
@@ -2397,6 +2457,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4572680",
      "name": "Tucker Kraft",
      "team": "GB",
@@ -2659,6 +2721,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4876132",
      "name": "Josh Cuevas",
      "team": "BAL",
@@ -2680,6 +2744,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4249624",
      "name": "Nick Muse",
      "team": "ATL",
@@ -2701,6 +2767,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4426553",
      "name": "Davis Allen",
      "team": "LAR",
@@ -2722,6 +2790,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4362523",
      "name": "Will Mallory",
      "team": "IND",
@@ -2743,6 +2813,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4595342",
      "name": "Oronde Gadsden",
      "team": "LAC",
@@ -2932,6 +3004,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4361307",
      "name": "Trey McBride",
      "team": "ARI",
@@ -2953,6 +3027,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4430027",
      "name": "Sam LaPorta",
      "team": "DET",
@@ -2974,6 +3050,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "3116365",
      "name": "Mark Andrews",
      "team": "BAL",
@@ -2995,6 +3073,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4426553",
      "name": "Davis Allen",
      "team": "LAR",
@@ -3016,6 +3096,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4036133",
      "name": "T.J. Hockenson",
      "team": "MIN",
@@ -3154,6 +3236,8 @@
    "picks": [
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4876132",
      "name": "Josh Cuevas",
      "team": "BAL",
@@ -3169,9 +3253,9 @@
      "why": "2 RZ tgt (1 inside 5) · 1 TD vs 0.8 xTD · team 14.8 pts · JAX allows 4 TE TD in 7 (14th-most)",
      "takenAt": "2026-11-05T15:21:07.340Z",
      "oddsAt": "2026-11-05T15:21:07.300Z",
-     "result": "void",
-     "scored": null,
-     "profit": 0
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -3196,6 +3280,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "3116365",
      "name": "Mark Andrews",
      "team": "BAL",
@@ -3463,6 +3549,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4362523",
      "name": "Will Mallory",
      "team": "IND",
@@ -3488,6 +3576,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4249624",
      "name": "Nick Muse",
      "team": "ATL",
@@ -3513,6 +3603,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "3930086",
      "name": "Dawson Knox",
      "team": "BUF",
@@ -3538,6 +3630,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "5083315",
      "name": "Kenyon Sadiq",
      "team": "NYJ",
@@ -3559,6 +3653,8 @@
     },
     {
      "cat": "longshot",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4036131",
      "name": "Noah Fant",
      "team": "NO",
@@ -3797,6 +3893,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4431459",
      "name": "Tyler Warren",
      "team": "IND",
@@ -3822,6 +3920,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4361307",
      "name": "Trey McBride",
      "team": "ARI",
@@ -3847,6 +3947,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4429086",
      "name": "Michael Mayer",
      "team": "LV",
@@ -3868,6 +3970,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4361050",
      "name": "Isaiah Likely",
      "team": "NYG",
@@ -3889,6 +3993,8 @@
     },
     {
      "cat": "first",
+     "shadow": true,
+     "excluded": "paused",
      "playerId": "4572680",
      "name": "Tucker Kraft",
      "team": "GB",
@@ -3957,5 +4063,5 @@
   }
  },
  "updated": "2026-11-08T08:21:06.343Z",
- "graded": "2026-11-10T17:24:38.849Z"
+ "graded": "2026-11-11T16:13:31.159Z"
 }

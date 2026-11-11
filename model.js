@@ -136,9 +136,23 @@ function isOut(player) {
   return !!player?.injury && OUT_STATUS.test(player.injury.status ?? "");
 }
 
-// Defense vs TE TDs was tested as a matchup multiplier on 2026-10-06 and left out: after 4 weeks
-// it's mostly noise and made the model's fit to the market worse at every strength tried
-// (RMSE 6.39 -> 6.58..7.19). Revisit mid-season; defense context is still shown in Best Bets.
+// Opponent multiplier: the TE TDs a defense allows per game, relative to the league average.
+// Each defense is shrunk toward the average with DEF_SHRINK_GAMES games of league-average play, so
+// after 9 games a defense's own record carries about a third of the weight.
+// History: tested 2026-10-06 and left out because it worsened the fit to market prices. That was the
+// wrong yardstick (it rewards copying the books). Scored against results on weeks 5-9 (465 priced TE
+// games, scripts/score-model.mjs) it lowers the Brier score from 0.0950 to 0.0935 (books 0.0948) and
+// is better in 4 of 5 weeks. 8 games of shrinkage scored a hair better (0.0933), but the choice was
+// made after seeing the data, so the gentler 16 is used. DEF_POWER 0 turns the factor off.
+const DEF_SHRINK_GAMES = 16;
+const DEF_POWER = 1;
+function defenseTdFactor(data) {
+  const def = Object.values(defenseVsTe(data).byTeam);
+  const gp = def.reduce((s, d) => s + d.gp, 0);
+  const avg = gp ? def.reduce((s, d) => s + d.td, 0) / gp : 0;
+  if (!avg) return {};
+  return Object.fromEntries(def.map((d) => [d.team, Math.pow((d.td + DEF_SHRINK_GAMES * avg) / (d.gp + DEF_SHRINK_GAMES) / avg, DEF_POWER)]));
+}
 
 // Expected TDs per game over `games`, shrunk toward the player's volume-only baseline.
 function shrunkXtdPg(model, games, tgtPg) {
@@ -156,6 +170,7 @@ function tdOdds(data) {
   const teamWeeks = {};
   for (const g of data.games) (teamWeeks[g.team] ??= new Set()).add(g.week);
   const last2 = Object.fromEntries(Object.entries(teamWeeks).map(([t, w]) => [t, new Set([...w].sort((a, b) => a - b).slice(-2))]));
+  const defFactor = defenseTdFactor(data);
   const rows = [];
   for (const a of aggregate(data, data.games)) {
     const p = a.player;
@@ -170,7 +185,7 @@ function tdOdds(data) {
     const rush = a.rushTd / a.gp;
     const base = Math.max(MIN_XTD_PG, (a.gp >= 3 ? (1 - RECENT_WEIGHT) * season + RECENT_WEIGHT * recentPg : season) + 0.5 * rush);
     const scale = u.implied ? u.implied / model.avgImplied : 1;
-    const lambda = base * scale;
+    const lambda = base * scale * (defFactor[u.opp] ?? 1);
     const missedLast = (lastTeamWeek[team] ?? 0) > a.games.at(-1).week;
     // A game the player missed counts as zero targets.
     const tgtLast2 = a.games.filter((g) => last2[team]?.has(g.week)).reduce((s, g) => s + g.tgt, 0);
@@ -235,11 +250,16 @@ function ordinalShort(n) {
 const BET_CATEGORIES = [
   { key: "likely", label: "Most likely to score", blurb: "Highest model chance of an anytime TD this week, given usage and the team's implied points." },
   { key: "value", label: "Best value", blurb: "The model's chance beats the best available price by the most (expected profit). Prices under +400, priced by at least 2 books." },
-  { key: "longshot", label: "Longshots", blurb: "Prices of +400 or longer where the model still sees positive expected value, for players with a red-zone role and at least 2 targets in the team's last 2 games." },
+  { key: "longshot", label: "Longshots", blurb: "Prices of +400 or longer where the model still sees positive expected value, for players with a red-zone role and at least 2 targets in the team's last 2 games.",
+    paused: "Tracking only since week 10. As official picks in weeks 5–9 these went 1–24: books and the model both overrate long prices." },
   { key: "due", label: "Due for a TD", blurb: "Plenty of red-zone looks but fewer TDs than those targets usually produce. The usage suggests TDs are coming." },
   { key: "fade", label: "Fades", blurb: "Short prices (+250 or shorter) the model thinks are too short. Bets to avoid." },
-  { key: "first", label: "First TD value", blurb: "Bets on the player scoring the game's first touchdown (by either team). The model's chance beats the best price by the most. Priced by at least 2 books. Requires a red-zone role and at least 2 targets in the team's last 2 games." },
+  { key: "first", label: "First TD value", blurb: "Bets on the player scoring the game's first touchdown (by either team). The model's chance beats the best price by the most. Priced by at least 2 books. Requires a red-zone role and at least 2 targets in the team's last 2 games.",
+    paused: "Tracking only since week 10. As official picks in weeks 5–9 these went 0–27: the first-TD model isn't calibrated yet." },
 ];
+// A category with `paused` text is tracking only (decided 2026-11-07 on weeks 5–8, rechecked with week 9):
+// its picks are still chosen, recorded and graded, but as `shadow: true, excluded: "paused"`, never as
+// official picks. Remove `paused` to make a category official again; old picks keep their flags.
 const PICKS_PER_CATEGORY = 5;
 
 // This week's suggested anytime-TD bets by category. `now` is injectable for tests.
@@ -315,8 +335,13 @@ function bestBets(data, now = Date.now()) {
       near: () => firstRows, by: byEv,
     },
   };
-  const cats = {}, closeCalls = {}, excluded = {};
-  for (const [k, r] of Object.entries(rules)) cats[k] = top(r.pick().filter((c) => !r.usage || recentLooks(c)), r.by);
+  const pausedKeys = new Set(BET_CATEGORIES.filter((c) => c.paused).map((c) => c.key));
+  const cats = {}, closeCalls = {}, excluded = {}, paused = {};
+  for (const [k, r] of Object.entries(rules)) {
+    const picks = top(r.pick().filter((c) => !r.usage || recentLooks(c)), r.by);
+    cats[k] = pausedKeys.has(k) ? [] : picks;
+    if (pausedKeys.has(k)) paused[k] = picks;
+  }
   // Players the usage rule cut from the top 5: recorded as their own shadow entries, so the record
   // shows what the rule costs (close calls only fill empty spots, so they'd miss most of these).
   for (const [k, r] of Object.entries(rules)) {
@@ -326,7 +351,8 @@ function bestBets(data, now = Date.now()) {
   const avoid = { fade: new Set(cats.due.map((c) => c.playerId)), due: new Set(cats.fade.map((c) => c.playerId)) };
   for (const [k, r] of Object.entries(rules)) {
     const taken = new Set(cats[k].map((c) => c.playerId));
-    closeCalls[k] = r.near()
+    // Close calls only fill out an official list, so a paused category has none.
+    closeCalls[k] = pausedKeys.has(k) ? [] : r.near()
       .filter((c) => !taken.has(c.playerId) && !avoid[k]?.has(c.playerId))
       .sort(r.by)
       .slice(0, Math.max(0, PICKS_PER_CATEGORY - cats[k].length));
@@ -338,12 +364,13 @@ function bestBets(data, now = Date.now()) {
     cats,
     closeCalls,
     excluded,
+    paused,
   };
 }
 
 if (typeof module !== "undefined") {
   module.exports = {
     SCORING, fantasyPoints, gamesFor, aggregate, TD_ZONES, TD_PER_POINT, zoneCounts, tdModel, shrunkXtdPg, tdOdds,
-    defenseVsTe, impliedProb, playerOdds, isOut, payout, evPer100, BET_CATEGORIES, bestBets,
+    defenseVsTe, defenseTdFactor, impliedProb, playerOdds, isOut, payout, evPer100, BET_CATEGORIES, bestBets,
   };
 }

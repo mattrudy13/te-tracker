@@ -8,12 +8,12 @@
 // Usage (from the repo root):
 //   node scripts/score-model.mjs                 current model plus the default variants below
 //   node scripts/score-model.mjs '<json array>'  your own variants, e.g.
-//     '[{"name":"prior .05","consts":{"TD_PER_TARGET_PRIOR":0.05}},{"name":"def 16","defK":16}]'
-// A variant can swap any top-level `const NAME = value;` in model.js (`consts`) and add a defense
-// multiplier (`defK` = games of league-average prior, `defPow` = strength, default 1). Nothing is written.
+//     '[{"name":"prior .05","consts":{"TD_PER_TARGET_PRIOR":0.05}},{"name":"def 8","consts":{"DEF_SHRINK_GAMES":8}}]'
+// A variant can swap any top-level `const NAME = value;` in model.js (`consts`). Nothing is written.
+// The defense factor is part of the model since 2026-11-11; `DEF_POWER: 0` scores the model without it.
 //
-// Lower Brier score and log loss are better. Week 5–8 baseline (2026-11-07, 368 TE games): model Brier
-// 0.0963 vs books 0.0959; defense factor (defK 16) 0.0944.
+// Lower Brier score and log loss are better. Weeks 5–9 (2026-11-11, 465 TE games): model Brier 0.0935
+// vs books 0.0948; without the defense factor 0.0950.
 
 import { execSync } from "node:child_process";
 import fs from "node:fs";
@@ -21,36 +21,19 @@ import vm from "node:vm";
 
 const SEASON = JSON.parse(fs.readFileSync("data/seasons.json", "utf8")).current;
 const DEVIG = 1.12;
-const DEFAULT_VARIANTS = [{ name: "current" }, { name: "defense k16", defK: 16 }, { name: "defense k8", defK: 8 }];
+const DEFAULT_VARIANTS = [{ name: "current" }, { name: "no defense factor", consts: { DEF_POWER: 0 } }, { name: "defense k8", consts: { DEF_SHRINK_GAMES: 8 } }];
 
 const git = (args) => execSync(`git ${args}`, { maxBuffer: 1 << 28 }).toString();
 const src = fs.readFileSync("model.js", "utf8");
 const current = JSON.parse(fs.readFileSync(`data/${SEASON}.json`, "utf8"));
 
-// model.js with constants swapped and, optionally, the opponent's TE TDs allowed as a multiplier.
+// model.js with constants swapped.
 function loadModel(v = {}) {
   let s = src;
   for (const [k, val] of Object.entries(v.consts ?? {})) {
     const re = new RegExp(`const ${k} = [^;]+;`);
     if (!re.test(s)) throw new Error(`model.js has no const ${k}`);
     s = s.replace(re, `const ${k} = ${val};`);
-  }
-  if (v.defK != null) {
-    const before = s;
-    s = s.replace(
-      "const lambda = base * scale;",
-      `const __d = __def[u.opp]; const __m = __d ? ((__d.td + ${v.defK} * __avg) / (__d.gp + ${v.defK})) / __avg : 1;
-       const lambda = base * scale * Math.pow(__m, ${v.defPow ?? 1});`,
-    );
-    s = s.replace(
-      "const rows = [];\n  for (const a of aggregate(data, data.games)) {",
-      `const __def = defenseVsTe(data).byTeam; const __dv = Object.values(__def);
-  const __avg = __dv.reduce((a, d) => a + d.td, 0) / __dv.reduce((a, d) => a + d.gp, 0);
-  const rows = [];
-  for (const a of aggregate(data, data.games)) {`,
-    );
-    // If tdOdds() changed shape, fail loudly rather than score an unpatched model as "defense".
-    if (s === before || !s.includes("__def[u.opp]") || !s.includes("const __avg")) throw new Error("defense patch didn't apply: update loadModel()");
   }
   const ctx = { module: { exports: {} }, console, Math, Date, Object, Array, Set, Map, JSON, Number, String, RegExp };
   vm.runInNewContext(s, ctx);

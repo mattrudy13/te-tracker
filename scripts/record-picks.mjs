@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Saves this week's Best Bets picks (and close calls, flagged `shadow`, plus players the usage rule cut,
-// flagged `shadow` and `excluded: "usage"`) to data/picks-<season>.json so they can be graded later.
+// flagged `shadow` and `excluded: "usage"`, plus the picks of tracking-only categories, flagged `shadow`
+// and `excluded: "paused"`) to data/picks-<season>.json so they can be graded later.
 // Runs after each odds snapshot. A pick locks at kickoff: later snapshots only replace picks whose
 // games haven't started, so Thursday's TNF picks survive the Sunday run.
 //
@@ -50,7 +51,8 @@ const fresh = [];
 // official record. They show whether the category rules are too strict or too loose.
 // Usage-rule exclusions are a second shadow set: the same player can also be a close call, and each
 // set is counted only in its own table.
-const sets = [[bets.cats, false, null], [bets.closeCalls ?? {}, true, null], [bets.excluded ?? {}, true, "usage"]];
+// Paused (tracking-only) categories are a third: their would-be picks, kept out of the official record.
+const sets = [[bets.cats, false, null], [bets.closeCalls ?? {}, true, null], [bets.excluded ?? {}, true, "usage"], [bets.paused ?? {}, true, "paused"]];
 for (const [cats, shadow, excluded] of sets) for (const [cat, rows] of Object.entries(cats)) {
   for (const c of rows) {
     const k = key({ cat, playerId: c.playerId, shadow, excluded });
@@ -68,9 +70,9 @@ for (const [cats, shadow, excluded] of sets) for (const [cat, rows] of Object.en
 wk.picks = [...locked, ...fresh];
 store.updated = takenAt;
 await writeFile(file, JSON.stringify(store, null, 1) + "\n");
-const n = (rows, sh, ex = false) => rows.filter((p) => !!p.shadow === sh && !!p.excluded === ex).length;
-console.log(`week ${bets.week}: kept ${n(locked, false)} locked picks + ${n(locked, true)} close calls + ${n(locked, true, true)} excluded; ` +
-  `recorded ${n(fresh, false)} picks + ${n(fresh, true)} close calls + ${n(fresh, true, true)} excluded (${bets.priced} TEs priced)`);
+const n = (rows, sh, ex = null) => rows.filter((p) => !!p.shadow === sh && (p.excluded ?? null) === ex).length;
+const counts = (rows) => `${n(rows, false)} picks + ${n(rows, true)} close calls + ${n(rows, true, "usage")} excluded + ${n(rows, true, "paused")} tracking only`;
+console.log(`week ${bets.week}: kept locked ${counts(locked)}; recorded ${counts(fresh)} (${bets.priced} TEs priced)`);
 
 // The pick as first recorded: its own open* fields if it already carried them, else its price then.
 function openFields(prev) {
