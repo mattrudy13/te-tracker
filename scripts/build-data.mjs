@@ -13,6 +13,9 @@ const API = "https://site.api.espn.com/apis/site/v2/sports/football/nfl";
 const ATHLETE_API = "https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes";
 const CORE_API = "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl";
 const CORE_TE = "/positions/7?"; // position $ref for tight ends on core API game rosters
+// Hours after kickoff before a finished game is processed: about 3 h of game plus 3 h for ESPN's
+// per-player stat records to appear (see `settled` below).
+const SETTLE_HOURS = 6;
 const DATA_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "data");
 const SEASON_TYPE = 2; // regular season
 
@@ -229,7 +232,11 @@ async function main() {
   for (const week of weekNums) {
     const sb = await getJson(`${API}/scoreboard?seasontype=${SEASON_TYPE}&week=${week}&dates=${season}`);
     for (const ev of sb.events ?? []) {
-      if (ev.status?.type?.completed) events.push({ id: ev.id, week });
+      // ESPN posts per-player game stat records some time after the final whistle. Processing a game
+      // minutes after it ended (TNF 2026-11-05) read a missing record as "no snap", so a TE who played
+      // without a target got no row and a pick on him was voided. Wait until well after the final.
+      const settled = now - new Date(ev.date).getTime() >= SETTLE_HOURS * 3600e3;
+      if (ev.status?.type?.completed && settled) events.push({ id: ev.id, week });
     }
   }
 

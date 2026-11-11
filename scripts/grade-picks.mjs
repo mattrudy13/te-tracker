@@ -5,7 +5,8 @@
 //           including games with no TD at all). Rows include zero-stat appearances (`noLine`).
 //   void  – no game row: the player was inactive or never took a snap (books void those bets)
 // Profit is per $100 at the recorded price. Fades are graded right/wrong only (no "No" price).
-// Already-graded picks are left alone, so reruns change nothing.
+// Already-graded picks are left alone, so reruns change nothing. The one exception: a void whose game
+// row has since appeared (ESPN's stat record was late, or the game was reprocessed) is graded again.
 
 import { readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
@@ -32,8 +33,9 @@ const rows = new Map(data.games.map((g) => [`${g.gameId}:${g.playerId}`, g]));
 let graded = 0;
 for (const wk of Object.values(store.weeks)) {
   for (const p of wk.picks) {
-    if (p.result || !final.has(p.gameId)) continue;
+    if (!final.has(p.gameId)) continue;
     const g = rows.get(`${p.gameId}:${p.playerId}`);
+    if (p.result && !(p.result === "void" && g)) continue;
     const scored = g ? (p.cat === "first" ? !!g.firstTd : g.td + g.rushTd > 0) : null;
     if (!g) p.result = "void";
     else if (p.cat === "fade") p.result = scored ? "lost" : "won"; // a fade "wins" when the player doesn't score
