@@ -1,8 +1,8 @@
 # Enhancements
 
 Ideas for the site, roughly in priority order within each section. `[x]` done, `[~]` partly done,
-**(new)** added on 2026-10-06 after Best Bets shipped, **(10-13)** added on 2026-10-13. The focus is touchdown
-and receptions betting.
+**(new)** added on 2026-10-06 after Best Bets shipped, **(10-13)** added on 2026-10-13, **(11-11)** added on
+2026-11-11 after a health check through week 9. The focus is touchdown and receptions betting.
 Fantasy points are deliberately out of scope.
 
 ## Quick wins
@@ -21,8 +21,11 @@ Fantasy points are deliberately out of scope.
       official record, and show their results separately. After a few weeks this shows whether the
       category rules are too strict or too loose. It's the data needed to tune them (next item).
       Since 2026-10-13 players cut by the usage rule are a second shadow set with their own table.
-- [~] **(new) Tune the category rules from results** (reviewed 2026-11-07, ships Tue Nov 10: First TD value and
-      Longshots go shadow-only, defense factor added; details in CLAUDE.md next steps). Original note: thresholds like "+400 for
+- [~] **(new) Tune the category rules from results** (reviewed 2026-11-07: First TD value and
+      Longshots go shadow-only, defense factor added; details in CLAUDE.md next steps). **Shipped 2026-11-11**, rechecked
+      with week 9 first: First TD value 0–27 and Longshots 1–24 are tracking only (their week 5–9 picks moved
+      out of the official record), defense factor in (Brier 0.0935 vs 0.0950 without, books 0.0948). Next
+      review around week 13. Change rules before a Thursday snapshot, never mid-week. Original note: thresholds like "+400 for
       longshots", "TD − xTD ≤ −0.8" and "edge ≤ −8" were set by judgment. Check them against the
       official and shadow records. Also review the usage rule (2+ targets in the last 2 games) against the
       "Cut by the usage rule" table, and judge fades by faded players who scored vs market expected, not W–L.
@@ -39,6 +42,15 @@ Fantasy points are deliberately out of scope.
       Still open: the Sunday snapshot (4 AM ET since 2026-10-13) is ~9 h before kickoff, so it's an early "close"; the inactives
       snapshot (below) would sharpen it. Picks dropped between snapshots aren't kept, so CLV only covers picks
       that survived.
+- [ ] **(11-11) Price cap on Value picks (shadow test first)**: through week 9, betting every positive-edge TE
+      won at short prices and lost at long ones: under +200, 7 of 10 (+7.3 units); +200 to +399, 9 of 36
+      (+0.2); +400 and up, 5 of 88 (−23.5). Books and model both overrate longshots, so a model "edge" at +400
+      and up is mostly that bias. Record a shadow "Value under +400" set next to the current Value picks and
+      compare after 4+ weeks before changing the official rule.
+- [ ] **(11-11) Decide what to do with Due**: 8–19, −5.3 units through week 9, with 8.7 wins expected by both
+      the market and the model. "Scored less than xTD says" is already in the price, so the category has no
+      edge of its own. Options at the next rule review: make it shadow-only, or require a positive model edge
+      as well (which makes it a subset of Value).
 - [ ] **(new) What changed since Thursday**: after the Sunday snapshot, mark picks that are new, dropped,
       or re-priced since Thursday (with the price move), so a Sunday-morning check is quick.
 - [ ] **(new) Units chart**: cumulative units by week for each category, under the record table (bets
@@ -65,6 +77,10 @@ Fantasy points are deliberately out of scope.
       betting every positive-edge TE. That's the honest test of whether Edge means anything. Nothing new has
       to be saved: every snapshot is in git history, and the 2026-10-13 recheck rebuilt the model as of each
       snapshot from it (method in CLAUDE.md Status). Turn that into a committed `scripts/score-model.mjs`.
+- [ ] **(11-11) Save the weekly scores for the site**: have the Tuesday grading run write the scoring
+      script's output (per week and per price range: n, scored, model and book expected, Brier) to
+      `data/scores-<season>.json`. The calibration table above then reads one small file instead of
+      rebuilding from git history, and the weekly rerun stops being a manual step.
 - [~] **Recalibrate every few weeks** from those results and the market. Rechecked 2026-10-13 against both
       week-5 snapshots after zero-target games started counting (per-target baseline 5% → 5.5%, 0.02 xTD/game
       floor). Next: around week 9 with 4+ weeks of snapshots, using the scoring script above.
@@ -75,8 +91,8 @@ Fantasy points are deliberately out of scope.
 - [ ] **Red-zone target share**: count every receiver's red-zone targets from play-by-play (not just
       TEs), so a TE's share of the team's red-zone looks can feed the model. That's a better signal than raw
       counts when teams differ in red-zone trips.
-- [~] **Defense vs TE touchdowns**: retested 2026-11-07 against results (not market fit): it helps (Brier
-      0.0963 → 0.0944), so it goes in on Tue Nov 10 with 16 games of shrinkage. Earlier: shown in each Best Bets reason. A model multiplier was tested and left
+- [x] **Defense vs TE touchdowns** (in the model since 2026-11-11, 16 games of shrinkage): retested against
+      results, not market fit, it helps (weeks 5–9 Brier 0.0950 → 0.0935, books 0.0948). Earlier: shown in each Best Bets reason. A model multiplier was tested and left
       out because it worsened the market fit after 4 weeks. Retest around week 9 with more data.
 - [ ] **Goal-line role**: flag TEs with targets or carries inside the 5 over the last few games. The sample
       is small, but those are the plays books seem to price hardest.
@@ -124,11 +140,25 @@ Fantasy points are deliberately out of scope.
       01:02 UTC, after TNF kickoff; Sun Oct 11 at 16:52 UTC, 8 minutes before the 1 PM games). Moved to
       Thu 15:00 / Sun 08:00 UTC on 2026-10-13. If runs still slip too far, trigger `workflow_dispatch` from
       an outside scheduler (e.g. a Claude routine or cron-job.org) instead.
-- [ ] **(10-13) Zero-stat rows right after a game**: `tookSnap()` in build-data reads ESPN's per-player game
+- [x] **(10-13) Zero-stat rows right after a game** (fixed 2026-11-11, see the end of this item): `tookSnap()` in build-data reads ESPN's per-player game
       stat record and treats a 404 as "no snap". If that record lags the final whistle, a TE who played gets no
       row and a pick on him is voided. If it lags, only process games that ended an hour or more ago. Not
       tested yet: TNF Oct 15 (DEN/SEA, 4 `noLine` rows) was first processed about 10 h after the final because
       the 07:42 UTC run failed. Check it on a Sunday game picked up by the first run after it ends.
+      **Confirmed and fixed 2026-11-11**: TNF Nov 5 (BAL/JAX, 401873037) was processed at 04:20 UTC, minutes
+      after the final. Josh Cuevas (BAL) played without a target but got no row, so his week 9 longshot pick
+      was voided. Games are now processed 6 h after kickoff (`SETTLE_HOURS`), and a `--reprocess` of weeks 1–9
+      added the 6 rows that had been missed (2 each in weeks 7, 8, 9). Still open: the real lag is unknown, so
+      6 h is a guess; a stricter check would confirm a known player's stat record exists before processing.
+- [x] **(11-11) Regrade picks whose game row shows up later** (done 2026-11-11): grade-picks used to skip any
+      pick that already had a result, so a void stayed void after a reprocess added the row. A void with a
+      game row is now graded again; other graded picks are still left alone.
+- [ ] **(11-11) Games before the Thursday snapshot**: week 12 has a Wednesday game (Nov 25, 8:00 PM ET), which
+      kicks off before Thursday's snapshot, so it gets no odds or picks. Short term: a manual snapshot that
+      Wednesday morning (~45 credits; about 59 left at month end). Longer term: have the snapshot workflow
+      (or the hub Worker) look at the week's first kickoff and run the morning of that day. Friday and
+      Saturday games (Nov 27, Dec 25, late-December Saturdays) are covered by Thursday's snapshot, but their
+      prices are 1–2 days old by kickoff.
 - [x] **(10-16) One bad game failed the whole build**: an ESPN 503 on the TNF game roster outlasted the
       retries and the Update data run failed. A failed game is now skipped and retried next run (grading waits
       for it). Re-running the failed run then hit a rebase conflict, because re-runs and queued runs checked out
@@ -154,6 +184,9 @@ Fantasy points are deliberately out of scope.
       bad numbers.
 
 ## Shipped
+- [x] Rule tuning: Longshots and First TD value tracking only (past picks moved out of the official record),
+      defense factor in the TD model; games processed 6 h after kickoff so late ESPN stat records aren't read as
+      "no snap", weeks 1–9 reprocessed (6 rows added), voids regraded when a row appears (2026-11-11)
 - [x] Update data survives one bad game (skipped and retried next run), and the data workflows check out the
       branch tip so re-runs and queued runs don't conflict on push (2026-10-16)
 - [x] Zero-target games counted (`noLine` rows from ESPN's core API game rosters, weeks 1–5 reprocessed), week 5's

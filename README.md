@@ -132,10 +132,14 @@ Action computes exactly what the page shows.
 |---|---|
 | Most likely to score | Highest model TD % |
 | Best value | Expected profit > 0 at the best price, price under +400, model ≥ 15%, ≥ 2 books |
-| Longshots | Price +400 or longer, expected profit > 0, at least 1 red-zone target, at least 2 targets in the team's last 2 games |
+| Longshots (tracking only) | Price +400 or longer, expected profit > 0, at least 1 red-zone target, at least 2 targets in the team's last 2 games |
 | Due for a TD | TD − xTD ≤ −0.8 with ≥ 3 red-zone targets |
 | Fades | Price +250 or shorter and model at least 8 points below the market |
-| First TD value | First-TD bet: expected profit > 0 at the best price, model ≥ 4%, ≥ 2 books, ≥ 1 red-zone target, ≥ 2 targets in the team's last 2 games |
+| First TD value (tracking only) | First-TD bet: expected profit > 0 at the best price, model ≥ 4%, ≥ 2 books, ≥ 1 red-zone target, ≥ 2 targets in the team's last 2 games |
+
+Longshots and First TD value have been **tracking only** since week 10 of 2026: as official picks in weeks 5–9
+they went 1–24 and 0–27. Their rules still run and their picks are recorded and graded, but in a separate
+"Tracking only" table that never counts toward the official record.
 
 - `scripts/record-picks.mjs` runs after each odds snapshot, following a fresh stats/injury build. It saves the
   picks to `data/picks-<season>.json`. Picks lock at kickoff: Sunday's snapshot only replaces picks for games
@@ -169,8 +173,9 @@ Action computes exactly what the page shows.
 - **Anytime TD %**: expected TDs per game, shrunk toward a volume-only baseline (targets per game ×
   a long-run 5.5% TE TD-per-target rate, weighted like 8 games of data), blended 70/30 with the last 3
   games, plus a small rushing-TD term, with a floor of 0.02 expected TDs per game (so a TE who plays is
-  never at 0%). That's scaled by the team's implied points against the week's average
-  and run through a Poisson: P = 1 − e^(−λ). It's shown as a probability and as fair American odds.
+  never at 0%). That's scaled by the team's implied points against the week's average and by the
+  opponent's TE TDs allowed per game relative to the league (shrunk toward average with 16 games of
+  league-average play), and run through a Poisson: P = 1 − e^(−λ). It's shown as a probability and as fair American odds.
 - **Calibration** (Oct 5, 2026, first odds snapshot): with books de-vigged by ~12%, the error against the
   market fell from 11.2 to 6.4 percentage points (RMSE over 30 TEs) and the model's average matched the
   market's. Rechecked Oct 13 once zero-target games counted: the baseline went from 5% to 5.5% and the
@@ -210,8 +215,10 @@ python3 -m http.server 8000          # then open http://localhost:8000
   in the team's latest game.
 - The TD model is calibrated against one snapshot. The Best Bets track record (first graded week: week 5)
   is the first real test of it.
-- A defense-vs-TE matchup factor was tested and left out of the model: four weeks of data is mostly noise.
-  Defense context still appears in each pick's reason.
+- The defense-vs-TE factor was added on Nov 11, 2026 after scoring the model against results for weeks 5–9
+  (`node scripts/score-model.mjs`): Brier score 0.0935 with it, 0.0950 without, sportsbooks 0.0948. That is
+  a small edge on 465 player-games, so it gets rechecked as the season goes on.
+- A finished game is processed 6 hours after kickoff, because ESPN's per-player records lag the final.
 - Regular season only.
 - GitHub Pages lets browsers cache pages for 10 minutes, so hard refresh (⌘⇧R) right after a deploy. Scripts
   and styles are cache-busted (see above). The HTML itself can still be up to 10 minutes stale.

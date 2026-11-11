@@ -51,30 +51,37 @@ Fixed 2026-10-16 (pushed, `7e4a967` + `35cc8d2`; a manual Update data run passed
   check out `ref: ${{ github.ref }}` (the branch tip). Don't re-run old failed data runs anyway; the next
   scheduled run catches up.
 
+Shipped 2026-11-11 (rule tuning approved 2026-11-07, rechecked with week 9; Thu Nov 12's snapshot is the first
+live run):
+- **Longshots and First TD value are tracking only** (`paused` text on their `BET_CATEGORIES` entries). Their rules
+  still run; `bestBets().paused` holds the picks, recorded as `shadow: true, excluded: "paused"`, and `cats` /
+  `closeCalls` are empty for them. Their cards stay on the page with a "Tracking only" tag and lighter rows. By
+  Rudy's choice their week 5–9 picks (53) were moved out of the official record too, into the "Tracking only"
+  table: Longshots 1–24, −13 units; First TD value 0–27, −27 units. Remove `paused` to make one official again.
+- **Official record through week 9** (Most likely, Best value, Due): 26–50, −1.0 units; unique bets 19–34, +3.4.
+  Most likely 11–13 (+2.6), Best value 7–18 (+1.7), Due 8–19 (−5.3). Fades: 5 of 20 scored vs 7.5 market expected.
+- **Defense factor in the TD model**: λ × (opponent's TE TDs allowed per game, shrunk with 16 games of league
+  average) ÷ league average (`defenseTdFactor()`, `DEF_SHRINK_GAMES`, `DEF_POWER`; power 0 turns it off). Weeks 5–9,
+  465 priced TE games: Brier 0.0935 with it, 0.0950 without, books 0.0948; better in 4 of 5 weeks. The Oct 6 test
+  rejected it on fit to market prices, the wrong yardstick. Constants otherwise unchanged.
+- **Stat-record lag fixed**: build-data waits `SETTLE_HOURS` (6 h after kickoff) before processing a finished game.
+  TNF Nov 5 was processed minutes after the final, ESPN's per-player stat record wasn't up, and Josh Cuevas (BAL,
+  played, no target) got no row, so his pick was voided. A `--reprocess` of weeks 1–9 added 6 `noLine` rows (2 each
+  in weeks 7, 8, 9), removed none, and picked up one ESPN stat correction (TEN team targets, week 7). Only the
+  Cuevas pick changed (void → lost). Finished games now reach the site 3–6 h later than before.
+- grade-picks regrades a void when its game row has since appeared; every other graded pick is still left alone.
+
 Next steps (details in ENHANCEMENTS.md):
-1. Check the record-picks log line (`+ N excluded`) from Thursday's snapshot and the Best Bets page. TNF (DEN/SEA)
-   got 4 `noLine` rows, as expected, but it was processed ~10 h after the final, so the stat-record lag is
-   still untested; check a Sunday game picked up by the first run after it ends. If a TE who played has no row, ESPN's per-game stat record wasn't
-   posted yet when the build ran (`tookSnap()` treats 404 as no snap); delay processing if so.
-2. Score the model and books on every priced TE, each week: `node scripts/score-model.mjs` (added 2026-11-07;
-   the method above, as a script). Still open: a calibration table on the site.
-3. Receptions projection vs the line (unlocks receptions picks).
-4. **Rule tuning, reviewed 2026-11-07 on weeks 5–8; ship Tue Nov 10** (after week 9 is graded, before Thursday's
-   snapshot; changing it mid-week would switch rules under Sunday's re-picks). Rerun `score-model.mjs` and the
-   record with week 9 first, and recheck nothing flipped. Rudy approved all four:
-   - **First TD value → shadow-only** (0–22, −22 units; market expected ~1.1 wins, model 1.8). Still recorded and
-     graded, never official. Re-add after the first-TD model is calibrated (ENHANCEMENTS).
-   - **Longshots → shadow-only** (1–19, −8 units). Across all priced TEs at +400 and up, 16 of 263 scored vs 20.7
-     market and 18.1 model expected: books and model both overrate them (favorite–longshot bias). Under +200,
-     11 of 23 scored vs 8.6 expected, which is why Most likely is the only winner (10–9, +5.5 units).
-   - **Defense factor in the model**: λ × (opponent's TE TDs allowed per game, shrunk with 16 games of league
-     average) ÷ league average (`defK 16` in score-model.mjs). Brier 0.0963 → 0.0944 vs books 0.0959; better in
-     3 of 4 weeks. The Oct 6 test rejected it on fit to market prices, the wrong yardstick (it copies the books).
-     k16 over k8 (0.0939) on purpose: picked after seeing the data, so take the gentler one. Update the model.js note.
-   - **Constants unchanged**: prior rate, shrinkage, recent weight and floor variations all moved Brier ≤ 0.0007.
-   - Unchanged: Value (5–15, −0.6 units, about break-even), Due (7–15, −4 units, exactly what the market expected:
-     no edge, revisit), Fades (4 of 16 scored vs 5.9 market expected: working), usage rule (only 8 cut picks).
-   - Model edges don't pay yet: every TE with model − market > 3 pts went 8 for 53.
+1. Check Thu Nov 12's snapshot: the record-picks log line should read `recorded N picks + N close calls +
+   N excluded + N tracking only`, and the Best Bets page should show Longshots and First TD value as tracking only.
+   Check Sunday's games are processed on the first run 6 h after kickoff, with their `noLine` rows.
+2. **Wed Nov 25 morning: run the odds snapshot by hand** (Actions → Snapshot odds → Run workflow). Week 12 has a
+   Wednesday 8:00 PM ET game that kicks off before Thursday's snapshot. ~45 credits; about 59 left at month end.
+3. Score the model and books each week: `node scripts/score-model.mjs`. Still open: a calibration table on the site.
+4. Receptions projection vs the line (unlocks receptions picks).
+5. Next rule review around week 13: Due (no edge of its own), a price cap on Value (model edges only paid under
+   +200), and whether Longshots or First TD value have earned their way back.
+   Model edges don't pay yet at long prices: +EV bets at +400 and up went 5 of 88 (−23.5 units) before the defense factor.
 
 ## Before every commit that touches model.js, common.js or style.css
 
@@ -130,7 +137,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   category to 5, `tr.close` with a "CC" label). record-picks saves close calls with `shadow: true`; they're
   graded like picks but shown only in the separate "shadow record" table. **Never let shadow picks into the
   official record.** Every consumer must filter on `!p.shadow`. The lock key includes the shadow flag and
-  `excluded`. Usage-rule exclusions are also `shadow`; close-call consumers filter `p.shadow && !p.excluded`.
+  `excluded`. Usage-rule exclusions (`excluded: "usage"`) and tracking-only categories (`excluded: "paused"`) are
+  also `shadow`; close-call consumers filter `p.shadow && !p.excluded`.
 - Fades stay graded won/lost in the data, but the page keeps them out of Total / Unique bets (by request) and
   shows them as ✓ No TD / ✗ Scored plus a `fadeLine()`: faded players who scored vs market and model expected.
 - Odds are US-licensed books only: `OFFSHORE_BOOKS` in fetch-odds.mjs (Odds API bookmaker keys) are dropped
@@ -145,8 +153,8 @@ Run `node scripts/stamp-assets.mjs`. It rewrites the `?v=<hash>` stamps in every
   `recLineCell()`, `edgeCell()`, `oddsAsOf()` in common.js.
 - Injuries: `players[id].injury = { status, date }` from the ESPN roster (`a.injuries[0]`). `isOut()` (Out,
   Doubtful, IR, suspended, PUP, NFI) sets `tdOdds` rows `out: true` and `prob: null`; those players are never picked.
-- A defense-vs-TE multiplier was tested (2026-10-06) and left out: it worsened the market fit at every
-  strength (RMSE 6.39 → 6.58–7.19). The note is in model.js. Revisit mid-season.
+- `tdOdds()` multiplies λ by `defenseTdFactor()` (opponent's TE TDs allowed, shrunk 16 games toward the league
+  average) since 2026-11-11. Judge model changes against results (`score-model.mjs`), not fit to market prices.
 
 ## Page notes
 
@@ -215,7 +223,8 @@ finished games, so those are null. `upcoming` can be a week ahead of `schedule` 
   the game unprocessed so it's retried next run. So does any other error while processing a game (e.g. an
   ESPN 5xx that outlasts the retries); grading waits on `processedEvents`, so its picks aren't voided meanwhile.
 - Games are only processed once `status.type.completed`, and `processedEvents` stops
-  them from being fetched again. To force a full rebuild, run `build-data.mjs --reprocess` (used 2026-10-13 to
+  them from being fetched again. A finished game is only processed 6 h after kickoff (`SETTLE_HOURS`), because
+  the per-player stat records lag the final. To force a full rebuild, run `build-data.mjs --reprocess` (used 2026-10-13 to
   add the zero-stat rows; every existing row came back identical).
 - Around Monday night the current week has no unplayed games left, so `upcoming` looks at the next
   calendar week as well (`openWeeks` in build-data.mjs holds both).
