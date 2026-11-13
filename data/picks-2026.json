@@ -4079,7 +4079,10 @@
      "ev": 37,
      "why": "10 RZ tgt (3 inside 5) · 6 TD vs 3.6 xTD · team 21.5 pts · WSH allows 8 TE TD in 8 (2nd-most)",
      "takenAt": "2026-11-12T15:21:03.545Z",
-     "oddsAt": "2026-11-12T15:21:03.500Z"
+     "oddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "won",
+     "scored": true,
+     "profit": 210
     },
     {
      "cat": "likely",
@@ -4187,7 +4190,10 @@
      "ev": 37,
      "why": "10 RZ tgt (3 inside 5) · 6 TD vs 3.6 xTD · team 21.5 pts · WSH allows 8 TE TD in 8 (2nd-most)",
      "takenAt": "2026-11-12T15:21:03.545Z",
-     "oddsAt": "2026-11-12T15:21:03.500Z"
+     "oddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "won",
+     "scored": true,
+     "profit": 210
     },
     {
      "cat": "value",
@@ -4584,7 +4590,10 @@
      "ev": 55.5,
      "why": "10 RZ tgt (3 inside 5) · 6 TD vs 3.6 xTD · team 21.5 pts · WSH allows 8 TE TD in 8 (2nd-most)",
      "takenAt": "2026-11-12T15:21:03.545Z",
-     "oddsAt": "2026-11-12T15:21:03.500Z"
+     "oddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -4670,5 +4679,5 @@
   }
  },
  "updated": "2026-11-12T15:21:03.545Z",
- "graded": "2026-11-11T16:13:31.159Z"
+ "graded": "2026-11-13T13:40:01.871Z"
 }
