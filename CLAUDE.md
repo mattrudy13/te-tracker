@@ -72,9 +72,9 @@ live run):
 - grade-picks regrades a void when its game row has since appeared; every other graded pick is still left alone.
 
 Next steps (details in ENHANCEMENTS.md):
-1. Check Thu Nov 12's snapshot: the record-picks log line should read `recorded N picks + N close calls +
-   N excluded + N tracking only`, and the Best Bets page should show Longshots and First TD value as tracking only.
-   Check Sunday's games are processed on the first run 6 h after kickoff, with their `noLine` rows.
+1. Sun Nov 15: check Sunday's games are processed on the first run 6 h after kickoff, with their `noLine` rows.
+   (Thu Nov 12's snapshot checked 2026-11-13: `recorded 17 picks + 3 close calls + 2 excluded + 10 tracking
+   only`, 332 credits left; Best Bets shows Longshots and First TD value as tracking only.)
 2. **Wed Nov 25 morning: run the odds snapshot by hand** (Actions → Snapshot odds → Run workflow). Week 12 has a
    Wednesday 8:00 PM ET game that kicks off before Thursday's snapshot. ~45 credits; about 59 left at month end.
 3. Score the model and books each week: `node scripts/score-model.mjs`. Still open: a calibration table on the site.
