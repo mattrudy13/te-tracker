@@ -4148,7 +4148,10 @@
      "openPrice": 110,
      "openBook": "BetMGM",
      "openMarketProb": 0.4762,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "likely",
@@ -4170,7 +4173,10 @@
      "openPrice": 280,
      "openBook": "FanDuel",
      "openMarketProb": 0.2685,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "likely",
@@ -4263,7 +4269,10 @@
      "openPrice": 280,
      "openBook": "FanDuel",
      "openMarketProb": 0.2685,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -4381,7 +4390,10 @@
      "openPrice": 285,
      "openBook": "DraftKings",
      "openMarketProb": 0.2703,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -4428,7 +4440,10 @@
      "openPrice": 280,
      "openBook": "FanDuel",
      "openMarketProb": 0.2685,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -4493,7 +4508,10 @@
      "ev": -35,
      "why": "7 RZ tgt (3 inside 5) · 3 TD vs 2.6 xTD · team 23.0 pts · CIN allows 1 TE TD in 8 (31st-most)",
      "takenAt": "2026-11-15T08:21:04.322Z",
-     "oddsAt": "2026-11-15T08:21:04.272Z"
+     "oddsAt": "2026-11-15T08:21:04.272Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -4540,7 +4558,10 @@
      "openPrice": 250,
      "openBook": "BetRivers",
      "openMarketProb": 0.2986,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -4666,7 +4687,10 @@
      "openPrice": 650,
      "openBook": "FanDuel",
      "openMarketProb": 0.1429,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "won",
+     "scored": true,
+     "profit": 600
     },
     {
      "cat": "longshot",
@@ -4791,7 +4815,10 @@
      "openPrice": 1200,
      "openBook": "FanDuel",
      "openMarketProb": 0.0616,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -4811,7 +4838,10 @@
      "ev": 31.8,
      "why": "4 RZ tgt (2 inside 5) · 2 TD vs 1.6 xTD · team 24.0 pts · ARI allows 8 TE TD in 9 (3rd-most)",
      "takenAt": "2026-11-15T08:21:04.322Z",
-     "oddsAt": "2026-11-15T08:21:04.272Z"
+     "oddsAt": "2026-11-15T08:21:04.272Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -4867,5 +4897,5 @@
   }
  },
  "updated": "2026-11-15T08:21:04.322Z",
- "graded": "2026-11-16T00:32:58.201Z"
+ "graded": "2026-11-16T10:23:04.580Z"
 }
