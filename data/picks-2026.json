@@ -4192,7 +4192,10 @@
      "openPrice": 215,
      "openBook": "DraftKings",
      "openMarketProb": 0.3333,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "likely",
@@ -4214,7 +4217,10 @@
      "openPrice": 290,
      "openBook": "BetMGM",
      "openMarketProb": 0.2598,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "likely",
@@ -4232,7 +4238,10 @@
      "ev": -7.5,
      "why": "4 RZ tgt · 3 TD vs 1.4 xTD · team 25.3 pts · ATL allows 4 TE TD in 9 (18th-most)",
      "takenAt": "2026-11-15T08:21:04.322Z",
-     "oddsAt": "2026-11-15T08:21:04.272Z"
+     "oddsAt": "2026-11-15T08:21:04.272Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -4276,7 +4285,10 @@
      "openPrice": 290,
      "openBook": "BetMGM",
      "openMarketProb": 0.2598,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -4298,7 +4310,10 @@
      "openPrice": 215,
      "openBook": "DraftKings",
      "openMarketProb": 0.3333,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -4320,7 +4335,10 @@
      "openPrice": 310,
      "openBook": "BetMGM",
      "openMarketProb": 0.2667,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -4338,7 +4356,10 @@
      "ev": 8.6,
      "why": "5 RZ tgt (1 inside 5) · 0 TD vs 1.9 xTD · team 22.5 pts · CLE allows 6 TE TD in 9 (9th-most)",
      "takenAt": "2026-11-15T08:21:04.322Z",
-     "oddsAt": "2026-11-15T08:21:04.272Z"
+     "oddsAt": "2026-11-15T08:21:04.272Z",
+     "result": "won",
+     "scored": true,
+     "profit": 290
     },
     {
      "cat": "due",
@@ -4382,7 +4403,10 @@
      "openPrice": 255,
      "openBook": "DraftKings",
      "openMarketProb": 0.2857,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "won",
+     "scored": true,
+     "profit": 290
     },
     {
      "cat": "due",
@@ -4448,7 +4472,10 @@
      "openPrice": 450,
      "openBook": "DraftKings",
      "openMarketProb": 0.1852,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "fade",
@@ -4488,7 +4515,10 @@
      "openPrice": 225,
      "openBook": "BetMGM",
      "openMarketProb": 0.32,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -4533,7 +4563,10 @@
      "openPrice": 300,
      "openBook": "BetMGM",
      "openMarketProb": 0.2778,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -4552,7 +4585,10 @@
      "ev": -15.1,
      "why": "6 RZ tgt · 2 TD vs 1.8 xTD · team 29.0 pts · NYJ allows 4 TE TD in 9 (17th-most)",
      "takenAt": "2026-11-15T08:21:04.322Z",
-     "oddsAt": "2026-11-15T08:21:04.272Z"
+     "oddsAt": "2026-11-15T08:21:04.272Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "longshot",
@@ -4576,7 +4612,10 @@
      "openPrice": 3000,
      "openBook": "BetMGM",
      "openMarketProb": 0.0334,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -4600,7 +4639,10 @@
      "openPrice": 650,
      "openBook": "DraftKings",
      "openMarketProb": 0.1455,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -4644,7 +4686,10 @@
      "ev": 28.8,
      "why": "3 RZ tgt (2 inside 5) · 2 TD vs 1.4 xTD · team 28.5 pts · TEN allows 5 TE TD in 8 (10th-most)",
      "takenAt": "2026-11-15T08:21:04.322Z",
-     "oddsAt": "2026-11-15T08:21:04.272Z"
+     "oddsAt": "2026-11-15T08:21:04.272Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -4668,7 +4713,10 @@
      "openPrice": 500,
      "openBook": "BetMGM",
      "openMarketProb": 0.1795,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -4716,7 +4764,10 @@
      "openPrice": 2000,
      "openBook": "BetMGM",
      "openMarketProb": 0.0387,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -4784,7 +4835,10 @@
      "openPrice": 1800,
      "openBook": "BetMGM",
      "openMarketProb": 0.0443,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -4804,11 +4858,14 @@
      "ev": 27.1,
      "why": "3 RZ tgt (1 inside 5) · 3 TD vs 1.4 xTD · team 23.5 pts · NO allows 5 TE TD in 8 (12th-most)",
      "takenAt": "2026-11-15T08:21:04.322Z",
-     "oddsAt": "2026-11-15T08:21:04.272Z"
+     "oddsAt": "2026-11-15T08:21:04.272Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     }
    ]
   }
  },
  "updated": "2026-11-15T08:21:04.322Z",
- "graded": "2026-11-13T13:40:01.871Z"
+ "graded": "2026-11-16T00:32:58.201Z"
 }
