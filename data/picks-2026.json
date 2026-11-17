@@ -4465,7 +4465,10 @@
      "openPrice": 350,
      "openBook": "BetMGM",
      "openMarketProb": 0.2247,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "due",
@@ -4764,7 +4767,10 @@
      "openPrice": 600,
      "openBook": "BetRivers",
      "openMarketProb": 0.165,
-     "openOddsAt": "2026-11-12T15:21:03.500Z"
+     "openOddsAt": "2026-11-12T15:21:03.500Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -4897,5 +4903,5 @@
   }
  },
  "updated": "2026-11-15T08:21:04.322Z",
- "graded": "2026-11-16T10:23:04.580Z"
+ "graded": "2026-11-17T18:53:07.373Z"
 }
