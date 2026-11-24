@@ -5290,7 +5290,10 @@
      "openPrice": 245,
      "openBook": "DraftKings",
      "openMarketProb": 0.3009,
-     "openOddsAt": "2026-11-19T15:21:05.567Z"
+     "openOddsAt": "2026-11-19T15:21:05.567Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -5486,7 +5489,10 @@
      "openPrice": 800,
      "openBook": "DraftKings",
      "openMarketProb": 0.1176,
-     "openOddsAt": "2026-11-19T15:21:05.567Z"
+     "openOddsAt": "2026-11-19T15:21:05.567Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -5700,5 +5706,5 @@
   }
  },
  "updated": "2026-11-22T08:21:04.090Z",
- "graded": "2026-11-23T11:31:52.028Z"
+ "graded": "2026-11-24T20:27:03.196Z"
 }
