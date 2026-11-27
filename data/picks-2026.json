@@ -5722,7 +5722,10 @@
      "ev": 13.3,
      "why": "12 RZ tgt (2 inside 5) · 3 TD vs 3.6 xTD · team 29.0 pts · DET allows 11 TE TD in 10 (1st-most)",
      "takenAt": "2026-11-26T15:21:01.428Z",
-     "oddsAt": "2026-11-26T15:21:01.385Z"
+     "oddsAt": "2026-11-26T15:21:01.385Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "likely",
@@ -5866,7 +5869,10 @@
      "ev": 13.3,
      "why": "12 RZ tgt (2 inside 5) · 3 TD vs 3.6 xTD · team 29.0 pts · DET allows 11 TE TD in 10 (1st-most)",
      "takenAt": "2026-11-26T15:21:01.428Z",
-     "oddsAt": "2026-11-26T15:21:01.385Z"
+     "oddsAt": "2026-11-26T15:21:01.385Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "value",
@@ -6067,7 +6073,10 @@
      "ev": -1.4,
      "why": "13 RZ tgt (3 inside 5) · 3 TD vs 4.5 xTD · team 27.5 pts · CHI allows 3 TE TD in 10 (21st-most)",
      "takenAt": "2026-11-26T15:21:01.428Z",
-     "oddsAt": "2026-11-26T15:21:01.385Z"
+     "oddsAt": "2026-11-26T15:21:01.385Z",
+     "result": "lost",
+     "scored": true,
+     "profit": null
     },
     {
      "cat": "longshot",
@@ -6247,7 +6256,10 @@
      "ev": 54.9,
      "why": "12 RZ tgt (2 inside 5) · 3 TD vs 3.6 xTD · team 29.0 pts · DET allows 11 TE TD in 10 (1st-most)",
      "takenAt": "2026-11-26T15:21:01.428Z",
-     "oddsAt": "2026-11-26T15:21:01.385Z"
+     "oddsAt": "2026-11-26T15:21:01.385Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -6313,5 +6325,5 @@
   }
  },
  "updated": "2026-11-26T15:21:01.428Z",
- "graded": "2026-11-24T20:27:03.196Z"
+ "graded": "2026-11-27T03:23:12.661Z"
 }
