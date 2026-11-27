@@ -5998,7 +5998,10 @@
      "ev": -38.7,
      "why": "5 RZ tgt · 5 TD vs 1.9 xTD · team 21.3 pts · BUF allows 1 TE TD in 10 (31st-most)",
      "takenAt": "2026-11-26T15:21:01.428Z",
-     "oddsAt": "2026-11-26T15:21:01.385Z"
+     "oddsAt": "2026-11-26T15:21:01.385Z",
+     "result": "won",
+     "scored": false,
+     "profit": null
     },
     {
      "cat": "fade",
@@ -6325,5 +6328,5 @@
   }
  },
  "updated": "2026-11-26T15:21:01.428Z",
- "graded": "2026-11-27T03:23:12.661Z"
+ "graded": "2026-11-27T15:51:53.324Z"
 }
