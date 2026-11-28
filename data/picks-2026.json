@@ -6139,7 +6139,10 @@
      "ev": 49.8,
      "why": "7 RZ tgt (2 inside 5) · 6 TD vs 2.5 xTD · team 16.0 pts · DEN allows 8 TE TD in 10 (5th-most)",
      "takenAt": "2026-11-26T15:21:01.428Z",
-     "oddsAt": "2026-11-26T15:21:01.385Z"
+     "oddsAt": "2026-11-26T15:21:01.385Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -6199,7 +6202,10 @@
      "ev": 32.5,
      "why": "3 RZ tgt (1 inside 5) · 1 TD vs 0.9 xTD · team 20.5 pts · PIT allows 4 TE TD in 10 (16th-most)",
      "takenAt": "2026-11-26T15:21:01.428Z",
-     "oddsAt": "2026-11-26T15:21:01.385Z"
+     "oddsAt": "2026-11-26T15:21:01.385Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "longshot",
@@ -6282,7 +6288,10 @@
      "ev": 53.9,
      "why": "7 RZ tgt (2 inside 5) · 6 TD vs 2.5 xTD · team 16.0 pts · DEN allows 8 TE TD in 10 (5th-most)",
      "takenAt": "2026-11-26T15:21:01.428Z",
-     "oddsAt": "2026-11-26T15:21:01.385Z"
+     "oddsAt": "2026-11-26T15:21:01.385Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     },
     {
      "cat": "first",
@@ -6322,11 +6331,14 @@
      "ev": 46.8,
      "why": "7 RZ tgt (3 inside 5) · 3 TD vs 2.7 xTD · team 16.0 pts · DEN allows 8 TE TD in 10 (5th-most)",
      "takenAt": "2026-11-26T15:21:01.428Z",
-     "oddsAt": "2026-11-26T15:21:01.385Z"
+     "oddsAt": "2026-11-26T15:21:01.385Z",
+     "result": "lost",
+     "scored": false,
+     "profit": -100
     }
    ]
   }
  },
  "updated": "2026-11-26T15:21:01.428Z",
- "graded": "2026-11-27T15:51:53.324Z"
+ "graded": "2026-11-28T11:09:49.391Z"
 }
